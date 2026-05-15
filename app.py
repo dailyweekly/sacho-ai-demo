@@ -77,18 +77,20 @@ st.markdown(
     @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gowun+Batang:wght@400;700&family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@400;500;700&display=swap');
 
     :root {
-        --cream: #FDF8EE;
-        --oat: #F4ECD9;
-        --paper: #FBF3E0;
-        --ink: #3A2A1F;             /* 따뜻한 다크 브라운 (캐릭터 외곽선과 통일) */
-        --ink-soft: #6B5440;
-        --red: #C97064;
-        --red-deep: #A8554A;
-        --navy: #4A5B73;
-        --mustard: #DBB871;
-        --pink: #F2B5B5;
-        --sage: #B5C5A8;
-        --sky: #B8D4DE;
+        --beige:     #FBF7F2;       /* 캐릭터 배경과 동일한 베이스 베이지 */
+        --beige-dk:  #F2EBD9;
+        --cream:     #FBF7F2;
+        --oat:       #F2EBD9;
+        --paper:     #F8F0DC;
+        --ink:       #3A2A1F;       /* 따뜻한 다크 브라운 (캐릭터 외곽선과 통일) */
+        --ink-soft:  #6B5440;
+        --red:       #C97064;
+        --red-deep:  #A8554A;
+        --navy:      #4A5B73;
+        --mustard:   #DBB871;
+        --pink:      #F2B5B5;
+        --sage:      #B5C5A8;
+        --sky:       #B8D4DE;
     }
 
     /* ── 사이드바 완전 숨김 ───────────────────────────────── */
@@ -116,13 +118,13 @@ st.markdown(
         height: auto;
     }
 
-    /* ── 전체 배경 (한지 + 따뜻한 워시) ─────────────────────── */
+    /* ── 전체 배경 (캐릭터 베이지 + 은은한 워시) ─────────────── */
     .stApp {
         background:
-            radial-gradient(circle at 18% 8%, rgba(219,184,113,0.14) 0, transparent 38%),
-            radial-gradient(circle at 88% 92%, rgba(201,112,100,0.10) 0, transparent 45%),
-            radial-gradient(circle at 92% 12%, rgba(181,197,168,0.10) 0, transparent 35%),
-            linear-gradient(180deg, #FFFBF1 0%, #F7EDD9 100%);
+            radial-gradient(circle at 18% 8%, rgba(219,184,113,0.10) 0, transparent 38%),
+            radial-gradient(circle at 88% 92%, rgba(201,112,100,0.08) 0, transparent 45%),
+            radial-gradient(circle at 92% 12%, rgba(181,197,168,0.08) 0, transparent 35%),
+            #FBF7F2;
     }
 
     .main .block-container {
@@ -788,13 +790,13 @@ def render_password_gate(expected: str) -> None:
         f'<div class="gate-wrap">'
         f'<div class="gate-card{shake_class}">'
         f'  <div class="gate-chars">'
-        f'    <div class="char-main">{char_img("paper", width=180)}</div>'
+        f'    <div class="char-main">{char_img("whodat", width=180)}</div>'
         f'    <div class="char-lock">{LOCK_SVG}</div>'
         f'  </div>'
         f'  <div class="gate-bubble">'
-        f'    어어… 이 두루마리는 <b>잠금</b>이 걸려 있소이다.<br>'
-        f'    암호를 살짝 속삭여 주시구려…'
-        f'    <small>(Hmm… this scroll is locked. Whisper the password.)</small>'
+        f'    어어… <b>누구세요…?</b><br>'
+        f'    문 안쪽 두루마리는 잠금이라… 암호를 살짝 속삭여 주시구려.'
+        f'    <small>(Who is there? This scroll is locked. Whisper the password.)</small>'
         f'  </div>',
         unsafe_allow_html=True,
     )
@@ -844,7 +846,7 @@ if _pw and not st.session_state.get("auth_ok"):
 # 여백 데코 캐릭터 (좌하·우하, 큰 화면에서만 보임)
 # ─────────────────────────────────────────────────────────────
 st.markdown(
-    f'<div class="deco-left">{char_img("sleeping", width=140)}</div>'
+    f'<div class="deco-left">{char_img("sleep_bed", width=150)}</div>'
     f'<div class="deco-right">{char_img("peeking", width=120)}</div>',
     unsafe_allow_html=True,
 )
@@ -976,7 +978,7 @@ st.markdown(
     f'    <h1>📜 {title}</h1>'
     f'    <p>{subtitle}</p>'
     f'  </div>'
-    f'  <div class="hero-peek">{char_img("peeking", width=110)}</div>'
+    f'  <div class="hero-peek">{char_img("hmm", width=110)}</div>'
     f'</div>',
     unsafe_allow_html=True,
 )
@@ -1126,7 +1128,7 @@ if not st.session_state.messages:
         unsafe_allow_html=True,
     )
     questions = SUGGESTED_QUESTIONS_BY_LANG[st.session_state.language]
-    SUGGEST_POSES = ["start", "happy", "reading", "books"]
+    SUGGEST_POSES = ["start", "celebrate", "careful_write", "books"]
     qcols = st.columns(len(questions))
     for i, q in enumerate(questions):
         with qcols[i]:
