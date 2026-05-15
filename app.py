@@ -587,9 +587,7 @@ st.markdown(
     }
     .gate-card {
         width: 100%; max-width: 520px;
-        background:
-            radial-gradient(circle at 25% 20%, #FFF6DC 0, transparent 55%),
-            linear-gradient(135deg, var(--paper) 0%, var(--oat) 100%);
+        background: #FBF7F2;     /* 캐릭터 PNG 배경과 동일한 베이지 */
         border: 3px solid var(--ink);
         border-radius: 28px;
         padding: 28px 28px 22px 28px;
@@ -785,6 +783,15 @@ def render_password_gate(expected: str) -> None:
     """초 귀여운 비밀번호 게이트. 통과 시 st.session_state.auth_ok = True."""
     attempts = st.session_state.get("auth_attempts", 0)
     shake_class = " gate-shake" if st.session_state.pop("_just_failed", False) else ""
+
+    # 게이트 페이지만 바깥은 흰색 (캐릭터 박스만 베이지로 보이도록)
+    st.markdown(
+        '<style>'
+        '.stApp { background: #FFFFFF !important; }'
+        '.stApp::before, .stApp::after { display: none; }'
+        '</style>',
+        unsafe_allow_html=True,
+    )
 
     st.markdown(
         f'<div class="gate-wrap">'
