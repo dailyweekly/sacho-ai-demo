@@ -589,14 +589,15 @@ st.markdown(
     }
     .gate-chars {
         display: flex; align-items: flex-end; justify-content: center;
-        gap: 10px; margin-bottom: 6px;
+        gap: 14px; margin-bottom: 10px;
     }
     .gate-chars .char-main {
         animation: float-y 4s ease-in-out infinite;
     }
     .gate-chars .char-lock {
         animation: lock-wiggle 3.5s ease-in-out infinite;
-        margin-bottom: 14px;
+        margin-bottom: 22px;  /* 살짝 띄워서 사관 키와 맞춤 */
+        transform-origin: center;
     }
     @keyframes lock-wiggle {
         0%, 100% { transform: rotate(-4deg) translateY(0); }
@@ -774,7 +775,8 @@ def render_password_gate(expected: str) -> None:
         f'<div class="gate-wrap">'
         f'<div class="gate-card{shake_class}">'
         f'  <div class="gate-chars">'
-        f'    <div class="char-main">{SHUSH_SVG}</div>'
+        f'    <div class="char-main">{MAIN_SVG}</div>'
+        f'    <div class="char-lock">{LOCK_SVG}</div>'
         f'  </div>'
         f'  <div class="gate-bubble">'
         f'    어어… 이 두루마리는 <b>잠금</b>이 걸려 있소이다.<br>'
