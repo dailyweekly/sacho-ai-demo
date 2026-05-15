@@ -81,8 +81,8 @@ st.markdown(
         --cream: #FDF8EE;
         --oat: #F4ECD9;
         --paper: #FBF3E0;
-        --ink: #2A1F18;
-        --ink-soft: #5C4A38;
+        --ink: #3A2A1F;             /* 따뜻한 다크 브라운 (캐릭터 외곽선과 통일) */
+        --ink-soft: #6B5440;
         --red: #C97064;
         --red-deep: #A8554A;
         --navy: #4A5B73;
@@ -102,6 +102,20 @@ st.markdown(
     /* 기본 헤더/푸터 숨김 */
     header[data-testid="stHeader"] { background: transparent; height: 0; }
     #MainMenu, footer { visibility: hidden; }
+
+    /* ── 모든 캐릭터 SVG의 기본 표시 보장 ─────────────────── */
+    .hero-char svg, .hero-peek svg,
+    .greeting-char svg, .suggest-char svg,
+    .thinking-char svg, .footer-char svg,
+    .collection-char svg, .collection-char-side svg,
+    .collection-empty-char svg,
+    .deco-left svg, .deco-right svg,
+    .gate-chars .char-main svg, .gate-chars .char-lock svg,
+    .topbar-logo .logo-svg svg {
+        display: block;
+        max-width: none;
+        height: auto;
+    }
 
     /* ── 전체 배경 (한지 + 따뜻한 워시) ─────────────────────── */
     .stApp {
