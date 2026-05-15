@@ -56,8 +56,7 @@ from core.rag import search_corpus, SourceCard
 from core.badge import parse_response, render_badge_html, sanitize_streaming_text
 from core.prompts import GREETING_BY_LANG, SUGGESTED_QUESTIONS_BY_LANG, UI_TEXT
 from core.character import (
-    LOGO_SVG, MAIN_SVG, SLEEPING_SVG, WALKING_SVG, POINTING_SVG,
-    CONFUSED_SVG, PEEKING_SVG, SUGGEST_CHARS, SHUSH_SVG, LOCK_SVG,
+    LOGO_SVG, LOCK_SVG, char_img,
 )
 
 
@@ -789,7 +788,7 @@ def render_password_gate(expected: str) -> None:
         f'<div class="gate-wrap">'
         f'<div class="gate-card{shake_class}">'
         f'  <div class="gate-chars">'
-        f'    <div class="char-main">{MAIN_SVG}</div>'
+        f'    <div class="char-main">{char_img("paper", width=180)}</div>'
         f'    <div class="char-lock">{LOCK_SVG}</div>'
         f'  </div>'
         f'  <div class="gate-bubble">'
@@ -845,8 +844,8 @@ if _pw and not st.session_state.get("auth_ok"):
 # 여백 데코 캐릭터 (좌하·우하, 큰 화면에서만 보임)
 # ─────────────────────────────────────────────────────────────
 st.markdown(
-    f'<div class="deco-left">{SLEEPING_SVG}</div>'
-    f'<div class="deco-right">{PEEKING_SVG}</div>',
+    f'<div class="deco-left">{char_img("sleeping", width=140)}</div>'
+    f'<div class="deco-right">{char_img("peeking", width=120)}</div>',
     unsafe_allow_html=True,
 )
 
@@ -972,12 +971,12 @@ HEADER_TEXT = {
 title, subtitle = HEADER_TEXT[st.session_state.language]
 st.markdown(
     f'<div class="hero">'
-    f'  <div class="hero-char">{MAIN_SVG}</div>'
+    f'  <div class="hero-char">{char_img("cheek", width=170)}</div>'
     f'  <div class="hero-text">'
     f'    <h1>📜 {title}</h1>'
     f'    <p>{subtitle}</p>'
     f'  </div>'
-    f'  <div class="hero-peek">{CONFUSED_SVG}</div>'
+    f'  <div class="hero-peek">{char_img("peeking", width=110)}</div>'
     f'</div>',
     unsafe_allow_html=True,
 )
@@ -1028,7 +1027,7 @@ def render_collection_page() -> None:
     if n == 0:
         st.markdown(
             f'<div class="collection-empty">'
-            f'  <div class="collection-empty-char">{SLEEPING_SVG}</div>'
+            f'  <div class="collection-empty-char">{char_img("facedown", width=160)}</div>'
             f'  <div class="collection-empty-text">'
             f'    <h3>{T["collection_empty"]}</h3>'
             f'    <p>{T["collection_empty_hint"]}</p>'
@@ -1043,12 +1042,12 @@ def render_collection_page() -> None:
 
     st.markdown(
         f'<div class="collection-header">'
-        f'  <div class="collection-char">{POINTING_SVG}</div>'
+        f'  <div class="collection-char">{char_img("reading", width=110)}</div>'
         f'  <div class="collection-head-text">'
         f'    <h3>📜 {T["collection_title"]}</h3>'
         f'    <p>{T["collection_sub"]} <b>{n}</b>{T["collection_count"]}.</p>'
         f'  </div>'
-        f'  <div class="collection-char-side">{CONFUSED_SVG}</div>'
+        f'  <div class="collection-char-side">{char_img("books", width=90)}</div>'
         f'</div>',
         unsafe_allow_html=True,
     )
@@ -1116,7 +1115,7 @@ if not st.session_state.messages:
     greeting = GREETING_BY_LANG[st.session_state.language]
     st.markdown(
         f'<div class="greeting-card">'
-        f'  <div class="greeting-char">{POINTING_SVG}</div>'
+        f'  <div class="greeting-char">{char_img("umbrella", width=130)}</div>'
         f'  <div class="greeting-bubble">{greeting}</div>'
         f'</div>',
         unsafe_allow_html=True,
@@ -1127,12 +1126,13 @@ if not st.session_state.messages:
         unsafe_allow_html=True,
     )
     questions = SUGGESTED_QUESTIONS_BY_LANG[st.session_state.language]
+    SUGGEST_POSES = ["start", "happy", "reading", "books"]
     qcols = st.columns(len(questions))
     for i, q in enumerate(questions):
         with qcols[i]:
-            char_svg = SUGGEST_CHARS[i % len(SUGGEST_CHARS)]
+            pose = SUGGEST_POSES[i % len(SUGGEST_POSES)]
             st.markdown(
-                f'<div class="suggest-char">{char_svg}</div>',
+                f'<div class="suggest-char">{char_img(pose, width=90)}</div>',
                 unsafe_allow_html=True,
             )
             if st.button(q, key=f"suggest_{i}", use_container_width=True):
@@ -1199,7 +1199,7 @@ if user_query:
         placeholder = st.empty()
         placeholder.markdown(
             f'<div class="thinking">'
-            f'<span class="thinking-char">{WALKING_SVG}</span>'
+            f'<span class="thinking-char">{char_img("writing", width=60)}</span>'
             f'<span>{T["thinking"]}<span class="thinking-dots"></span></span>'
             f'</div>',
             unsafe_allow_html=True,
@@ -1276,7 +1276,7 @@ FOOTER_TAGLINE = {
 st.markdown(
     f'<div style="text-align:center;">'
     f'<div class="footer-strip">'
-    f'  <div class="footer-char">{WALKING_SVG}</div>'
+    f'  <div class="footer-char">{char_img("cheer", width=58)}</div>'
     f'  <div class="footer-text">{FOOTER_TAGLINE[st.session_state.language]}</div>'
     f'</div>'
     f'</div>',

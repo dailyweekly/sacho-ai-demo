@@ -1,12 +1,38 @@
-"""사관 캐릭터 SVG — 부드러운 수채화/그림책 톤.
+"""사관 캐릭터 — 사용자 제공 그림책 풍 PNG (assets/c_*.png).
 
-특징 (첨부 레퍼런스 기반):
-- 갓 대신 상투(머리 묶음) — 검은 머리 위에 동글 묶음
-- 떡 같은 동글동글 몸 + 코랄빛 한복 + 흉배(가슴 휘장)
-- 점 두 개 눈, 분홍 볼터치, 작은 입
-- 따뜻한 갈색 외곽선(검정 X)
+assets/c_*.png 16종 포즈를 base64 데이터 URI로 래핑해 그대로 <img> 로 임베드.
+SVG fallback도 함께 노출 (호환성).
 """
 from __future__ import annotations
+
+import base64
+from functools import lru_cache
+from pathlib import Path
+
+
+_ASSETS = Path(__file__).resolve().parents[1] / "assets"
+
+
+@lru_cache(maxsize=32)
+def char_img(name: str, width: int | None = None, css_class: str = "") -> str:
+    """assets/c_<name>.png 를 base64 <img> 태그로 반환.
+
+    name : 포즈 이름 (start, writing, cheek, books, proud, facedown,
+                     paper, reading, umbrella, happy, candle, moon,
+                     peeking, snack, sleeping, cheer)
+    width: 선택 — px 단위. 미지정 시 원본 비율로 자동.
+    css_class: 추가 CSS 클래스 (애니메이션 적용 등).
+    """
+    path = _ASSETS / f"c_{name}.png"
+    if not path.exists():
+        return f'<span style="color:#C97064;">[missing c_{name}]</span>'
+    b64 = base64.b64encode(path.read_bytes()).decode("ascii")
+    size_attr = f' style="width:{width}px;height:auto;"' if width else ''
+    cls = f' class="{css_class}"' if css_class else ''
+    return (
+        f'<img src="data:image/png;base64,{b64}" alt="사관 {name}"'
+        f'{cls}{size_attr}>'
+    )
 
 # 팔레트 (참고용 주석 — SVG에는 hex 직접 박음)
 #   SKIN        #FBF1DD   얼굴·손
@@ -24,30 +50,44 @@ from __future__ import annotations
 # MAIN — 큰 사관 (헤더·게이트·빈 화면 hero)
 # ─────────────────────────────────────────────────────────────
 MAIN_SVG = """
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 200" width="140" height="175" aria-label="sagwan main">
-  <ellipse cx="80" cy="192" rx="48" ry="4" fill="#3A2A1F" opacity="0.12"/>
-  <path d="M28 188 Q24 138 44 122 Q80 114 116 122 Q136 138 132 188 Q80 196 28 188 Z"
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 200" width="150" height="176" aria-label="sagwan main">
+  <ellipse cx="85" cy="194" rx="60" ry="4" fill="#3A2A1F" opacity="0.12"/>
+  <!-- 통통하게 한 덩어리로 만든 동글동글 몸 (어깨 따로 안 그림) -->
+  <path d="M22 192
+           Q10 168 14 140
+           Q18 116 44 108
+           Q85 102 126 108
+           Q152 116 156 140
+           Q160 168 148 192
+           Q85 204 22 192 Z"
         fill="#D67B5A" stroke="#3A2A1F" stroke-width="3" stroke-linejoin="round"/>
-  <path d="M34 178 Q80 188 126 178 Q124 192 80 196 Q36 192 34 178 Z"
+  <!-- 바닥쪽 음영 (둥근 배 강조) -->
+  <path d="M30 184 Q85 196 140 184 Q134 198 85 202 Q36 198 30 184 Z"
         fill="#B05E42" opacity="0.35"/>
-  <circle cx="80" cy="156" r="11" fill="#FFE090" stroke="#3A2A1F" stroke-width="1.8"/>
-  <circle cx="80" cy="156" r="6" fill="#E2B574" stroke="#3A2A1F" stroke-width="1.2"/>
-  <ellipse cx="30" cy="156" rx="11" ry="18" fill="#D67B5A" stroke="#3A2A1F" stroke-width="2.5"/>
-  <ellipse cx="130" cy="156" rx="11" ry="18" fill="#D67B5A" stroke="#3A2A1F" stroke-width="2.5"/>
-  <circle cx="30" cy="174" r="6" fill="#FBF1DD" stroke="#3A2A1F" stroke-width="2"/>
-  <circle cx="130" cy="174" r="6" fill="#FBF1DD" stroke="#3A2A1F" stroke-width="2"/>
-  <rect x="40" y="166" width="80" height="12" rx="5" fill="#FFF6E0" stroke="#3A2A1F" stroke-width="2"/>
-  <line x1="48" y1="170" x2="112" y2="170" stroke="#3A2A1F" stroke-width="0.6" opacity="0.4"/>
-  <line x1="48" y1="174" x2="108" y2="174" stroke="#3A2A1F" stroke-width="0.6" opacity="0.4"/>
-  <ellipse cx="80" cy="78" rx="44" ry="40" fill="#FBF1DD" stroke="#3A2A1F" stroke-width="3"/>
-  <path d="M40 78 Q40 44 80 40 Q120 44 120 78 Q118 64 80 62 Q42 64 40 78 Z" fill="#3A2A1F"/>
-  <ellipse cx="80" cy="34" rx="14" ry="11" fill="#3A2A1F" stroke="#2A1F18" stroke-width="2"/>
-  <ellipse cx="80" cy="30" rx="6" ry="3" fill="#5A4438" opacity="0.5"/>
-  <circle cx="64" cy="80" r="3" fill="#3A2A1F"/>
-  <circle cx="96" cy="80" r="3" fill="#3A2A1F"/>
-  <ellipse cx="52" cy="92" rx="6" ry="3" fill="#F4B0A0" opacity="0.7"/>
-  <ellipse cx="108" cy="92" rx="6" ry="3" fill="#F4B0A0" opacity="0.7"/>
-  <path d="M74 100 Q80 104 86 100" stroke="#3A2A1F" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- 흉배 (가운데) -->
+  <circle cx="85" cy="148" r="13" fill="#FFE090" stroke="#3A2A1F" stroke-width="1.8"/>
+  <circle cx="85" cy="148" r="7" fill="#E2B574" stroke="#3A2A1F" stroke-width="1.2"/>
+  <!-- 작은 손 두 개가 앞에서 두루마리 잡고 있음 -->
+  <rect x="42" y="166" width="86" height="13" rx="6" fill="#FFF6E0" stroke="#3A2A1F" stroke-width="2"/>
+  <line x1="50" y1="170" x2="120" y2="170" stroke="#3A2A1F" stroke-width="0.6" opacity="0.4"/>
+  <line x1="50" y1="175" x2="115" y2="175" stroke="#3A2A1F" stroke-width="0.6" opacity="0.4"/>
+  <circle cx="40" cy="172" r="7" fill="#FBF1DD" stroke="#3A2A1F" stroke-width="2"/>
+  <circle cx="130" cy="172" r="7" fill="#FBF1DD" stroke="#3A2A1F" stroke-width="2"/>
+  <!-- 머리 -->
+  <ellipse cx="85" cy="72" rx="46" ry="42" fill="#FBF1DD" stroke="#3A2A1F" stroke-width="3"/>
+  <!-- 머리카락 -->
+  <path d="M41 72 Q41 38 85 34 Q129 38 129 72 Q127 58 85 56 Q43 58 41 72 Z" fill="#3A2A1F"/>
+  <!-- 상투 -->
+  <ellipse cx="85" cy="28" rx="14" ry="11" fill="#3A2A1F" stroke="#2A1F18" stroke-width="2"/>
+  <ellipse cx="85" cy="24" rx="6" ry="3" fill="#5A4438" opacity="0.5"/>
+  <!-- 눈 (점) -->
+  <circle cx="69" cy="74" r="3" fill="#3A2A1F"/>
+  <circle cx="101" cy="74" r="3" fill="#3A2A1F"/>
+  <!-- 볼터치 -->
+  <ellipse cx="57" cy="86" rx="6" ry="3" fill="#F4B0A0" opacity="0.7"/>
+  <ellipse cx="113" cy="86" rx="6" ry="3" fill="#F4B0A0" opacity="0.7"/>
+  <!-- 입 -->
+  <path d="M79 94 Q85 98 91 94" stroke="#3A2A1F" stroke-width="2" fill="none" stroke-linecap="round"/>
 </svg>
 """
 
@@ -73,21 +113,24 @@ LOGO_SVG = """
 # SLEEPING — 누워서 자는 사관
 # ─────────────────────────────────────────────────────────────
 SLEEPING_SVG = """
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 80" width="120" height="68" aria-label="sleeping sagwan">
-  <ellipse cx="70" cy="74" rx="50" ry="3" fill="#3A2A1F" opacity="0.1"/>
-  <ellipse cx="78" cy="56" rx="46" ry="14" fill="#D67B5A" stroke="#3A2A1F" stroke-width="2.5"/>
-  <circle cx="78" cy="56" r="6" fill="#FFE090" stroke="#3A2A1F" stroke-width="1.5"/>
-  <ellipse cx="30" cy="48" rx="22" ry="20" fill="#FBF1DD" stroke="#3A2A1F" stroke-width="2.5"/>
-  <path d="M9 48 Q9 26 30 24 Q51 26 51 48 Q50 38 30 36 Q10 38 9 48 Z" fill="#3A2A1F"/>
-  <g transform="rotate(-14 26 18)">
-    <ellipse cx="26" cy="18" rx="8" ry="6" fill="#3A2A1F" stroke="#2A1F18" stroke-width="1.5"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 88" width="128" height="75" aria-label="sleeping sagwan">
+  <ellipse cx="80" cy="80" rx="58" ry="4" fill="#3A2A1F" opacity="0.1"/>
+  <!-- 누워있는 통통 몸 (한 덩어리) -->
+  <ellipse cx="86" cy="60" rx="54" ry="20" fill="#D67B5A" stroke="#3A2A1F" stroke-width="2.5"/>
+  <path d="M40 64 Q86 76 132 64 Q126 80 86 82 Q44 80 40 64 Z" fill="#B05E42" opacity="0.35"/>
+  <circle cx="86" cy="60" r="7" fill="#FFE090" stroke="#3A2A1F" stroke-width="1.5"/>
+  <!-- 머리 -->
+  <ellipse cx="32" cy="50" rx="24" ry="22" fill="#FBF1DD" stroke="#3A2A1F" stroke-width="2.5"/>
+  <path d="M9 50 Q9 26 32 22 Q55 26 55 50 Q54 38 32 36 Q10 38 9 50 Z" fill="#3A2A1F"/>
+  <g transform="rotate(-14 28 18)">
+    <ellipse cx="28" cy="18" rx="9" ry="6" fill="#3A2A1F" stroke="#2A1F18" stroke-width="1.5"/>
   </g>
-  <path d="M22 50 L28 50" stroke="#3A2A1F" stroke-width="2" stroke-linecap="round"/>
-  <ellipse cx="40" cy="54" rx="2" ry="2.6" fill="#3A2A1F"/>
-  <ellipse cx="18" cy="57" rx="3" ry="1.5" fill="#F4B0A0" opacity="0.7"/>
-  <text x="60" y="22" font-family="Georgia,serif" font-size="18" font-style="italic" fill="#8B7A60">z</text>
-  <text x="76" y="14" font-family="Georgia,serif" font-size="14" font-style="italic" fill="#8B7A60" opacity="0.75">z</text>
-  <text x="90" y="8"  font-family="Georgia,serif" font-size="10" font-style="italic" fill="#8B7A60" opacity="0.55">z</text>
+  <path d="M24 52 L30 52" stroke="#3A2A1F" stroke-width="2" stroke-linecap="round"/>
+  <ellipse cx="42" cy="56" rx="2" ry="2.6" fill="#3A2A1F"/>
+  <ellipse cx="20" cy="59" rx="3" ry="1.5" fill="#F4B0A0" opacity="0.7"/>
+  <text x="64" y="22" font-family="Georgia,serif" font-size="18" font-style="italic" fill="#8B7A60">z</text>
+  <text x="80" y="14" font-family="Georgia,serif" font-size="14" font-style="italic" fill="#8B7A60" opacity="0.75">z</text>
+  <text x="94" y="8"  font-family="Georgia,serif" font-size="10" font-style="italic" fill="#8B7A60" opacity="0.55">z</text>
 </svg>
 """
 
@@ -96,19 +139,21 @@ SLEEPING_SVG = """
 # WALKING — 걷는 사관 (thinking·footer)
 # ─────────────────────────────────────────────────────────────
 WALKING_SVG = """
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 82" width="44" height="60" aria-label="walking sagwan">
-  <line x1="24" y1="64" x2="20" y2="76" stroke="#3A2A1F" stroke-width="3" stroke-linecap="round"/>
-  <line x1="36" y1="64" x2="42" y2="76" stroke="#3A2A1F" stroke-width="3" stroke-linecap="round"/>
-  <ellipse cx="30" cy="52" rx="17" ry="14" fill="#D67B5A" stroke="#3A2A1F" stroke-width="2.5"/>
-  <circle cx="30" cy="52" r="4.5" fill="#FFE090" stroke="#3A2A1F" stroke-width="1.4"/>
-  <ellipse cx="30" cy="28" rx="19" ry="17" fill="#FBF1DD" stroke="#3A2A1F" stroke-width="2.5"/>
-  <path d="M11 28 Q11 8 30 6 Q49 8 49 28 Q48 20 30 18 Q12 20 11 28 Z" fill="#3A2A1F"/>
-  <ellipse cx="30" cy="4" rx="7" ry="5" fill="#3A2A1F" stroke="#2A1F18" stroke-width="1.5"/>
-  <circle cx="24" cy="30" r="1.8" fill="#3A2A1F"/>
-  <circle cx="36" cy="30" r="1.8" fill="#3A2A1F"/>
-  <ellipse cx="30" cy="37" rx="1.2" ry="1.5" fill="#3A2A1F"/>
-  <ellipse cx="20" cy="35" rx="2" ry="1.2" fill="#F4B0A0" opacity="0.7"/>
-  <ellipse cx="40" cy="35" rx="2" ry="1.2" fill="#F4B0A0" opacity="0.7"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 86" width="46" height="62" aria-label="walking sagwan">
+  <line x1="26" y1="68" x2="22" y2="80" stroke="#3A2A1F" stroke-width="3" stroke-linecap="round"/>
+  <line x1="38" y1="68" x2="44" y2="80" stroke="#3A2A1F" stroke-width="3" stroke-linecap="round"/>
+  <!-- 통통한 몸 -->
+  <ellipse cx="32" cy="54" rx="22" ry="17" fill="#D67B5A" stroke="#3A2A1F" stroke-width="2.5"/>
+  <circle cx="32" cy="54" r="5" fill="#FFE090" stroke="#3A2A1F" stroke-width="1.4"/>
+  <!-- 머리 -->
+  <ellipse cx="32" cy="28" rx="20" ry="18" fill="#FBF1DD" stroke="#3A2A1F" stroke-width="2.5"/>
+  <path d="M12 28 Q12 8 32 6 Q52 8 52 28 Q50 20 32 18 Q14 20 12 28 Z" fill="#3A2A1F"/>
+  <ellipse cx="32" cy="4" rx="7" ry="5" fill="#3A2A1F" stroke="#2A1F18" stroke-width="1.5"/>
+  <circle cx="26" cy="30" r="1.8" fill="#3A2A1F"/>
+  <circle cx="38" cy="30" r="1.8" fill="#3A2A1F"/>
+  <ellipse cx="32" cy="38" rx="1.2" ry="1.5" fill="#3A2A1F"/>
+  <ellipse cx="22" cy="36" rx="2" ry="1.2" fill="#F4B0A0" opacity="0.7"/>
+  <ellipse cx="42" cy="36" rx="2" ry="1.2" fill="#F4B0A0" opacity="0.7"/>
 </svg>
 """
 
