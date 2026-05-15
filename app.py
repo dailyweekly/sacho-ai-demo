@@ -16,9 +16,32 @@ from pathlib import Path
 
 import pandas as pd
 import streamlit as st
-from dotenv import load_dotenv
 
-load_dotenv(Path(__file__).resolve().parent / ".env")
+
+def _safe_load_env(path: Path) -> None:
+    """python-dotenv가 UTF-16 BOM 파일을 못 읽는 문제 회피.
+    UTF-8 → UTF-8-SIG → UTF-16 (LE/BE/auto) → latin-1 순서로 시도.
+    """
+    if not path.exists():
+        return
+    for enc in ("utf-8", "utf-8-sig", "utf-16", "utf-16-le", "utf-16-be", "latin-1"):
+        try:
+            text = path.read_text(encoding=enc)
+        except (UnicodeDecodeError, UnicodeError, OSError):
+            continue
+        for raw in text.splitlines():
+            line = raw.strip().lstrip("﻿")
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, val = line.partition("=")
+            key = key.strip()
+            val = val.strip().strip('"').strip("'")
+            if key and key not in os.environ:
+                os.environ[key] = val
+        return  # 첫 성공한 인코딩에서 종료
+
+
+_safe_load_env(Path(__file__).resolve().parent / ".env")
 
 # Streamlit Community Cloud 등 클라우드 환경에서 secrets.toml 의 키를
 # 환경변수로 노출 — 코어 모듈은 그대로 os.getenv 만 본다.
@@ -482,6 +505,66 @@ st.markdown(
         box-shadow: 2px 2px 0 var(--ink) !important;
     }
 
+    /* ─── 📜 사료 보관함 페이지 ─── */
+    .collection-header {
+        display: flex; align-items: center; gap: 16px;
+        background:
+            radial-gradient(circle at 20% 20%, #FFF6DC 0, transparent 55%),
+            linear-gradient(135deg, var(--paper) 0%, var(--oat) 100%);
+        border: 2.5px solid var(--ink);
+        border-radius: 22px;
+        padding: 18px 22px;
+        box-shadow: 4px 4px 0 var(--ink);
+        margin: 6px 0 18px 0;
+        position: relative;
+    }
+    .collection-char { flex: 0 0 70px; animation: wobble 5s ease-in-out infinite; }
+    .collection-char-side {
+        flex: 0 0 60px; opacity: 0.85;
+        animation: peek-wobble 6s ease-in-out infinite;
+    }
+    .collection-head-text { flex: 1; }
+    .collection-head-text h3 {
+        margin: 0; font-size: 22px; font-weight: 700;
+        font-family: 'Gowun Batang', serif;
+    }
+    .collection-head-text p {
+        margin: 4px 0 0 0;
+        font-family: 'Nanum Pen Script', cursive;
+        font-size: 19px; color: var(--ink-soft);
+    }
+    .collection-head-text b { color: var(--red-deep); font-weight: 700; }
+
+    .collection-empty {
+        display: flex; gap: 18px; align-items: center;
+        background: var(--cream);
+        border: 2.5px dashed var(--ink);
+        border-radius: 22px;
+        padding: 32px 28px;
+        margin: 12px 0 18px 0;
+        text-align: left;
+    }
+    .collection-empty-char {
+        flex: 0 0 120px;
+        animation: float-y 5s ease-in-out infinite;
+    }
+    .collection-empty-text { flex: 1; }
+    .collection-empty-text h3 {
+        margin: 0; font-family: 'Gowun Batang', serif;
+        font-size: 19px; color: var(--ink);
+    }
+    .collection-empty-text p {
+        margin: 6px 0 0 0;
+        font-family: 'Nanum Pen Script', cursive;
+        font-size: 18px; color: var(--ink-soft);
+    }
+
+    @media (max-width: 720px) {
+        .collection-header { flex-wrap: wrap; }
+        .collection-char-side { display: none; }
+        .collection-empty { flex-direction: column; text-align: center; }
+    }
+
     /* ─── 🔐 비밀번호 게이트 (초 귀엽게) ─── */
     .gate-wrap {
         display: flex; justify-content: center;
@@ -649,6 +732,10 @@ def init_state() -> None:
         st.session_state.show_rag_debug = False
     if "show_map" not in st.session_state:
         st.session_state.show_map = True
+    if "view" not in st.session_state:
+        st.session_state.view = "chat"          # "chat" | "collection"
+    if "collection" not in st.session_state:
+        st.session_state.collection = {}        # id -> SourceCard
 
 
 init_state()
@@ -661,6 +748,7 @@ api_key_present = bool(os.getenv("ANTHROPIC_API_KEY", "").strip())
 # ─────────────────────────────────────────────────────────────
 if st.query_params.get("home") == "1":
     st.session_state.messages = []
+    st.session_state.view = "chat"
     st.query_params.clear()
 
 
@@ -752,7 +840,7 @@ st.markdown(
 # ─────────────────────────────────────────────────────────────
 st.markdown('<div class="topbar-tools">', unsafe_allow_html=True)
 
-bar_cols = st.columns([2.6, 1.2, 1.2, 0.7, 0.7])
+bar_cols = st.columns([2.3, 1.0, 1.0, 1.1, 0.7, 0.7])
 
 with bar_cols[0]:
     st.markdown(
@@ -795,6 +883,15 @@ with bar_cols[2]:
     st.session_state.mode = new_mode
 
 with bar_cols[3]:
+    n_seen = len(st.session_state.collection)
+    label = f"{T['collection_btn']} ({n_seen})" if n_seen else T["collection_btn"]
+    is_in_collection = st.session_state.view == "collection"
+    if st.button(label, key="btn_collection", use_container_width=True,
+                 help="내가 마주한 사료 모음"):
+        st.session_state.view = "chat" if is_in_collection else "collection"
+        st.rerun()
+
+with bar_cols[4]:
     with st.popover("⚙", use_container_width=True):
         st.markdown("**시연 옵션**")
         st.session_state.show_rag_debug = st.toggle(
@@ -833,9 +930,11 @@ with bar_cols[3]:
                 use_container_width=True,
             )
 
-with bar_cols[4]:
+with bar_cols[5]:
     if st.button("🔄", help=T["reset_label"], use_container_width=True):
         st.session_state.messages = []
+        st.session_state.collection = {}
+        st.session_state.view = "chat"
         st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
@@ -869,7 +968,7 @@ st.markdown(
 
 
 # ─────────────────────────────────────────────────────────────
-# 렌더링 헬퍼
+# 뷰 분기 — 사료 보관함이면 본 페이지에서 종료 (헤더는 위에서 이미 그려졌음)
 # ─────────────────────────────────────────────────────────────
 def render_evidence_cards(cards: list[SourceCard]) -> None:
     if not cards:
@@ -905,6 +1004,64 @@ def render_evidence_map(cards: list[SourceCard]) -> None:
     st.map(pd.DataFrame(rows), size=40, zoom=14)
 
 
+def render_collection_page() -> None:
+    """사관과 함께 본 사료 보관함."""
+    cards = list(st.session_state.collection.values())
+    n = len(cards)
+
+    if n == 0:
+        st.markdown(
+            f'<div class="collection-empty">'
+            f'  <div class="collection-empty-char">{SLEEPING_SVG}</div>'
+            f'  <div class="collection-empty-text">'
+            f'    <h3>{T["collection_empty"]}</h3>'
+            f'    <p>{T["collection_empty_hint"]}</p>'
+            f'  </div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+        if st.button(T["back_to_chat"], key="back_chat_empty"):
+            st.session_state.view = "chat"
+            st.rerun()
+        return
+
+    st.markdown(
+        f'<div class="collection-header">'
+        f'  <div class="collection-char">{POINTING_SVG}</div>'
+        f'  <div class="collection-head-text">'
+        f'    <h3>📜 {T["collection_title"]}</h3>'
+        f'    <p>{T["collection_sub"]} <b>{n}</b>{T["collection_count"]}.</p>'
+        f'  </div>'
+        f'  <div class="collection-char-side">{CONFUSED_SVG}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    # 2-column 그리드 (좁은 화면에서는 자동 1단)
+    cols = st.columns(2)
+    for i, c in enumerate(sorted(cards, key=lambda x: x.date)):
+        with cols[i % 2]:
+            st.markdown(
+                f'<div class="evidence-card">'
+                f'<h4>📜 {T["evidence_id"]} {c.id} · {c.title}</h4>'
+                f'<div class="meta">📅 {c.date} &nbsp;|&nbsp; 📍 {c.place} '
+                f'&nbsp;|&nbsp; 📖 {c.source}</div>'
+                f'<div class="body">{c.summary}</div>'
+                f'<div class="body" style="margin-top:8px;color:#5C4A33;font-size:13.5px;">'
+                f'<b>{T["original_excerpt"]}</b>: <em>{c.original_text}</em></div>'
+                f'<div style="margin-top:10px;font-size:12.5px;">'
+                f'<a href="{c.source_url}" target="_blank">{T["view_source"]}</a>'
+                f'&nbsp;&nbsp;<span style="color:#8a7560;">📄 {c.license}</span>'
+                f'</div></div>',
+                unsafe_allow_html=True,
+            )
+
+    st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
+    if st.button(T["back_to_chat"], key="back_chat_bottom"):
+        st.session_state.view = "chat"
+        st.rerun()
+
+
 def render_meta(usage: dict | None, rag_cards: list[SourceCard]) -> None:
     if usage:
         st.markdown(
@@ -926,6 +1083,14 @@ def render_meta(usage: dict | None, rag_cards: list[SourceCard]) -> None:
                 ]
             )
             st.dataframe(df, hide_index=True, use_container_width=True)
+
+
+# ─────────────────────────────────────────────────────────────
+# 사료 보관함 뷰 — 별도 페이지
+# ─────────────────────────────────────────────────────────────
+if st.session_state.view == "collection":
+    render_collection_page()
+    st.stop()
 
 
 # ─────────────────────────────────────────────────────────────
@@ -1077,6 +1242,10 @@ if user_query:
         "cards": cited_cards,
         "usage": usage_box or None,
     })
+
+    # 보관함에 새로 마주한 사료 누적 (id 기준 dedupe)
+    for _c in cited_cards or []:
+        st.session_state.collection[_c.id] = _c
 
 
 # ─────────────────────────────────────────────────────────────
