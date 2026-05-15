@@ -244,6 +244,75 @@ PEEKING_SVG = """
 SUGGEST_CHARS = [POINTING_SVG, CONFUSED_SVG, WALKING_SVG, YAWNING_SVG]
 
 
+# ─────────────────────────────────────────────────────────────
+# 게이트용 — 자물쇠 안고 있는 사관
+# ─────────────────────────────────────────────────────────────
+SHUSH_SVG = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 210" width="160" height="186" aria-label="자물쇠를 안은 사관">
+  <ellipse cx="90" cy="200" rx="48" ry="4" fill="#2A1F18" opacity="0.12"/>
+  <!-- body -->
+  <path d="M40 192 Q34 150 50 130 Q90 118 130 130 Q146 150 140 192 Q90 200 40 192 Z"
+        fill="#FDF8EE" stroke="#2A1F18" stroke-width="3" stroke-linejoin="round"/>
+  <!-- sash -->
+  <path d="M46 166 Q90 170 134 166 L132 176 Q90 178 48 176 Z"
+        fill="#C97064" stroke="#2A1F18" stroke-width="2"/>
+  <!-- arms -->
+  <ellipse cx="46" cy="160" rx="9" ry="14" fill="#FDF8EE" stroke="#2A1F18" stroke-width="2.5"/>
+  <ellipse cx="134" cy="160" rx="9" ry="14" fill="#FDF8EE" stroke="#2A1F18" stroke-width="2.5"/>
+
+  <!-- BIG LOCK in front -->
+  <g transform="translate(58 132)">
+    <!-- shackle -->
+    <path d="M10 26 Q10 6 32 6 Q54 6 54 26" fill="none" stroke="#2A1F18" stroke-width="3" stroke-linecap="round"/>
+    <!-- body -->
+    <rect x="0" y="22" width="64" height="46" rx="9" fill="#DBB871" stroke="#2A1F18" stroke-width="2.6"/>
+    <!-- highlight -->
+    <rect x="6" y="28" width="52" height="7" rx="3.5" fill="#FFE7A0" opacity="0.7"/>
+    <!-- keyhole -->
+    <circle cx="32" cy="42" r="4.5" fill="#2A1F18"/>
+    <path d="M32 45 L32 58" stroke="#2A1F18" stroke-width="3.6" stroke-linecap="round"/>
+    <!-- sparkle on top right -->
+    <path d="M58 6 L59 9 L62 10 L59 11 L58 14 L57 11 L54 10 L57 9 Z" fill="#FFD55A" stroke="#2A1F18" stroke-width="0.6"/>
+  </g>
+
+  <!-- head -->
+  <ellipse cx="90" cy="70" rx="46" ry="42" fill="#FDF8EE" stroke="#2A1F18" stroke-width="3"/>
+  <!-- gat brim -->
+  <ellipse cx="90" cy="30" rx="56" ry="5" fill="#2A1F18"/>
+  <path d="M62 30 Q60 4 90 2 Q120 4 118 30 Z" fill="#2A1F18"/>
+  <!-- gat string -->
+  <path d="M62 32 Q56 60 78 80" stroke="#2A1F18" stroke-width="1.4" fill="none"/>
+  <path d="M118 32 Q124 60 102 80" stroke="#2A1F18" stroke-width="1.4" fill="none"/>
+
+  <!-- eyes (looking down at lock — small arcs) -->
+  <path d="M68 70 Q72 74 76 70" stroke="#2A1F18" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+  <path d="M104 70 Q108 74 112 70" stroke="#2A1F18" stroke-width="2.8" fill="none" stroke-linecap="round"/>
+  <!-- blush -->
+  <ellipse cx="58" cy="86" rx="6" ry="3.2" fill="#F2B5B5" opacity="0.7"/>
+  <ellipse cx="122" cy="86" rx="6" ry="3.2" fill="#F2B5B5" opacity="0.7"/>
+  <!-- shh mouth (tiny) -->
+  <ellipse cx="90" cy="92" rx="2" ry="2.6" fill="#2A1F18"/>
+  <!-- finger in front of mouth (shh) — tiny stub -->
+  <line x1="90" y1="94" x2="96" y2="86" stroke="#2A1F18" stroke-width="2.5" stroke-linecap="round"/>
+  <circle cx="96" cy="86" r="3" fill="#FDF8EE" stroke="#2A1F18" stroke-width="2"/>
+</svg>
+"""
+
+
+# ─────────────────────────────────────────────────────────────
+# 작은 단독 자물쇠 — 부가 데코
+# ─────────────────────────────────────────────────────────────
+LOCK_SVG = """
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 100" width="64" height="80" aria-label="자물쇠">
+  <path d="M22 50 Q22 18 40 18 Q58 18 58 50" fill="none" stroke="#2A1F18" stroke-width="3" stroke-linecap="round"/>
+  <rect x="12" y="48" width="56" height="44" rx="8" fill="#DBB871" stroke="#2A1F18" stroke-width="3"/>
+  <rect x="16" y="52" width="48" height="7" rx="3" fill="#FFE7A0" opacity="0.7"/>
+  <circle cx="40" cy="66" r="5" fill="#2A1F18"/>
+  <path d="M40 69 L40 80" stroke="#2A1F18" stroke-width="4" stroke-linecap="round"/>
+</svg>
+"""
+
+
 # 하위 호환 — 기존 import 보호
 SAGWAN_SVG_FULL = MAIN_SVG
 SAGWAN_SVG_MINI = LOGO_SVG

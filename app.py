@@ -34,7 +34,7 @@ from core.badge import parse_response, render_badge_html, sanitize_streaming_tex
 from core.prompts import GREETING_BY_LANG, SUGGESTED_QUESTIONS_BY_LANG, UI_TEXT
 from core.character import (
     LOGO_SVG, MAIN_SVG, SLEEPING_SVG, WALKING_SVG, POINTING_SVG,
-    CONFUSED_SVG, PEEKING_SVG, SUGGEST_CHARS,
+    CONFUSED_SVG, PEEKING_SVG, SUGGEST_CHARS, SHUSH_SVG, LOCK_SVG,
 )
 
 
@@ -468,6 +468,144 @@ st.markdown(
         box-shadow: 2px 2px 0 var(--ink) !important;
     }
 
+    /* ─── 🔐 비밀번호 게이트 (초 귀엽게) ─── */
+    .gate-wrap {
+        display: flex; justify-content: center;
+        padding: 36px 12px 60px 12px;
+    }
+    .gate-card {
+        width: 100%; max-width: 520px;
+        background:
+            radial-gradient(circle at 25% 20%, #FFF6DC 0, transparent 55%),
+            linear-gradient(135deg, var(--paper) 0%, var(--oat) 100%);
+        border: 3px solid var(--ink);
+        border-radius: 28px;
+        padding: 28px 28px 22px 28px;
+        box-shadow: 6px 6px 0 var(--ink);
+        position: relative;
+        overflow: visible;
+    }
+    .gate-card::after {
+        content: ''; position: absolute; inset: 8px;
+        border: 1.5px dashed rgba(42, 31, 24, 0.22);
+        border-radius: 22px; pointer-events: none;
+    }
+    .gate-chars {
+        display: flex; align-items: flex-end; justify-content: center;
+        gap: 10px; margin-bottom: 6px;
+    }
+    .gate-chars .char-main {
+        animation: float-y 4s ease-in-out infinite;
+    }
+    .gate-chars .char-lock {
+        animation: lock-wiggle 3.5s ease-in-out infinite;
+        margin-bottom: 14px;
+    }
+    @keyframes lock-wiggle {
+        0%, 100% { transform: rotate(-4deg) translateY(0); }
+        50%      { transform: rotate(6deg) translateY(-3px); }
+    }
+    .gate-bubble {
+        background: #FFF;
+        border: 2.5px solid var(--ink);
+        border-radius: 18px;
+        padding: 14px 18px;
+        font-family: 'Gowun Batang', serif;
+        font-size: 15.5px; line-height: 1.7;
+        text-align: center; color: var(--ink);
+        margin: 4px 4px 14px 4px;
+        box-shadow: 2px 2px 0 var(--ink);
+        position: relative;
+    }
+    .gate-bubble::before {
+        content: '';
+        position: absolute; left: 50%; top: -10px;
+        transform: translateX(-50%);
+        width: 0; height: 0;
+        border-left: 10px solid transparent;
+        border-right: 10px solid transparent;
+        border-bottom: 12px solid var(--ink);
+    }
+    .gate-bubble::after {
+        content: '';
+        position: absolute; left: 50%; top: -7px;
+        transform: translateX(-50%);
+        width: 0; height: 0;
+        border-left: 9px solid transparent;
+        border-right: 9px solid transparent;
+        border-bottom: 11px solid #FFF;
+    }
+    .gate-bubble small {
+        display: block; margin-top: 6px;
+        font-family: 'Nanum Pen Script', cursive;
+        font-size: 16px; color: var(--ink-soft); opacity: 0.85;
+    }
+    /* 입력칸 — 동글동글 */
+    .gate-card [data-testid="stTextInput"] input {
+        border-radius: 14px !important;
+        border: 2.5px solid var(--ink) !important;
+        background: #FFFDF6 !important;
+        font-family: 'Gowun Batang', serif !important;
+        font-size: 16px !important;
+        padding: 12px 16px !important;
+        box-shadow: 2px 2px 0 var(--ink) !important;
+        text-align: center !important;
+        letter-spacing: 2px;
+    }
+    .gate-card [data-testid="stTextInput"] input:focus {
+        outline: none !important;
+        border-color: var(--red-deep) !important;
+        background: #FFF7E0 !important;
+    }
+    /* 제출 버튼 */
+    .gate-card [data-testid="stFormSubmitButton"] button {
+        width: 100%;
+        border-radius: 14px !important;
+        border: 2.5px solid var(--ink) !important;
+        background: #FFE7A0 !important;
+        color: var(--ink) !important;
+        font-family: 'Gowun Batang', serif !important;
+        font-weight: 700 !important;
+        font-size: 16px !important;
+        box-shadow: 3px 3px 0 var(--ink) !important;
+        padding: 12px 18px !important;
+        margin-top: 8px;
+        transition: all 0.1s !important;
+    }
+    .gate-card [data-testid="stFormSubmitButton"] button:hover {
+        background: #FFD55A !important;
+        transform: translate(-1px, -1px);
+        box-shadow: 4px 4px 0 var(--ink) !important;
+    }
+    .gate-card [data-testid="stFormSubmitButton"] button:active {
+        transform: translate(2px, 2px);
+        box-shadow: 1px 1px 0 var(--ink) !important;
+    }
+    /* 틀렸을 때 흔들리기 */
+    .gate-shake { animation: shake 0.55s cubic-bezier(.36,.07,.19,.97); }
+    @keyframes shake {
+        10%, 90% { transform: translateX(-2px); }
+        20%, 80% { transform: translateX(3px); }
+        30%, 50%, 70% { transform: translateX(-6px); }
+        40%, 60% { transform: translateX(6px); }
+    }
+    .gate-err {
+        background: #FFE3D6;
+        border: 2px dashed #C97064;
+        border-radius: 14px;
+        padding: 10px 14px;
+        font-family: 'Gowun Batang', serif;
+        text-align: center;
+        margin-top: 10px;
+        color: #7A3A2A;
+        font-size: 14.5px;
+    }
+    .gate-foot {
+        margin-top: 14px; text-align: center;
+        font-family: 'Nanum Pen Script', cursive;
+        font-size: 16px; color: var(--ink-soft); opacity: 0.7;
+    }
+
     /* 모바일 폴백 */
     @media (max-width: 720px) {
         .hero { flex-direction: column; align-items: flex-start; }
@@ -502,6 +640,79 @@ def init_state() -> None:
 init_state()
 T = UI_TEXT[st.session_state.language]
 api_key_present = bool(os.getenv("ANTHROPIC_API_KEY", "").strip())
+
+
+# ─────────────────────────────────────────────────────────────
+# 🔐 비밀번호 게이트 — APP_PASSWORD 가 설정돼 있을 때만 발동
+# ─────────────────────────────────────────────────────────────
+def _expected_password() -> str:
+    try:
+        v = st.secrets.get("APP_PASSWORD", None)
+        if v:
+            return str(v).strip()
+    except Exception:
+        pass
+    return os.getenv("APP_PASSWORD", "").strip()
+
+
+def render_password_gate(expected: str) -> None:
+    """초 귀여운 비밀번호 게이트. 통과 시 st.session_state.auth_ok = True."""
+    attempts = st.session_state.get("auth_attempts", 0)
+    shake_class = " gate-shake" if st.session_state.pop("_just_failed", False) else ""
+
+    st.markdown(
+        f'<div class="gate-wrap">'
+        f'<div class="gate-card{shake_class}">'
+        f'  <div class="gate-chars">'
+        f'    <div class="char-main">{SHUSH_SVG}</div>'
+        f'  </div>'
+        f'  <div class="gate-bubble">'
+        f'    어어… 이 두루마리는 <b>잠금</b>이 걸려 있소이다.<br>'
+        f'    암호를 살짝 속삭여 주시구려…'
+        f'    <small>(Hmm… this scroll is locked. Whisper the password.)</small>'
+        f'  </div>',
+        unsafe_allow_html=True,
+    )
+
+    with st.form("pw_form", clear_on_submit=True):
+        pw = st.text_input(
+            "암호",
+            type="password",
+            label_visibility="collapsed",
+            placeholder="• • • • • •",
+            key="pw_input",
+        )
+        submitted = st.form_submit_button("들여 보내 주시오")
+
+    if attempts > 0:
+        st.markdown(
+            '<div class="gate-err">'
+            '어어… 그 암호가 아닌 것 같소이다… 다시 한 번?'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+
+    st.markdown(
+        '<div class="gate-foot">— 졸린 사관이 지키는 두루마리 —</div>'
+        '</div></div>',
+        unsafe_allow_html=True,
+    )
+
+    if submitted:
+        if pw == expected:
+            st.session_state.auth_ok = True
+            st.session_state.auth_attempts = 0
+            st.rerun()
+        else:
+            st.session_state.auth_attempts = attempts + 1
+            st.session_state._just_failed = True
+            st.rerun()
+
+
+_pw = _expected_password()
+if _pw and not st.session_state.get("auth_ok"):
+    render_password_gate(_pw)
+    st.stop()
 
 
 # ─────────────────────────────────────────────────────────────
