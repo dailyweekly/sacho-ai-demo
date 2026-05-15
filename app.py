@@ -143,7 +143,7 @@ st.markdown(
     .topbar {
         display: flex; align-items: center; gap: 14px;
         padding: 12px 18px;
-        background: rgba(255, 251, 241, 0.85);
+        background: #FBF7F2;
         border: 2.5px solid var(--ink);
         border-radius: 22px;
         box-shadow: 4px 4px 0 var(--ink);
@@ -222,9 +222,7 @@ st.markdown(
     /* ── 헤더 + 메인 캐릭터 큰 컷 ─────────────────────────── */
     .hero {
         display: flex; align-items: center; gap: 24px;
-        background:
-            radial-gradient(circle at 25% 25%, #FFF6DC 0, transparent 60%),
-            linear-gradient(135deg, var(--paper) 0%, var(--oat) 100%);
+        background: #FBF7F2;          /* 캐릭터 PNG 배경과 동일 */
         border: 2.5px solid var(--ink);
         border-radius: 28px;
         padding: 22px 28px;
@@ -523,9 +521,7 @@ st.markdown(
     /* ─── 📜 사료 보관함 페이지 ─── */
     .collection-header {
         display: flex; align-items: center; gap: 16px;
-        background:
-            radial-gradient(circle at 20% 20%, #FFF6DC 0, transparent 55%),
-            linear-gradient(135deg, var(--paper) 0%, var(--oat) 100%);
+        background: #FBF7F2;          /* 캐릭터 배경과 동일 */
         border: 2.5px solid var(--ink);
         border-radius: 22px;
         padding: 18px 22px;
