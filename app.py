@@ -74,7 +74,7 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gowun+Batang:wght@400;700&family=Nanum+Pen+Script&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gowun+Batang:wght@400;700&family=Nanum+Pen+Script&family=Gugi&family=Noto+Sans+KR:wght@400;500;700&display=swap');
 
     :root {
         --beige:     #FBF7F2;       /* 캐릭터 배경과 동일한 베이스 베이지 */
@@ -151,37 +151,50 @@ st.markdown(
         position: relative;
         backdrop-filter: blur(6px);
     }
+    /* 밑줄 완전 제거 — 모든 자식 요소에 강제 적용 */
+    .topbar-logo-link,
+    .topbar-logo-link:link,
+    .topbar-logo-link:visited,
+    .topbar-logo-link:hover,
+    .topbar-logo-link:active,
+    .topbar-logo-link *,
+    .topbar-logo-link *:hover {
+        text-decoration: none !important;
+        border-bottom: none !important;
+        color: var(--ink) !important;
+    }
     .topbar-logo-link {
         display: inline-block;
-        text-decoration: none;
-        color: inherit;
         border-radius: 14px;
         padding: 4px 8px;
         transition: transform 0.12s, background 0.15s;
         cursor: pointer;
     }
     .topbar-logo-link:hover {
-        background: rgba(255, 231, 160, 0.55);
+        background: rgba(255, 231, 160, 0.45);
         transform: translateY(-1px);
     }
     .topbar-logo-link:active { transform: translateY(1px); }
     .topbar-logo {
-        display: flex; align-items: center; gap: 10px;
+        display: flex; align-items: center; gap: 12px;
         flex: 1; min-width: 0;
     }
     .topbar-logo .logo-svg { animation: bob 4s ease-in-out infinite; }
     @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
     .topbar-logo .brand {
-        font-family: 'Gowun Batang', serif;
-        font-weight: 700;
-        font-size: 22px;
-        line-height: 1.1;
-        color: var(--ink);
+        font-family: 'Gugi', 'Gowun Batang', serif;     /* 붓글씨 캘리그래피 */
+        font-weight: 400;
+        font-size: 26px;
+        line-height: 1.05;
+        color: var(--ink) !important;
+        letter-spacing: 0.5px;
     }
     .topbar-logo .brand-sub {
         font-family: 'Nanum Pen Script', cursive;
-        font-size: 15px; color: var(--ink-soft); opacity: 0.8;
-        margin-left: 4px;
+        font-size: 15px;
+        color: var(--ink-soft) !important;
+        opacity: 0.8;
+        margin-top: 2px;
     }
 
     /* 톱바 안 selectbox·버튼 컴팩트화 */
