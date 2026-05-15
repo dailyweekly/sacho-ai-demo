@@ -129,7 +129,7 @@ st.markdown(
 
     .main .block-container {
         max-width: 1180px;
-        padding: 1rem 2rem 4rem 2rem;
+        padding: 1rem 2rem 1.5rem 2rem;
         font-family: 'Noto Sans KR', sans-serif;
         color: var(--ink);
     }
@@ -509,13 +509,69 @@ st.markdown(
         .deco-left, .deco-right { display: none; }
     }
 
-    /* 채팅 input 영역 — 부드럽게 */
-    [data-testid="stChatInput"] textarea {
-        border-radius: 18px !important;
+    /* ── 채팅 input — 인라인 카드 스타일 (sticky 바닥 해제) ── */
+    /* Streamlit이 기본으로 입력칸을 화면 하단에 고정시켜 푸터를 가립니다.
+       static 으로 풀어 자연스럽게 흐름 안에 위치시킵니다. */
+    [data-testid="stBottomBlockContainer"],
+    [data-testid="stBottomBlock"] {
+        position: static !important;
+        background: transparent !important;
+        padding: 0 !important;
+        max-width: none !important;
+    }
+    [data-testid="stChatInput"] {
+        margin: 18px 0 12px 0 !important;
+        padding: 0 !important;
+    }
+    /* 입력 박스 외형 — 베이지 카드 + 도장 그림자 */
+    [data-testid="stChatInput"] > div,
+    [data-testid="stChatInputContainer"] {
+        background: #FBF7F2 !important;
         border: 2.5px solid var(--ink) !important;
-        background: var(--cream) !important;
+        border-radius: 22px !important;
+        box-shadow: 4px 4px 0 var(--ink) !important;
+        overflow: hidden;
+    }
+    /* 텍스트 영역 자체 */
+    [data-testid="stChatInput"] textarea {
+        background: transparent !important;
+        border: none !important;
+        outline: none !important;
+        box-shadow: none !important;
         font-family: 'Gowun Batang', serif !important;
+        font-size: 16px !important;
+        color: var(--ink) !important;
+        padding: 16px 20px !important;
+        min-height: 56px !important;
+        line-height: 1.6 !important;
+    }
+    [data-testid="stChatInput"] textarea::placeholder {
+        color: var(--ink-soft) !important;
+        opacity: 0.7;
+        font-style: italic;
+    }
+    /* 보내기 버튼 (화살표) */
+    [data-testid="stChatInput"] button {
+        background: var(--mustard) !important;
+        border: 2px solid var(--ink) !important;
+        border-radius: 50% !important;
         box-shadow: 2px 2px 0 var(--ink) !important;
+        color: var(--ink) !important;
+        margin: 8px 8px 8px 0 !important;
+        transition: transform 0.08s !important;
+    }
+    [data-testid="stChatInput"] button:hover {
+        background: #FFD55A !important;
+        transform: translate(-1px, -1px);
+        box-shadow: 3px 3px 0 var(--ink) !important;
+    }
+    [data-testid="stChatInput"] button:active {
+        transform: translate(1px, 1px);
+        box-shadow: 1px 1px 0 var(--ink) !important;
+    }
+    [data-testid="stChatInput"] button svg {
+        fill: var(--ink) !important;
+        color: var(--ink) !important;
     }
 
     /* ─── 📜 사료 보관함 페이지 ─── */
