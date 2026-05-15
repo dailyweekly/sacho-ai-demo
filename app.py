@@ -113,6 +113,20 @@ st.markdown(
         position: relative;
         backdrop-filter: blur(6px);
     }
+    .topbar-logo-link {
+        display: inline-block;
+        text-decoration: none;
+        color: inherit;
+        border-radius: 14px;
+        padding: 4px 8px;
+        transition: transform 0.12s, background 0.15s;
+        cursor: pointer;
+    }
+    .topbar-logo-link:hover {
+        background: rgba(255, 231, 160, 0.55);
+        transform: translateY(-1px);
+    }
+    .topbar-logo-link:active { transform: translateY(1px); }
     .topbar-logo {
         display: flex; align-items: center; gap: 10px;
         flex: 1; min-width: 0;
@@ -643,6 +657,14 @@ api_key_present = bool(os.getenv("ANTHROPIC_API_KEY", "").strip())
 
 
 # ─────────────────────────────────────────────────────────────
+# 로고 클릭 → 첫 화면(인사 화면) 복귀 (auth/언어/모드는 유지)
+# ─────────────────────────────────────────────────────────────
+if st.query_params.get("home") == "1":
+    st.session_state.messages = []
+    st.query_params.clear()
+
+
+# ─────────────────────────────────────────────────────────────
 # 🔐 비밀번호 게이트 — APP_PASSWORD 가 설정돼 있을 때만 발동
 # ─────────────────────────────────────────────────────────────
 def _expected_password() -> str:
@@ -734,11 +756,14 @@ bar_cols = st.columns([2.6, 1.2, 1.2, 0.7, 0.7])
 
 with bar_cols[0]:
     st.markdown(
+        f'<a href="?home=1" target="_self" class="topbar-logo-link" '
+        f'title="첫 화면으로 돌아가기">'
         f'<div class="topbar-logo">'
         f'<div class="logo-svg">{LOGO_SVG}</div>'
         f'<div><div class="brand">사초(史草) AI</div>'
         f'<div class="brand-sub">— 졸린 사관과 함께 —</div></div>'
-        f'</div>',
+        f'</div>'
+        f'</a>',
         unsafe_allow_html=True,
     )
 

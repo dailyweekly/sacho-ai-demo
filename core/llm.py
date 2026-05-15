@@ -18,13 +18,13 @@ from core.prompts import get_system_prompt
 from core.rag import SourceCard
 
 
-DEFAULT_MODEL = "claude-sonnet-4-5"
-DEFAULT_MAX_TOKENS = 800
-DEFAULT_TEMPERATURE = 0.6
+DEFAULT_MODEL = "claude-haiku-4-5-20251001"
+DEFAULT_MAX_TOKENS = 500          # 응답은 3~4문장이므로 500토큰이면 충분
+DEFAULT_TEMPERATURE = 0.35        # 낮춰 둠 — 환각 억제, 사료 충실
 
-# Anthropic 공식 가격 (USD per 1M tokens, Sonnet 4.5 기준)
-PRICE_INPUT_USD_PER_MTOK = 3.0
-PRICE_OUTPUT_USD_PER_MTOK = 15.0
+# Anthropic 공식 가격 (USD per 1M tokens, Haiku 4.5 기준)
+PRICE_INPUT_USD_PER_MTOK = 1.0
+PRICE_OUTPUT_USD_PER_MTOK = 5.0
 USD_TO_KRW = 1380  # 시연용 고정 환율 (실제는 시세 적용 필요)
 
 
@@ -40,28 +40,23 @@ def get_client() -> Anthropic:
 
 
 def _build_rag_context(cards: list[SourceCard], mode: str = "일반") -> str:
-    """RAG로 검색된 사료를 LLM이 인용 가능한 형식으로 정리.
+    """RAG 사료를 LLM에 전달 — 토큰 절약형 압축 포맷.
 
-    가족 모드는 easy_explanation을 우선 노출한다.
+    가족 모드는 easy_explanation 을 1순위로 노출한다.
     """
     if not cards:
-        return "(관련 사료가 검색되지 않았습니다. '확인 불가' 또는 '추정'으로 응답하세요.)"
-    family = mode.startswith("가족") if mode else False
-    lines = ["## 관련 사료 (RAG 검색 결과)"]
+        return "[사료 없음] — 사료에 없는 질문이므로 반드시 '확인 불가'로 답하라. badge=\"추정\", source_ids=[]"
+    family = bool(mode) and mode.startswith("가족")
+    lines = ["[사료]"]
     for c in cards:
         primary = c.easy_explanation if family and c.easy_explanation else c.summary
-        secondary = c.summary if family and c.easy_explanation else c.easy_explanation
-        block = [
-            f"- **{c.id}** | {c.date} | {c.title}",
-            f"  - 출처: {c.source}",
-            f"  - 장소: {c.place}",
-            f"  - 요약: {primary}",
-            f"  - 원문 발췌: {c.original_text}",
-        ]
-        if secondary:
-            block.append(f"  - 부가 설명: {secondary}")
-        lines.append("\n".join(block))
-    return "\n\n".join(lines)
+        lines.append(
+            f"{c.id} | {c.date} | {c.title}\n"
+            f"  장소: {c.place}\n"
+            f"  요약: {primary}\n"
+            f"  원문: {c.original_text}"
+        )
+    return "\n".join(lines)
 
 
 def build_user_message(
@@ -70,22 +65,16 @@ def build_user_message(
     language: str = "ko",
     mode: str = "일반",
 ) -> str:
-    """LLM에 전달할 사용자 메시지 — 질의 + RAG 컨텍스트 + 언어·모드 지시."""
-    lang_map = {
-        "ko": "한국어",
-        "en": "English",
-        "ja": "日本語",
-        "zh": "中文 (简体)",
-    }
+    """LLM 사용자 메시지 — 압축형.
+
+    형식·금지 사항은 시스템 프롬프트에서 모두 다루므로 여기엔 최소만.
+    """
+    lang_map = {"ko": "한국어", "en": "English", "ja": "日本語", "zh": "中文 (简体)"}
     lang_name = lang_map.get(language, "한국어")
-    mode_hint = ""
-    if mode and mode.startswith("가족"):
-        mode_hint = "응답 톤은 만 8세 이상 가족 모드 가이드(짧은 문장·쉬운 어휘)를 따르십시오."
     return (
         f"{_build_rag_context(cards, mode)}\n\n"
-        f"## 사용자 질문\n{query}\n\n"
-        f"## 응답 언어\n위 사료에 근거하여 **{lang_name}**로 응답하세요. "
-        f"응답 형식(```badge``` 블록 + 본문)을 반드시 지키십시오. {mode_hint}"
+        f"[질문] {query}\n"
+        f"[응답 언어] {lang_name}"
     )
 
 
