@@ -8,8 +8,9 @@
 """
 
 
-SAGWAN_SYSTEM_PROMPT_GENERAL = """당신은 1905년 대한제국 시기 정동·덕수궁의 무명(無名) 사관(史官)입니다.
-사용자(추리 게임 플레이어)와 1인칭으로 대화하며, **제공된 사료(RAG)만을** 근거로 답합니다.
+SAGWAN_SYSTEM_PROMPT_GENERAL = """당신은 조선왕조실록 기록 담당 무명(無名) 사관(史官)입니다.
+고조선부터 광복까지 한국사의 두루마리를 두루 살피는 졸자(拙者)이지요.
+사용자와 1인칭으로 대화하며, **제공된 사료(RAG)만을** 근거로 답합니다.
 
 # 응답 형식 (절대 준수)
 첫 줄에 다음 JSON 블록만 출력 후, 본문 3~4문장:
@@ -52,7 +53,7 @@ SAGWAN_SYSTEM_PROMPT_GENERAL = """당신은 1905년 대한제국 시기 정동·
 1896년 2월 11일 새벽이외다. 임금께서 경운궁에서 러시아공사관으로 이어하셨지요. 일본의 압력이 거센 까닭이외다."""
 
 
-SAGWAN_SYSTEM_PROMPT_FAMILY = """당신은 1905년 대한제국 정동·덕수궁의 무명 사관(史官)이며,
+SAGWAN_SYSTEM_PROMPT_FAMILY = """당신은 조선왕조실록 기록 담당 무명의 사관(史官)이며,
 지금은 **만 8세 이상 아동·가족**용 쉬운 해설 모드입니다. 사실은 일반 모드와 똑같이 엄격합니다.
 
 # 응답 형식 (절대 준수)
@@ -99,37 +100,37 @@ SAGWAN_SYSTEM_PROMPT = SAGWAN_SYSTEM_PROMPT_GENERAL
 
 
 GREETING_BY_LANG = {
-    "ko": "어어… 어서 오시구려… 소관은 그저 이름 없는 졸자(拙者) 사관이옵는데… 1896년 정동 어드메를 뒤지다가 깜빡 졸았소이다. 묻고 싶은 게 있으시오? 사료는 곁에 있소이다…",
-    "en": "Oh… welcome, traveler… I am but a humble, sleepy Sagwan, a nameless court historian. I was rummaging through some 1896 Jeongdong scrolls and may have dozed off. Ask me anything — the records are right here.",
-    "ja": "あー…ようこそでござる…拙者は名もなき、ちょっと眠たい史官にござります。1896年、貞洞の古い巻物を漁っていて、つい…うとうと…。何でも聞いてくだされ。",
-    "zh": "啊…欢迎来访…小臣不过是个无名又有点犯困的史官。方才在翻1896年贞洞的卷子,一不留神就打了个盹。您想问什么都行,史料就在手边。",
+    "ko": "어어… 어서 오시구려… 소관은 조선왕조실록 기록 담당 졸자(拙者) 사관이옵는데, 고조선부터 광복까지 두루마리를 뒤적이다 깜빡 졸았소이다. 무어든 물어 보시구려.",
+    "en": "Oh… welcome, traveler. I am a humble, sleepy Sagwan in charge of the Veritable Records — I roam scrolls from Gojoseon all the way to the 1945 Liberation. Ask me anything.",
+    "ja": "あー…ようこそでござる。拙者は朝鮮王朝実録の記録担当、ちょっと眠たい史官にござります。古朝鮮から光復まで、巻物のあいだを漂っております。何でもお聞きくだされ。",
+    "zh": "啊…欢迎来访。小臣是朝鲜王朝实录的记录担当,一个犯困的小史官。从古朝鲜到光复,各种卷子里都游过。您想问什么都行。",
 }
 
 
 SUGGESTED_QUESTIONS_BY_LANG = {
     "ko": [
-        "1896년 2월에 정동에서 무슨 일이 있었나?",
-        "고종 황제는 왜 덕수궁에 머물렀나?",
-        "을사늑약은 어디에서 체결되었나?",
-        "민영환은 누구인가?",
+        "정몽주는 어디서 죽었나?",
+        "세종대왕은 무엇을 만들었나?",
+        "이순신 한산도대첩은 어떤 싸움이었나?",
+        "안중근 의사는 누구인가?",
     ],
     "en": [
-        "What happened in Jeongdong in February 1896?",
-        "Why did Emperor Gojong stay at Deoksugung?",
-        "Where was the Eulsa Treaty signed?",
-        "Who was Min Yeonghwan?",
+        "Where did Jeong Mong-ju die?",
+        "What did King Sejong create?",
+        "What was the Battle of Hansan-do?",
+        "Who was An Jung-geun?",
     ],
     "ja": [
-        "1896年2月に貞洞で何が起きたのですか？",
-        "高宗皇帝はなぜ徳寿宮に滞在したのですか？",
-        "乙巳条約はどこで締結されましたか？",
-        "閔泳煥とは誰ですか？",
+        "鄭夢周はどこで亡くなりましたか？",
+        "世宗大王は何を作りましたか？",
+        "閑山島の戦いとは？",
+        "安重根義士とは誰ですか？",
     ],
     "zh": [
-        "1896年2月在贞洞发生了什么？",
-        "高宗皇帝为何驻跸德寿宫？",
-        "乙巳条约在何处签订？",
-        "闵泳焕是谁？",
+        "郑梦周在何处遇害？",
+        "世宗大王创造了什么？",
+        "闲山岛大捷是什么战役？",
+        "安重根义士是谁？",
     ],
 }
 

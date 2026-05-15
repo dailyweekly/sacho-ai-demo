@@ -1034,13 +1034,13 @@ st.markdown('</div>', unsafe_allow_html=True)
 # ─────────────────────────────────────────────────────────────
 HEADER_TEXT = {
     "ko": ("사관(史官)과 두런두런",
-           "1896년 정동에서 일어난 어떤 일을, 졸린 사관과 함께 살살 풀어 보시구려."),
+           "고조선부터 광복까지 — 한국사 두루마리를 졸린 사관과 함께 살살 펼쳐 보시구려."),
     "en": ("Chatting with the Sleepy Sagwan",
-           "Let's gently unravel what happened in Jeongdong, 1896, together with this drowsy historian."),
+           "From Gojoseon to the 1945 Liberation — unfurl Korea's scrolls together with this drowsy historian."),
     "ja": ("ねむたい史官とぽつぽつ",
-           "1896年、貞洞で起きたあの一件を、眠そうな史官と一緒にゆるゆると解いてみましょう。"),
+           "古朝鮮から光復まで、韓国史の巻物を眠そうな史官と一緒にゆるゆる開いてみましょう。"),
     "zh": ("和犯困的史官闲谈",
-           "1896年贞洞那桩事,我们和这位犯困的小史官慢慢理一理吧。"),
+           "从古朝鲜到光复 — 和这位犯困的小史官一起慢慢翻开韩国史的卷子吧。"),
 }
 title, subtitle = HEADER_TEXT[st.session_state.language]
 st.markdown(
