@@ -62,7 +62,7 @@ from core.character import (
 from core.quest import (
     generate_question, pick_card, QUEST_THEME_KEYWORDS,
     COURSES, course_card_count, pick_course_card, ending_tier,
-    pick_nearest_card,
+    pick_nearest_card, pick_nearby_cards, pick_random_nearby,
 )
 import random as _random
 
@@ -726,6 +726,63 @@ st.markdown(
         font-family: 'Gowun Batang', serif;
         font-size: 13.5px;
         color: var(--ink);
+    }
+    /* 3단계 트리거 알림 (현장·도보·당일) */
+    .nearby-tier {
+        background: linear-gradient(135deg, #FFFCF5 0%, #FFF6E0 100%);
+        border: 2px solid var(--ink);
+        border-left: 6px solid var(--mustard);
+        border-radius: 10px;
+        padding: 12px 16px;
+        margin: 10px 0;
+        font-family: 'Gowun Batang', serif;
+        font-size: 14.5px;
+        color: var(--ink);
+        box-shadow: 2px 2px 0 var(--ink);
+    }
+    .nearby-tier b { color: var(--red-deep); }
+    /* 직접 골라서 — 리스트 헤더 */
+    .nearby-list-head {
+        margin: 14px 0 8px 0;
+        font-family: 'Gowun Batang', serif;
+        font-size: 14px; font-weight: 600;
+        color: var(--ink);
+    }
+    .nearby-list-head small {
+        font-family: 'Nanum Pen Script', cursive;
+        font-size: 14px;
+        color: var(--ink-soft);
+    }
+    /* 근처 사료 한 줄 — 카드 */
+    .nearby-row {
+        background: #FBF7F2;
+        border: 1.5px solid rgba(58,42,31,0.18);
+        border-radius: 12px;
+        padding: 10px 14px;
+        margin: 6px 0;
+        font-family: 'Gowun Batang', serif;
+        transition: transform 0.1s, border-color 0.1s;
+    }
+    .nearby-row:hover {
+        transform: translate(-1px, -1px);
+        border-color: var(--ink);
+    }
+    .nearby-row-title {
+        font-size: 14.5px;
+        color: var(--ink);
+        margin-bottom: 4px;
+    }
+    .nearby-row-meta {
+        font-size: 12.5px;
+        color: var(--ink-soft);
+    }
+    .cat-pill {
+        display: inline-block;
+        padding: 1px 8px;
+        border-radius: 999px;
+        font-size: 11.5px;
+        font-weight: 600;
+        margin-left: 4px;
     }
 
     /* 코스 진행 표시 */
@@ -2673,13 +2730,23 @@ def _reset_question_state() -> None:
 
 
 def _generate_with_card(card: SourceCard) -> None:
-    """주어진 카드로 문제를 생성해 세션에 저장 (스피너 포함)."""
+    """주어진 카드로 문제를 생성해 세션에 저장 (스피너 포함).
+    같은 카드라도 직전에 쓴 qtype을 피해서 매번 다른 각도로 출제.
+    """
+    # 이 카드에 대해 이번 세션에서 사용된 qtype 추적
+    used_qtypes = st.session_state.setdefault("qtypes_per_card", {})
+    avoid = used_qtypes.get(card.id, [])
+
     with st.spinner(T["quest_thinking"]):
         new_q = generate_question(
             card,
             language=st.session_state.language,
             mode=st.session_state.mode,
+            avoid_qtypes=avoid[-3:],  # 최근 3개 유형 회피
         )
+    # 이번 qtype 기록
+    used_qtypes.setdefault(card.id, []).append(new_q.get("qtype", "?"))
+
     st.session_state.current_q = new_q
     st.session_state.q_answered = False
     st.session_state.q_user_choice = None
@@ -2833,21 +2900,97 @@ def render_quest_page() -> None:
                 lat = float(loc["latitude"])
                 lon = float(loc["longitude"])
                 st.session_state.user_geo = (lat, lon)
-                nearest, dist = pick_nearest_card(lat, lon, max_km=30.0)
-                if nearest is None:
+
+                # 3단계 트리거 — 현장(200m) / 도보권(2km) / 당일권(30km)
+                on_site = pick_nearby_cards(lat, lon, max_km=0.2,
+                                            exclude_ids=st.session_state.q_seen_ids[-5:])
+                walk    = pick_nearby_cards(lat, lon, max_km=2.0,
+                                            exclude_ids=st.session_state.q_seen_ids[-5:])
+                day     = pick_nearby_cards(lat, lon, max_km=30.0,
+                                            exclude_ids=st.session_state.q_seen_ids[-5:])
+
+                if on_site:
+                    tier_label = (f"🎯 <b>현장</b> (200m 안) 사적 {len(on_site)}곳 발견! "
+                                  f"바로 그 자리에서 푸시오")
+                    cards_to_show = on_site
+                    radius_km = 0.2
+                elif walk:
+                    tier_label = (f"🚶 <b>도보권</b> (2km 안) {len(walk)}곳 사적이 있소이다")
+                    cards_to_show = walk
+                    radius_km = 2.0
+                elif day:
+                    tier_label = (f"🚆 <b>당일 이동권</b> (30km 안) {len(day)}곳 사적이 있소이다")
+                    cards_to_show = day
+                    radius_km = 30.0
+                else:
                     st.warning(T["nearby_too_far"])
                     return
-                st.success(
-                    f"📍 가장 가까운 사적: **{nearest.title}** "
-                    f"({T['nearby_distance'].format(km=round(dist, 1))})"
+
+                st.markdown(
+                    f'<div class="nearby-tier">{tier_label}</div>',
+                    unsafe_allow_html=True,
                 )
-                if st.button(T["quest_start_btn"], key="quest_start_nearby",
-                             use_container_width=True):
+
+                # ── 큰 무작위 출제 버튼 (가까울수록 가중치 ↑) ──
+                st.markdown('<div class="start-btn-wrap">', unsafe_allow_html=True)
+                random_clicked = st.button(
+                    "🎲 가까운 사적 중 무작위로 출제 받기",
+                    key="quest_start_nearby_random",
+                    use_container_width=True,
+                )
+                st.markdown('</div>', unsafe_allow_html=True)
+                if random_clicked:
                     if not api_key_present:
                         st.error(T["api_key_missing_title"])
                         return
-                    _generate_with_card(nearest)
+                    picked = pick_random_nearby(
+                        lat, lon, max_km=radius_km,
+                        exclude_ids=st.session_state.q_seen_ids[-5:],
+                    )
+                    if picked is None and cards_to_show:
+                        picked = cards_to_show[0][0]
+                    if picked is None:
+                        st.error("근처 사료를 찾지 못했소이다.")
+                        return
+                    _generate_with_card(picked)
                     st.rerun()
+
+                # ── 직접 골라서 출제 받기 (가까운 8곳) ──
+                st.markdown(
+                    '<div class="nearby-list-head">또는 직접 골라서 — '
+                    '<small>(같은 자리도 다른 사료 + LLM이 매번 다른 문제 출제)</small>'
+                    '</div>',
+                    unsafe_allow_html=True,
+                )
+                for i, (card, dist_km) in enumerate(cards_to_show[:8]):
+                    dist_str = (
+                        f"{dist_km*1000:.0f} m" if dist_km < 1
+                        else f"{dist_km:.1f} km"
+                    )
+                    icon, color, cat_label = _site_category(card)
+                    row_l, row_r = st.columns([5, 1])
+                    with row_l:
+                        st.markdown(
+                            f'<div class="nearby-row">'
+                            f'  <div class="nearby-row-title">'
+                            f'    <span style="color:{color}">{icon}</span> '
+                            f'    <b>{card.title}</b>'
+                            f'  </div>'
+                            f'  <div class="nearby-row-meta">'
+                            f'    📍 {dist_str} · {card.place} · '
+                            f'    <span class="cat-pill" style="background:{color}22;color:{color}">{cat_label}</span>'
+                            f'  </div>'
+                            f'</div>',
+                            unsafe_allow_html=True,
+                        )
+                    with row_r:
+                        if st.button("🎲", key=f"nearby_pick_{i}",
+                                     help="이 사적에서 문제 받기 (매번 다른 문제)"):
+                            if not api_key_present:
+                                st.error(T["api_key_missing_title"])
+                                return
+                            _generate_with_card(card)
+                            st.rerun()
             else:
                 st.info(T["nearby_no_perm"])
             return

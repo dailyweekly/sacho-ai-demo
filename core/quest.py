@@ -85,15 +85,21 @@ def generate_question(
     language: str = "ko",
     mode: str = "일반",
     qtype: str | None = None,
+    avoid_qtypes: list[str] | None = None,
 ) -> dict[str, Any]:
     """사료 카드 한 건으로 4지선다 + 해설 + 선지별 코멘트 생성.
 
     qtype: 명시 시 해당 유형으로 출제, None 이면 무작위.
+    avoid_qtypes: 같은 카드에 직전에 나왔던 유형을 피해서 다른 각도로 출제.
     """
     client = get_client()
     lang_name = _LANG_MAP.get(language, "한국어")
     if qtype not in QUESTION_TYPES:
-        qtype = random.choice(list(QUESTION_TYPES.keys()))
+        avoid = set(avoid_qtypes or [])
+        pool = [k for k in QUESTION_TYPES.keys() if k not in avoid]
+        if not pool:
+            pool = list(QUESTION_TYPES.keys())
+        qtype = random.choice(pool)
     type_hint = QUESTION_TYPES[qtype]
 
     family_hint = (
@@ -127,6 +133,10 @@ def generate_question(
             "방문 가능한 장소·전통을 명확히 언급하세요."
         )
 
+    # 시드 nonce — 같은 카드·같은 유형이라도 호출마다 다른 각도로 출제하도록
+    # LLM 응답에 영향은 없지만 프롬프트 동일성을 깨서 캐시·결정성 방지
+    nonce = random.randint(100000, 999999)
+
     user_msg = (
         f"[사료]\n"
         f"id: {card.id}\n"
@@ -141,7 +151,9 @@ def generate_question(
         f"[문제 유형]\n{type_hint}\n"
         f"{kculture_hint}\n"
         f"[응답 언어] {lang_name}로 작성. 단, 사료 id 마커는 [{card.id}] 그대로.\n"
-        f"{family_hint}"
+        f"{family_hint}\n\n"
+        f"[중요] 같은 사료라도 매번 다른 관점·인물·디테일을 골라 출제하시오. "
+        f"같은 질문을 반복하지 말 것. (seed: {nonce})"
     )
 
     try:
@@ -399,27 +411,28 @@ def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
     return 2 * R * asin(sqrt(a))
 
 
+def _is_abstract_location(card: SourceCard) -> bool:
+    """위치가 모호한 entry (전국/추상 K-콘텐츠) 판별."""
+    if not card.place:
+        return True
+    if card.id.startswith("kculture-"):
+        if any(s in card.place for s in ["한국 무속", "전통 사후세계", "(전국"]):
+            return True
+    return False
+
+
 def pick_nearest_card(
     lat: float, lon: float,
     max_km: float = 30.0,
     exclude_ids: list[str] | None = None,
 ) -> tuple[SourceCard | None, float]:
-    """현재 위치에서 가장 가까운 사료 카드 + 거리(km).
-
-    K-콘텐츠 entry는 위치가 모호한 경우(전국/배경)가 많아 제외.
-    실제 사적·관광지·역사 사건 위치만 대상.
-    """
+    """현재 위치에서 가장 가까운 사료 카드 + 거리(km). 단일 픽."""
     excluded = set(exclude_ids or [])
     best: SourceCard | None = None
     best_dist = float("inf")
     for c in load_corpus():
-        if c.id in excluded:
+        if c.id in excluded or _is_abstract_location(c):
             continue
-        # K-콘텐츠는 일부만 정확한 위치 (북촌·정동 같은 명확한 곳만 허용)
-        if c.id.startswith("kculture-"):
-            # 명확한 단일 장소가 있는 K-콘텐츠만 (북촌·손탁호텔·낙선재 등)
-            if "한국 무속" in c.place or "전통 사후세계" in c.place or "(전국" in c.place:
-                continue
         if not c.place_coords or len(c.place_coords) != 2:
             continue
         d = _haversine_km(lat, lon, c.place_coords[1], c.place_coords[0])
@@ -429,6 +442,48 @@ def pick_nearest_card(
     if best_dist > max_km:
         return None, best_dist
     return best, best_dist
+
+
+def pick_nearby_cards(
+    lat: float, lon: float,
+    max_km: float = 2.0,
+    exclude_ids: list[str] | None = None,
+    limit: int = 20,
+) -> list[tuple[SourceCard, float]]:
+    """현 위치에서 max_km 이내의 사료를 거리순 정렬해 반환 (limit개).
+
+    같은 자리에서 다양한 카드를 노출할 수 있도록 '근처 다수'를 반환.
+    """
+    excluded = set(exclude_ids or [])
+    cands: list[tuple[SourceCard, float]] = []
+    for c in load_corpus():
+        if c.id in excluded or _is_abstract_location(c):
+            continue
+        if not c.place_coords or len(c.place_coords) != 2:
+            continue
+        d = _haversine_km(lat, lon, c.place_coords[1], c.place_coords[0])
+        if d <= max_km:
+            cands.append((c, d))
+    cands.sort(key=lambda x: x[1])
+    return cands[:limit]
+
+
+def pick_random_nearby(
+    lat: float, lon: float,
+    max_km: float = 2.0,
+    exclude_ids: list[str] | None = None,
+) -> SourceCard | None:
+    """근처 사료 중 거리 가중 무작위 선택.
+
+    같은 GPS 위치에서 매번 다른 사료가 뽑힐 수 있도록 가중 무작위.
+    가중치 = 1 / (거리_km + 0.05) → 가까울수록 뽑힐 확률 ↑.
+    같은 자리 같은 카드 반복 회피용 exclude_ids 인자를 함께 사용 권장.
+    """
+    cards = pick_nearby_cards(lat, lon, max_km, exclude_ids, limit=20)
+    if not cards:
+        return None
+    weights = [1.0 / (d + 0.05) for _, d in cards]
+    return random.choices([c for c, _ in cards], weights=weights, k=1)[0]
 
 
 def ending_tier(score: int, total: int) -> str:
@@ -449,4 +504,5 @@ __all__ = [
     "generate_question", "pick_card", "QUEST_THEME_KEYWORDS",
     "COURSES", "course_card_count", "pick_course_card", "ending_tier",
     "QUESTION_TYPES",
+    "pick_nearest_card", "pick_nearby_cards", "pick_random_nearby",
 ]
