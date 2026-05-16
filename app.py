@@ -58,7 +58,11 @@ from core.prompts import GREETING_BY_LANG, SUGGESTED_QUESTIONS_BY_LANG, UI_TEXT
 from core.character import (
     LOGO_SVG, LOCK_SVG, char_img,
 )
-from core.quest import generate_question, pick_card, QUEST_THEME_KEYWORDS
+from core.quest import (
+    generate_question, pick_card, QUEST_THEME_KEYWORDS,
+    COURSES, course_card_count, pick_course_card, ending_tier,
+)
+import random as _random
 
 
 st.set_page_config(
@@ -426,6 +430,124 @@ st.markdown(
         border-left: 3px solid #8C2A18;
         padding-left: 10px;
         text-decoration: line-through;
+    }
+
+    /* 코스 진행 표시 */
+    .course-progress {
+        background: #FFF7DA;
+        border: 1.5px dashed var(--ink);
+        border-radius: 12px;
+        padding: 8px 14px;
+        font-family: 'Gowun Batang', serif;
+        font-size: 13.5px;
+        color: var(--ink);
+        margin-bottom: 12px;
+    }
+    .course-progress b { color: var(--red-deep); }
+
+    /* 힌트 영역 */
+    .hint-tag {
+        font-family: 'Gowun Batang', serif;
+        font-size: 13px;
+        padding: 9px 14px;
+        border-radius: 12px;
+        border: 1.5px dashed var(--ink-soft);
+        text-align: center;
+        margin: 0;
+    }
+    .hint-used-tag {
+        background: #DDF0CB;
+        color: #2E6418;
+        border-color: #2E6418;
+    }
+    .hint-locked-tag {
+        background: #F0EDE6;
+        color: var(--ink-soft);
+    }
+
+    /* 힌트로 제외된 선지 */
+    .opt-eliminated {
+        padding: 12px 16px;
+        margin: 4px 0;
+        border-radius: 14px;
+        border: 2px dashed #BFBAB1;
+        background: #F4F2EE;
+        color: #9A958C;
+        font-family: 'Gowun Batang', serif;
+        font-size: 14px;
+        text-decoration: line-through;
+    }
+    .opt-eliminated small {
+        text-decoration: none;
+        font-size: 11.5px;
+        opacity: 0.7;
+        margin-left: 6px;
+    }
+
+    /* 선지별 코멘트 (오답 비교형) */
+    .opt-notes-block {
+        background: #FBF7F2;
+        border: 2px solid var(--ink);
+        border-radius: 14px;
+        padding: 12px 14px;
+        margin-bottom: 14px;
+        font-family: 'Gowun Batang', serif;
+    }
+    .opt-note-row {
+        display: flex; gap: 10px; align-items: flex-start;
+        padding: 8px 0;
+        border-bottom: 1px dashed rgba(58,42,31,0.18);
+    }
+    .opt-note-row:last-child { border-bottom: none; }
+    .opt-note-mark {
+        flex: 0 0 22px; height: 22px; line-height: 20px;
+        text-align: center;
+        background: #FFFCF0;
+        border: 1.5px solid var(--ink);
+        border-radius: 5px;
+        font-size: 13px;
+    }
+    .opt-note-row b { color: var(--ink); font-size: 13.5px; }
+    .opt-note-row small {
+        font-size: 12.5px; line-height: 1.5; color: var(--ink-soft);
+    }
+    .opt-note-row.note-correct .opt-note-mark {
+        background: #DDF0CB; border-color: #2E6418;
+    }
+    .opt-note-row.note-correct b { color: #2E6418; }
+
+    /* 엔딩 화면 */
+    .quest-ending {
+        display: flex; gap: 22px; align-items: center;
+        background: #FFF7DA;
+        border: 3px solid var(--ink);
+        border-radius: 22px;
+        padding: 24px 28px;
+        margin: 12px 0 18px 0;
+        box-shadow: 5px 5px 0 var(--ink);
+    }
+    .quest-ending .ending-char {
+        flex: 0 0 130px;
+        animation: float-y 4s ease-in-out infinite;
+    }
+    .quest-ending .ending-text { flex: 1; }
+    .quest-ending .ending-text h3 {
+        margin: 0;
+        font-family: 'Yeon Sung', serif;
+        font-size: 24px; color: var(--ink);
+    }
+    .quest-ending .ending-score {
+        margin: 8px 0 4px 0;
+        font-family: 'Gowun Batang', serif;
+        font-size: 16px; color: var(--ink);
+    }
+    .quest-ending .ending-tier {
+        margin: 6px 0 0 0;
+        font-family: 'Yeon Sung', serif;
+        font-size: 22px; color: var(--red-deep);
+    }
+    @media (max-width: 720px) {
+        .quest-ending { flex-direction: column; text-align: center; }
     }
 
     /* ── 왜 사초 AI? 차별 가치 카드 ────────────────────────── */
@@ -1139,6 +1261,19 @@ def init_state() -> None:
         st.session_state.q_seen_ids = []
     if "quest_theme" not in st.session_state:
         st.session_state.quest_theme = "all"
+    # ─── 힌트 / 코스 모드 ───
+    if "eliminated_options" not in st.session_state:
+        st.session_state.eliminated_options = []
+    if "play_mode" not in st.session_state:
+        st.session_state.play_mode = "course"        # "theme" | "course"
+    if "course_id" not in st.session_state:
+        st.session_state.course_id = "jeongdong"
+    if "course_idx" not in st.session_state:
+        st.session_state.course_idx = 0
+    if "course_score" not in st.session_state:
+        st.session_state.course_score = 0
+    if "course_finished" not in st.session_state:
+        st.session_state.course_finished = False
 
 
 init_state()
@@ -1609,12 +1744,76 @@ def _theme_options() -> dict[str, str]:
     }
 
 
+def _course_options() -> dict[str, str]:
+    """코스 키 -> 표시 라벨."""
+    lang = st.session_state.language
+    name_key = f"name_{lang}"
+    return {cid: c.get(name_key, c["name_ko"]) for cid, c in COURSES.items()}
+
+
+def _reset_question_state() -> None:
+    st.session_state.current_q = None
+    st.session_state.q_answered = False
+    st.session_state.q_user_choice = None
+    st.session_state.eliminated_options = []
+
+
+def _generate_with_card(card: SourceCard) -> None:
+    """주어진 카드로 문제를 생성해 세션에 저장 (스피너 포함)."""
+    with st.spinner(T["quest_thinking"]):
+        new_q = generate_question(
+            card,
+            language=st.session_state.language,
+            mode=st.session_state.mode,
+        )
+    st.session_state.current_q = new_q
+    st.session_state.q_answered = False
+    st.session_state.q_user_choice = None
+    st.session_state.eliminated_options = []
+    st.session_state.q_seen_ids.append(card.id)
+
+
 def render_quest_page() -> None:
+    # ── 코스 종료 화면 ──
+    if st.session_state.course_finished:
+        cid = st.session_state.course_id
+        total = course_card_count(cid)
+        score = st.session_state.course_score
+        tier = ending_tier(score, total)
+        tier_msg = T.get(f"ending_{tier}", T["ending_apprentice"])
+        char_pose = {
+            "master":     "celebrate",
+            "companion":  "happy",
+            "apprentice": "careful_write",
+            "novice":     "facedown",
+        }.get(tier, "careful_write")
+
+        st.markdown(
+            f'<div class="quest-ending">'
+            f'  <div class="ending-char">{char_img(char_pose, width=130)}</div>'
+            f'  <div class="ending-text">'
+            f'    <h3>{T["ending_title"]}</h3>'
+            f'    <p class="ending-score">'
+            f'{T["ending_score_line"].format(score=score, total=total)}</p>'
+            f'    <p class="ending-tier">{tier_msg}</p>'
+            f'  </div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+        if st.button(T["ending_restart_btn"], key="ending_restart",
+                     use_container_width=True):
+            st.session_state.course_finished = False
+            st.session_state.course_idx = 0
+            st.session_state.course_score = 0
+            _reset_question_state()
+            st.rerun()
+        return
+
     _credit_bar()
 
     q = st.session_state.current_q
 
-    # 문제 없을 때 — 인트로 + 새 문제 받기
+    # ── 문제 없을 때 — 모드/주제 선택 + 시작 ──
     if q is None:
         st.markdown(
             f'<div class="quest-intro">'
@@ -1627,44 +1826,95 @@ def render_quest_page() -> None:
             unsafe_allow_html=True,
         )
 
-        themes = _theme_options()
+        # 놀이 방식 선택 (라디오 — 코스 vs 자유 테마)
+        play_modes = {
+            T["play_mode_course"]: "course",
+            T["play_mode_theme"]:  "theme",
+        }
+        cur_label = next((k for k, v in play_modes.items()
+                          if v == st.session_state.play_mode), list(play_modes)[0])
+        picked = st.radio(
+            T["play_mode_label"],
+            list(play_modes.keys()),
+            index=list(play_modes.keys()).index(cur_label),
+            horizontal=True,
+            key="play_mode_radio",
+        )
+        st.session_state.play_mode = play_modes[picked]
+
+        # 코스 / 테마 셀렉트
         col_a, col_b = st.columns([3, 2])
         with col_a:
-            theme_keys = list(themes.keys())
-            theme_labels = [themes[k] for k in theme_keys]
-            current_theme = st.session_state.quest_theme
-            cur_idx = theme_keys.index(current_theme) if current_theme in theme_keys else 0
-            picked_label = st.selectbox(
-                T["quest_theme_label"],
-                theme_labels,
-                index=cur_idx,
-                key="theme_select",
-            )
-            st.session_state.quest_theme = theme_keys[theme_labels.index(picked_label)]
+            if st.session_state.play_mode == "course":
+                courses = _course_options()
+                course_keys = list(courses.keys())
+                course_labels = [courses[k] for k in course_keys]
+                cur_cid = st.session_state.course_id
+                cur_idx = course_keys.index(cur_cid) if cur_cid in course_keys else 0
+                picked_label = st.selectbox(
+                    T["course_label"],
+                    course_labels,
+                    index=cur_idx,
+                    key="course_select",
+                )
+                new_cid = course_keys[course_labels.index(picked_label)]
+                if new_cid != st.session_state.course_id:
+                    st.session_state.course_id = new_cid
+                    st.session_state.course_idx = 0
+                    st.session_state.course_score = 0
+            else:
+                themes = _theme_options()
+                theme_keys = list(themes.keys())
+                theme_labels = [themes[k] for k in theme_keys]
+                current_theme = st.session_state.quest_theme
+                cur_t = theme_keys.index(current_theme) if current_theme in theme_keys else 0
+                picked_label = st.selectbox(
+                    T["quest_theme_label"],
+                    theme_labels,
+                    index=cur_t,
+                    key="theme_select",
+                )
+                st.session_state.quest_theme = theme_keys[theme_labels.index(picked_label)]
+
         with col_b:
             st.markdown('<div style="height:30px"></div>', unsafe_allow_html=True)
             if st.button(T["quest_start_btn"], key="quest_start", use_container_width=True):
                 if not api_key_present:
                     st.error(T["api_key_missing_title"])
                     return
-                with st.spinner(T["quest_thinking"]):
+                if st.session_state.play_mode == "course":
+                    card = pick_course_card(
+                        st.session_state.course_id,
+                        st.session_state.course_idx,
+                    )
+                else:
                     card = pick_card(
                         st.session_state.quest_theme,
                         exclude_ids=st.session_state.q_seen_ids[-10:],
                     )
-                    new_q = generate_question(
-                        card,
-                        language=st.session_state.language,
-                        mode=st.session_state.mode,
-                    )
-                st.session_state.current_q = new_q
-                st.session_state.q_answered = False
-                st.session_state.q_user_choice = None
-                st.session_state.q_seen_ids.append(card.id)
+                if card is None:
+                    st.error("코스 사료를 찾을 수 없소이다.")
+                    return
+                _generate_with_card(card)
                 st.rerun()
         return
 
-    # 문제 표시
+    # ── 문제 표시 ──
+    # 코스 진행 표시
+    if st.session_state.play_mode == "course":
+        cid = st.session_state.course_id
+        total = course_card_count(cid)
+        idx_show = st.session_state.course_idx + 1
+        course_name = _course_options()[cid]
+        st.markdown(
+            f'<div class="course-progress">'
+            f'<b>🗺 {course_name}</b> · '
+            f'{T["course_progress"].format(n=idx_show, total=total)} · '
+            f'{T["course_score"]}: <b>{st.session_state.course_score}/{idx_show - 1 if not st.session_state.q_answered else idx_show}</b>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
     st.markdown(
         f'<div class="quest-q">'
         f'  <div class="quest-q-tag">Q.</div>'
@@ -1674,11 +1924,42 @@ def render_quest_page() -> None:
     )
 
     answered = st.session_state.q_answered
+    eliminated = set(st.session_state.eliminated_options)
+    marks = ["①", "②", "③", "④"]
 
-    # 답변 전 — 4지선다 버튼
+    # ── 답변 전 — 힌트 + 4지선다 ──
     if not answered:
-        marks = ["①", "②", "③", "④"]
+        # 힌트 행
+        hint_col_l, hint_col_r = st.columns([1, 1])
+        with hint_col_l:
+            if eliminated:
+                st.markdown(
+                    f'<div class="hint-tag hint-used-tag">{T["hint_used"]}</div>',
+                    unsafe_allow_html=True,
+                )
+            elif st.session_state.credits >= 3:
+                if st.button(T["hint_btn"], key="quest_hint",
+                             use_container_width=True):
+                    wrong = [i for i in range(4) if i != q["correct_idx"]]
+                    _random.shuffle(wrong)
+                    st.session_state.eliminated_options = wrong[:2]
+                    st.session_state.credits -= 3
+                    st.rerun()
+            else:
+                st.markdown(
+                    f'<div class="hint-tag hint-locked-tag">{T["hint_locked"]}</div>',
+                    unsafe_allow_html=True,
+                )
+
+        # 4지선다 버튼 (힌트로 제외된 것은 비활성)
         for i, opt in enumerate(q["options"]):
+            if i in eliminated:
+                st.markdown(
+                    f'<div class="opt-eliminated">{marks[i]}  {opt} '
+                    f'<small>{T["option_eliminated"]}</small></div>',
+                    unsafe_allow_html=True,
+                )
+                continue
             if st.button(
                 f"{marks[i]}  {opt}",
                 key=f"quest_opt_{i}",
@@ -1687,7 +1968,8 @@ def render_quest_page() -> None:
                 st.session_state.q_user_choice = i
                 st.session_state.q_answered = True
                 st.session_state.total_attempts += 1
-                if i == q["correct_idx"]:
+                is_correct = (i == q["correct_idx"])
+                if is_correct:
                     st.session_state.credits += 10
                     st.session_state.streak += 1
                     st.session_state.total_correct += 1
@@ -1695,13 +1977,15 @@ def render_quest_page() -> None:
                         st.session_state.best_streak = st.session_state.streak
                 else:
                     st.session_state.streak = 0
+                # 코스 점수
+                if st.session_state.play_mode == "course" and is_correct:
+                    st.session_state.course_score += 1
                 st.rerun()
         return
 
-    # 답변 후 — 결과 + 해설 + 사료 + 다음 버튼
+    # ── 답변 후 — 결과 + 선지 회고 + 옵션 노트 + 해설 + 사료 + 지도 ──
     user = st.session_state.q_user_choice
     correct = q["correct_idx"]
-    marks = ["①", "②", "③", "④"]
     if user == correct:
         st.markdown(
             f'<div class="quest-result correct">{T["quest_correct"]}</div>',
@@ -1714,7 +1998,7 @@ def render_quest_page() -> None:
             unsafe_allow_html=True,
         )
 
-    # 사용자가 고른 선지 + 정답 시각 표시
+    # 회고 (정답=녹색, 오답=취소선)
     rows = []
     for i, opt in enumerate(q["options"]):
         cls = ""
@@ -1726,7 +2010,24 @@ def render_quest_page() -> None:
     st.markdown('<div class="opt-recap">' + "".join(rows) + '</div>',
                 unsafe_allow_html=True)
 
-    # 해설
+    # 선지별 코멘트 (option_notes)
+    notes = q.get("option_notes") or []
+    if any(notes):
+        st.markdown(f"##### {T['option_notes_title']}")
+        note_html = '<div class="opt-notes-block">'
+        for i, opt in enumerate(q["options"]):
+            note = notes[i] if i < len(notes) else ""
+            row_cls = "note-correct" if i == correct else "note-wrong"
+            note_html += (
+                f'<div class="opt-note-row {row_cls}">'
+                f'<span class="opt-note-mark">{marks[i]}</span>'
+                f'<div><b>{opt}</b><br><small>{note}</small></div>'
+                f'</div>'
+            )
+        note_html += '</div>'
+        st.markdown(note_html, unsafe_allow_html=True)
+
+    # 본 해설
     st.markdown(f"##### {T['quest_explanation']}")
     st.markdown(q["explanation"])
 
@@ -1736,16 +2037,30 @@ def render_quest_page() -> None:
     if cards:
         render_evidence_cards(cards)
         render_evidence_map(cards)
-        # 보관함에 누적
         for cc in cards:
             st.session_state.collection[cc.id] = cc
 
-    # 다음 문제
+    # 다음 문제 / 코스 다음 단서 / 코스 종료
     st.markdown('<div style="height:10px"></div>', unsafe_allow_html=True)
     if st.button(T["quest_next_btn"], key="quest_next", use_container_width=True):
-        st.session_state.current_q = None
-        st.session_state.q_answered = False
-        st.session_state.q_user_choice = None
+        if st.session_state.play_mode == "course":
+            st.session_state.course_idx += 1
+            if st.session_state.course_idx >= course_card_count(st.session_state.course_id):
+                st.session_state.course_finished = True
+                _reset_question_state()
+                st.rerun()
+                return
+            # 다음 코스 사료
+            next_card = pick_course_card(
+                st.session_state.course_id, st.session_state.course_idx
+            )
+            if next_card is None:
+                st.session_state.course_finished = True
+                _reset_question_state()
+            else:
+                _generate_with_card(next_card)
+        else:
+            _reset_question_state()
         st.rerun()
 
 

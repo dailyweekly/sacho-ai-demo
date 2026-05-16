@@ -1,9 +1,9 @@
-"""한국사 객관식 퀘스트 — 사료 카드 1건에서 4지선다 문제를 생성.
+"""한국사 객관식 퀘스트 엔진.
 
-사용 방식:
-    card = pick_card(theme="경주")
-    q = generate_question(card, language="ko")
-    # q = {"question", "options"[4], "correct_idx", "explanation", "card_id"}
+- generate_question(card, language, mode, qtype): 사료 카드 1건 -> 4지선다 + 해설 + 선지별 코멘트
+- pick_card(theme, exclude_ids): 테마별 무작위 사료 픽
+- COURSES: 순차 진행되는 큐레이션 코스 (정동·경주 등)
+- pick_course_card(course_id, idx): 코스의 N번째 사료
 """
 from __future__ import annotations
 
@@ -15,22 +15,51 @@ from core.llm import get_client, DEFAULT_MODEL
 from core.rag import SourceCard, load_corpus
 
 
+# ─────────────────────────────────────────────────────────────
+# 문제 유형 — 단순 암기형 회피, 추리·맥락·비교 중심
+# ─────────────────────────────────────────────────────────────
+QUESTION_TYPES = {
+    "source_inference": (
+        "유형: 사료 추론형. 사료의 명시 사실에서 한 단계 추론하는 질문 "
+        "(예: '이 사건이 의미하는 바는 무엇입니까?', '왜 ~한 결과가 나왔는가?')."
+    ),
+    "character_motivation": (
+        "유형: 인물 동기형. 사건 속 핵심 인물의 동기·선택·고민을 사료 범위 내에서 묻는 질문 "
+        "(예: '~는 왜 이 결정을 내렸을까요?')."
+    ),
+    "place_significance": (
+        "유형: 장소 의의형. 사건이 일어난 장소·유물의 역사적 의의·맥락을 묻는 질문 "
+        "(예: '이 자리는 왜 중요한가요?', '이 장소가 가진 상징은?')."
+    ),
+    "wrong_compare": (
+        "유형: 오답 비교형. 정답·오답이 모두 같은 시대 또는 비슷한 사건이라 헷갈리기 쉬운 비교 학습형. "
+        "option_notes 에서 각 오답이 왜 그럴듯한데 틀렸는지 1줄로 짧게 풀어 주십시오."
+    ),
+    "consequence": (
+        "유형: 결과·영향형. 이 사건이 이후 한국사에 어떤 결과·영향을 가져왔는지를 묻는 질문 "
+        "(예: '이 사건 직후 어떤 일이 이어졌는가?')."
+    ),
+}
+
+
 QUEST_SYSTEM = """당신은 한국사 객관식 출제관입니다.
 주어진 사료 1건만을 근거로 객관식 문제 1개를 JSON 형식으로 만드십시오.
 
 # 출제 원칙 (절대 준수)
-1. 질문과 정답은 **사료에 명시된 사실**(인물·연·월·일·장소·사건·관련 인물)에서만 도출.
-2. 선지 4개:
-   - 1개는 사료에 명시된 **정답**
-   - 3개는 **그럴듯한 오답** (같은 시대 인물·비슷한 사건·인접 장소 등 헷갈리기 쉬운 항목)
-3. correct_idx — 정답이 위치한 인덱스 (0~3 중 무작위 배치)
-4. explanation — 5~8문장으로 사건 배경·인물·장소·의의를 풀어 설명.
-   - 어려운 한자어는 괄호로 풀이 (예: "이어(移御, 임금이 거처를 옮김)")
-   - 본문 안에 사료 id를 [card_id] 형태로 1~2번 인라인 마커
-   - 끝에 짧게 _「출처: 〈사료 제목〉 [card_id]」_
-
-# 학설이 갈리는 사안
-사료 summary에 "학설", "다른 견해", "후대에 더해진 설" 등이 있으면 explanation에 양측을 짧게 소개.
+1. 질문·정답은 **사료에 명시된 사실**(인물·연·월·일·장소·사건·관련 인물)에서만 도출.
+2. 단순 연도 암기 회피 — 추리·맥락·비교 중심으로 설계.
+3. 선지 4개:
+   - 1개 정답 (사료에 명시)
+   - 3개 오답 (같은 시대/비슷한 사건/인접 장소 등 헷갈리기 쉬운 그럴듯한 항목)
+4. correct_idx: 정답 위치 (0~3에 무작위 배치)
+5. explanation: 5~8문장 상세 해설.
+   - 어려운 한자어는 괄호 풀이
+   - 본문 안에 사료 id를 [card_id] 형식으로 1~2번 인라인 마커
+   - 끝에 _「출처: 〈사료 제목〉 [card_id]」_
+6. **option_notes**: 4개 선지 각각에 대한 1~2줄 코멘트
+   - 정답 선지: "정답. 사료에 따르면 …"
+   - 오답 선지: "그럴듯하지만, 실제로는 …" (왜 헷갈리는데 틀렸는지)
+7. 학설이 갈리는 사안은 explanation 에 양측 견해 짧게 병기.
 
 # 출력 형식
 다음 JSON만 출력 (다른 텍스트·코드펜스 절대 금지):
@@ -38,6 +67,7 @@ QUEST_SYSTEM = """당신은 한국사 객관식 출제관입니다.
   "question": "질문 문장",
   "options": ["선지A", "선지B", "선지C", "선지D"],
   "correct_idx": 0,
+  "option_notes": ["A 코멘트", "B 코멘트", "C 코멘트", "D 코멘트"],
   "explanation": "상세 해설 (5~8문장)"
 }"""
 
@@ -54,10 +84,17 @@ def generate_question(
     card: SourceCard,
     language: str = "ko",
     mode: str = "일반",
+    qtype: str | None = None,
 ) -> dict[str, Any]:
-    """사료 카드 한 건으로 객관식 문제 1개 생성. 실패 시 안전한 fallback 반환."""
+    """사료 카드 한 건으로 4지선다 + 해설 + 선지별 코멘트 생성.
+
+    qtype: 명시 시 해당 유형으로 출제, None 이면 무작위.
+    """
     client = get_client()
     lang_name = _LANG_MAP.get(language, "한국어")
+    if qtype not in QUESTION_TYPES:
+        qtype = random.choice(list(QUESTION_TYPES.keys()))
+    type_hint = QUESTION_TYPES[qtype]
 
     family_hint = (
         "응답 톤: 만 8세 이상 가족용. 어휘는 쉽게, 문장은 짧게."
@@ -76,6 +113,7 @@ def generate_question(
         f"summary: {card.summary}\n"
         f"easy_explanation: {card.easy_explanation}\n"
         f"related_persons: {', '.join(card.related_persons)}\n\n"
+        f"[문제 유형]\n{type_hint}\n\n"
         f"[응답 언어] {lang_name}로 작성. 단, 사료 id 마커는 [{card.id}] 그대로.\n"
         f"{family_hint}"
     )
@@ -83,27 +121,27 @@ def generate_question(
     try:
         resp = client.messages.create(
             model=DEFAULT_MODEL,
-            max_tokens=1200,
-            temperature=0.4,
+            max_tokens=1500,
+            temperature=0.45,
             system=QUEST_SYSTEM,
             messages=[{"role": "user", "content": user_msg}],
         )
         text = resp.content[0].text.strip()
-        # 안전망: 코드펜스 제거
+        # 코드펜스 안전 제거
         if text.startswith("```"):
-            inner = text.split("```")
-            for chunk in inner:
+            for chunk in text.split("```"):
                 chunk = chunk.strip()
+                if chunk.startswith("json"):
+                    chunk = chunk[4:].strip()
                 if chunk.startswith("{"):
                     text = chunk
                     break
-                if chunk.startswith("json"):
-                    text = chunk[4:].strip()
-                    break
 
         data = json.loads(text)
-        # 검증
         opts = data.get("options", [])
+        notes = data.get("option_notes", [""] * 4)
+        if len(notes) < 4:
+            notes = (notes + [""] * 4)[:4]
         if not (
             isinstance(data.get("question"), str)
             and isinstance(opts, list) and len(opts) == 4
@@ -112,34 +150,39 @@ def generate_question(
             and isinstance(data.get("explanation"), str)
         ):
             raise ValueError("schema invalid")
+
+        data["option_notes"] = notes
         data["card_id"] = card.id
-        # usage
+        data["qtype"] = qtype
         data["_usage"] = {
             "input_tokens": getattr(resp.usage, "input_tokens", 0),
             "output_tokens": getattr(resp.usage, "output_tokens", 0),
         }
         return data
     except Exception:
-        # Fallback — 사료 메타데이터만으로 안전한 질문 구성
+        # Fallback: 사료 메타로만 안전하게
         wrong_eras = ["조선 후기", "고려 중기", "신라 말기", "고구려 초기", "대한제국"]
         wrong_eras = [e for e in wrong_eras if e != card.era][:3]
-        options = [card.era] + wrong_eras
+        options = [card.era or "조선"] + wrong_eras
         random.shuffle(options)
         return {
             "question": f"〈{card.title}〉은(는) 어느 시대의 사건입니까?",
             "options": options,
-            "correct_idx": options.index(card.era),
+            "correct_idx": options.index(card.era or "조선"),
+            "option_notes": [
+                f"이 사건은 {card.era}에 일어났습니다." if o == card.era else f"이 사건은 {o}이 아니라 {card.era}에 속합니다."
+                for o in options
+            ],
             "explanation": f"{card.summary}\n_「출처: {card.source} [{card.id}]」_",
             "card_id": card.id,
+            "qtype": "fallback",
             "_fallback": True,
         }
 
 
 # ─────────────────────────────────────────────────────────────
-# 테마별 사료 풀
+# 테마 (무작위 풀)
 # ─────────────────────────────────────────────────────────────
-# 키: 테마 이름 (다국어 라벨은 prompts.py UI_TEXT 에서)
-# 값: 매칭 키워드 (title·tags·era·place 어디든 들어가면 매칭)
 QUEST_THEME_KEYWORDS: dict[str, list[str]] = {
     "all":          [],
     "palaces":      ["경복궁", "창덕궁", "창경궁", "덕수궁", "종묘", "중명전", "경기전"],
@@ -167,21 +210,100 @@ def _matches_theme(card: SourceCard, keywords: list[str]) -> bool:
 
 
 def pick_card(theme: str = "all", exclude_ids: list[str] | None = None) -> SourceCard:
-    """테마와 일치하는 사료 중 하나를 무작위로 선택. 직전에 본 카드는 제외."""
     corpus = load_corpus()
     keywords = QUEST_THEME_KEYWORDS.get(theme, [])
     excluded = set(exclude_ids or [])
     pool = [c for c in corpus if _matches_theme(c, keywords) and c.id not in excluded]
     if not pool:
-        # exclude_ids로 인해 다 떨어졌으면 무시
         pool = [c for c in corpus if _matches_theme(c, keywords)]
     if not pool:
         pool = corpus
     return random.choice(pool)
 
 
+# ─────────────────────────────────────────────────────────────
+# 큐레이션 코스 — 순차 진행 + 엔딩
+# ─────────────────────────────────────────────────────────────
+COURSES: dict[str, dict[str, Any]] = {
+    "jeongdong": {
+        "name_ko": "정동·덕수궁 7단서 (MVP 코스)",
+        "name_en": "Jeongdong & Deoksugung — 7 clues",
+        "name_ja": "貞洞・徳寿宮 7手がかり",
+        "name_zh": "贞洞·德寿宫 7线索",
+        "card_ids": [
+            "sillok-009",   # 1. 정동제일교회 (출발)
+            "sillok-001",   # 2. 아관파천 (구 러시아공사관 터)
+            "sillok-002",   # 3. 환궁 (덕수궁)
+            "sillok-004",   # 4. 대한제국 선포 (환구단)
+            "sillok-007",   # 5. 을사늑약 (덕수궁 중명전)
+            "place-020",    # 6. 중명전 자체
+            "sillok-010",   # 7. 헤이그 특사 (결말)
+        ],
+    },
+    "gyeongju_5": {
+        "name_ko": "경주 신라 5단서",
+        "name_en": "Gyeongju (Silla) — 5 clues",
+        "name_ja": "慶州(新羅) 5手がかり",
+        "name_zh": "庆州(新罗)5线索",
+        "card_ids": [
+            "place-006",    # 첨성대
+            "hist-003",     # 삼국통일
+            "place-007",    # 안압지
+            "place-005",    # 불국사·석굴암
+            "hist-004",     # 장보고 청해진
+        ],
+    },
+    "joseon_open": {
+        "name_ko": "조선의 시작 5단서",
+        "name_en": "Joseon Origins — 5 clues",
+        "name_ja": "朝鮮のはじまり 5手がかり",
+        "name_zh": "朝鲜的起点 5线索",
+        "card_ids": [
+            "hist-009",     # 위화도 회군
+            "hist-008",     # 정몽주 선죽교
+            "hist-010",     # 조선 건국
+            "place-001",    # 경복궁 창건
+            "place-003",    # 종묘
+        ],
+    },
+}
+
+
+def course_card_count(course_id: str) -> int:
+    return len(COURSES.get(course_id, {}).get("card_ids", []))
+
+
+def pick_course_card(course_id: str, idx: int) -> SourceCard | None:
+    """코스 N번째 사료 카드 반환. 범위 밖이면 None."""
+    course = COURSES.get(course_id)
+    if not course:
+        return None
+    ids = course["card_ids"]
+    if idx < 0 or idx >= len(ids):
+        return None
+    target_id = ids[idx]
+    for c in load_corpus():
+        if c.id == target_id:
+            return c
+    return None
+
+
+def ending_tier(score: int, total: int) -> str:
+    """정답률에 따른 엔딩 티어 키."""
+    if total <= 0:
+        return "novice"
+    ratio = score / total
+    if ratio >= 0.95:
+        return "master"      # 사관의 으뜸
+    if ratio >= 0.7:
+        return "companion"   # 사관의 동무
+    if ratio >= 0.4:
+        return "apprentice"  # 사관의 견습
+    return "novice"          # 다음에 또 오시구려
+
+
 __all__ = [
-    "generate_question",
-    "pick_card",
-    "QUEST_THEME_KEYWORDS",
+    "generate_question", "pick_card", "QUEST_THEME_KEYWORDS",
+    "COURSES", "course_card_count", "pick_course_card", "ending_tier",
+    "QUESTION_TYPES",
 ]
