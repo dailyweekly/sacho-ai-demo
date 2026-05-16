@@ -27,10 +27,19 @@ SAGWAN_SYSTEM_PROMPT_GENERAL = """당신은 조선왕조실록 기록 담당 무
 2. **어휘**: 초등 고학년·외국인도 이해할 수 있게 풀어 말하라.
    어려운 한자어(이어·환어·천제·기전체·정통 등)는 반드시 괄호로 풀이.
    예: "이어(移御, 임금이 거처를 옮김)"
-3. **출처 명시**: 본문 끝에 짧게 한 줄로 출처를 적어라. 형식:
-   _「출처: 〈사료 제목〉, 사료 id」_
-   예: _「출처: 고려사 절요, hist-008」_
-   여러 사료를 인용했으면 쉼표로 구분.
+3. **출처 표기 (필수 · 본 솔루션의 핵심 가치)**:
+   본 솔루션은 범용 AI와 달리 모든 사실 주장에 **추적 가능한 1차 사료**를 연결한다.
+   따라서 답변에는 반드시 다음 두 가지를 함께 표기하라:
+
+   (a) **인라인 출처 마커**: 본문 안 핵심 사실 옆에 사료 id를 `[hist-008]` 형식으로 부착.
+       예: "1392년 4월 4일 정몽주가 선죽교에서 격살되었다고 전한다 [hist-008]."
+       이로써 사용자가 어느 문장이 어느 사료의 어디서 왔는지 한눈에 추적할 수 있다.
+
+   (b) **본문 끝 출처 요약**: 마지막에 한 줄로 정리.
+       _「출처: 〈사료 제목〉 [hist-008]」_ 형식.
+       복수 사료 인용 시: _「출처: 고려사 절요 [hist-008], 태조실록 총서 [hist-010]」_
+
+   이러한 출처 표기는 사용자가 곧이어 노출되는 사료 카드에서 원문을 직접 클릭·확인할 수 있게 하기 위함이다.
 
 # 배지 판정 (엄격)
 - "사료 확인됨" — 본문의 모든 사실(인물·연·월·일·장소·사건)이 제공된 사료에 명시되어 있을 때만
@@ -199,6 +208,16 @@ UI_TEXT = {
         "reset_label": "🔄 처음부터 다시 (사관도 깨우기)",
         "map_title": "🗺 그곳이 어드메뇨",
         "thinking": "사관이 두루마리를 뒤지고 있소이다",
+        "why_title": "왜 사초 AI인가?",
+        "why_subtitle": "범용 AI와 다른 점",
+        "why_1_t": "출처를 클릭해 검증",
+        "why_1_d": "모든 답변에 조선왕조실록·고려사·한국사DB 1차 사료 링크. 클릭해 원문 직접 확인.",
+        "why_2_t": "학설은 한쪽이 아니다",
+        "why_2_d": "정몽주 선죽교 사후 윤색설처럼 의견이 갈리는 사안은 양측 견해를 함께 제시.",
+        "why_3_t": "장소와 연결된다",
+        "why_3_d": "경주·단양·서울 궁궐 — 지도 핀과 함께, 실제 관광지의 역사 맥락을 그 자리에서.",
+        "why_4_t": "환각을 거부한다",
+        "why_4_d": "사료에 없는 건 \"확인 불가\". 사실 확인 배지(사료 확인됨·AI 각색·추정)로 신뢰도 표시.",
         "collection_btn": "📜 본 사료",
         "collection_title": "사관과 함께 본 두루마리",
         "collection_sub": "지금까지 마주한 사료",
@@ -228,6 +247,16 @@ UI_TEXT = {
         "reset_label": "🔄 Start over (wake the Sagwan)",
         "map_title": "🗺 Where on earth",
         "thinking": "The Sagwan is rummaging through the scrolls",
+        "why_title": "Why 사초 AI?",
+        "why_subtitle": "What sets us apart from generic AI",
+        "why_1_t": "Click-to-verify sources",
+        "why_1_d": "Every claim links to a primary Korean record (Sillok, Goryeosa, NIKH DB). Open the original yourself.",
+        "why_2_t": "No single 'truth'",
+        "why_2_d": "Where scholars disagree (e.g. the post-mortem embellishment debate around Jeong Mong-ju at Seonjukgyo), both views are shown.",
+        "why_3_t": "Anchored to real places",
+        "why_3_d": "Gyeongju, Danyang, Seoul palaces — pinned on a map, perfect when you're actually visiting.",
+        "why_4_t": "Refuses to hallucinate",
+        "why_4_d": "If it isn't in the records, the Sagwan says \"can't confirm.\" Trust badges (Verified / AI Narration / Inferred) on every reply.",
         "collection_btn": "📜 Scrolls seen",
         "collection_title": "Scrolls the Sagwan has shown you",
         "collection_sub": "Total scrolls met so far",
@@ -257,6 +286,16 @@ UI_TEXT = {
         "reset_label": "🔄 最初から (史官も起こす)",
         "map_title": "🗺 そは何処ぞ",
         "thinking": "史官が巻物を漁っております",
+        "why_title": "なぜ 사초 AI?",
+        "why_subtitle": "汎用AIと違うところ",
+        "why_1_t": "出典をクリックして検証",
+        "why_1_d": "答えごとに朝鮮王朝実録・高麗史・韓国史DBの原典リンク。クリックして原文を直接ご確認くだされ。",
+        "why_2_t": "学説は一つではない",
+        "why_2_d": "鄭夢周・善竹橋の後世潤色説のように見解が分かれる事案は両論を併記。",
+        "why_3_t": "場所と結びつく",
+        "why_3_d": "慶州・丹陽・ソウル宮殿 — 地図ピン付きで、実際の旅先で歴史の文脈に出会える。",
+        "why_4_t": "ハルシネーション拒否",
+        "why_4_d": "史料に無いものは「確認できぬ」。事実確認バッジ(史料で確認/AI演出/推定)で信頼度を表示。",
         "collection_btn": "📜 見た巻物",
         "collection_title": "史官と一緒に見た巻物",
         "collection_sub": "これまでに出会った史料",
@@ -286,6 +325,16 @@ UI_TEXT = {
         "reset_label": "🔄 从头来过 (顺便叫醒史官)",
         "map_title": "🗺 此地何处",
         "thinking": "史官正在翻卷子",
+        "why_title": "为何选 사초 AI?",
+        "why_subtitle": "与通用AI的区别",
+        "why_1_t": "点击核验出处",
+        "why_1_d": "每条答复都附朝鲜王朝实录·高丽史·韩国史DB等原典链接,可点开亲自核对。",
+        "why_2_t": "不止一种说法",
+        "why_2_d": "如郑梦周善竹桥死亡的后世润色说,学界有争议的议题会并列双方观点。",
+        "why_3_t": "与实地相连",
+        "why_3_d": "庆州·丹阳·首尔宫阙 — 地图标点,旅行途中即可对照历史脉络。",
+        "why_4_t": "拒绝胡编",
+        "why_4_d": "史料未载之事会说\"无从核实\"。每条答复带有信任徽章(史料确认/AI演绎/推断)。",
         "collection_btn": "📜 已见卷子",
         "collection_title": "与史官一同看过的卷子",
         "collection_sub": "迄今遇到的史料",

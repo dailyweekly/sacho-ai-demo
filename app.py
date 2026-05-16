@@ -308,6 +308,66 @@ st.markdown(
         border-right: 11px solid #FFF;
     }
 
+    /* ── 왜 사초 AI? 차별 가치 카드 ────────────────────────── */
+    .why-card {
+        background: #FBF7F2;
+        border: 2.5px solid var(--ink);
+        border-radius: 22px;
+        padding: 18px 22px;
+        margin: 18px 0 22px 0;
+        box-shadow: 4px 4px 0 var(--ink);
+    }
+    .why-card .why-head {
+        display: flex; align-items: baseline; gap: 12px;
+        margin-bottom: 14px; flex-wrap: wrap;
+        border-bottom: 1.5px dashed rgba(58,42,31,0.20);
+        padding-bottom: 10px;
+    }
+    .why-card .why-title {
+        font-family: 'Yeon Sung', 'Black Han Sans', serif;
+        font-size: 24px; color: var(--ink); letter-spacing: 0.5px;
+    }
+    .why-card .why-sub {
+        font-family: 'Nanum Pen Script', cursive;
+        font-size: 17px; color: var(--ink-soft);
+    }
+    .why-card .why-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+    .why-card .why-cell {
+        display: flex; gap: 12px; align-items: flex-start;
+        background: #FFFCF5;
+        border: 1.5px dashed rgba(58,42,31,0.22);
+        border-radius: 14px;
+        padding: 12px 14px;
+    }
+    .why-card .why-num {
+        flex: 0 0 28px; height: 28px; line-height: 26px;
+        text-align: center;
+        background: var(--mustard);
+        border: 2px solid var(--ink);
+        border-radius: 50%;
+        font-family: 'Gowun Batang', serif;
+        font-weight: 700;
+        box-shadow: 1.5px 1.5px 0 var(--ink);
+    }
+    .why-card .why-cell b {
+        font-family: 'Gowun Batang', serif;
+        font-size: 14.5px;
+        color: var(--red-deep);
+    }
+    .why-card .why-cell p {
+        margin: 4px 0 0 0;
+        font-size: 13.5px;
+        line-height: 1.55;
+        color: var(--ink);
+    }
+    @media (max-width: 720px) {
+        .why-card .why-grid { grid-template-columns: 1fr; }
+    }
+
     /* ── 추천 질문 카드 그리드 (캐릭터 + 버튼 묶음) ────────── */
     .suggest-section h5 {
         font-family: 'Gowun Batang', serif;
@@ -445,6 +505,56 @@ st.markdown(
     .evidence-card a {
         color: var(--red-deep); text-decoration: none; font-weight: 700;
         border-bottom: 1.5px dotted var(--red-deep);
+    }
+    .evidence-card h4 code {
+        background: rgba(58,42,31,0.08);
+        padding: 1px 6px;
+        border-radius: 5px;
+        font-size: 12.5px;
+        font-family: 'JetBrains Mono', 'Consolas', monospace;
+        color: var(--ink-soft);
+        margin-right: 4px;
+    }
+    /* 출처 검증 영역 — 본 솔루션의 핵심 차별점 */
+    .evidence-card .verify-row {
+        display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+        margin-top: 12px; padding-top: 10px;
+        border-top: 1.5px dashed rgba(58,42,31,0.18);
+    }
+    .evidence-card .verify-btn {
+        display: inline-flex; align-items: center;
+        padding: 7px 14px;
+        background: var(--mustard);
+        color: var(--ink) !important;
+        border: 2px solid var(--ink);
+        border-radius: 10px;
+        box-shadow: 2px 2px 0 var(--ink);
+        font-family: 'Gowun Batang', serif;
+        font-weight: 700;
+        font-size: 13.5px;
+        text-decoration: none !important;
+        transition: transform 0.08s;
+    }
+    .evidence-card .verify-btn:hover {
+        background: #FFD55A;
+        transform: translate(-1px, -1px);
+        box-shadow: 3px 3px 0 var(--ink);
+        border-bottom: 2px solid var(--ink) !important;
+    }
+    .evidence-card .verify-btn:active {
+        transform: translate(1px, 1px);
+        box-shadow: 1px 1px 0 var(--ink);
+    }
+    .evidence-card .source-authority {
+        font-size: 12px;
+        color: var(--ink-soft);
+        font-family: 'Noto Sans KR', sans-serif;
+    }
+    .evidence-card .license-tag {
+        margin-top: 6px;
+        font-size: 11.5px;
+        color: #8a7560;
+        font-family: 'Noto Sans KR', sans-serif;
     }
 
     /* ── 응답 메타 (품삯 띠) ──────────────────────────── */
@@ -1021,13 +1131,13 @@ st.markdown('</div>', unsafe_allow_html=True)
 # ─────────────────────────────────────────────────────────────
 HEADER_TEXT = {
     "ko": ("사관(史官)과 두런두런",
-           "고조선부터 광복까지 — 한국사 두루마리를 졸린 사관과 함께 살살 펼쳐 보시구려."),
+           "고조선부터 광복까지 — 답변마다 1차 사료 링크. 학설이 갈리면 양측 견해를 함께."),
     "en": ("Chatting with the Sleepy Sagwan",
-           "From Gojoseon to the 1945 Liberation — unfurl Korea's scrolls together with this drowsy historian."),
+           "Gojoseon to the 1945 Liberation — every reply links to a primary Korean record, with multiple scholarly views where they exist."),
     "ja": ("ねむたい史官とぽつぽつ",
-           "古朝鮮から光復まで、韓国史の巻物を眠そうな史官と一緒にゆるゆる開いてみましょう。"),
+           "古朝鮮から光復まで — 答えごとに原典リンク。学説が分かれる事案は両論併記。"),
     "zh": ("和犯困的史官闲谈",
-           "从古朝鲜到光复 — 和这位犯困的小史官一起慢慢翻开韩国史的卷子吧。"),
+           "从古朝鲜到光复 — 每条答复附原典链接,学界争议则并列双方观点。"),
 }
 title, subtitle = HEADER_TEXT[st.session_state.language]
 st.markdown(
@@ -1046,23 +1156,48 @@ st.markdown(
 # ─────────────────────────────────────────────────────────────
 # 뷰 분기 — 사료 보관함이면 본 페이지에서 종료 (헤더는 위에서 이미 그려졌음)
 # ─────────────────────────────────────────────────────────────
+def _source_authority(url: str) -> str:
+    """URL에서 출처 기관을 식별해 사용자에게 신뢰도 라벨로 노출."""
+    if not url:
+        return "참고 자료"
+    if "sillok.history.go.kr" in url:
+        return "🏛 조선왕조실록 (국사편찬위원회)"
+    if "sjw.history.go.kr" in url:
+        return "🏛 승정원일기 (국사편찬위원회)"
+    if "db.history.go.kr" in url:
+        return "🏛 한국사데이터베이스 (국사편찬위원회)"
+    if "itkc.or.kr" in url:
+        return "🏛 한국고전번역원"
+    if "royalpalace.go.kr" in url or "cha.go.kr" in url or "cdg.go.kr" in url:
+        return "🏛 문화재청·궁능유적본부"
+    if "go.kr" in url:
+        return "🏛 정부·공공기관"
+    if "or.kr" in url:
+        return "📚 비영리·학술기관"
+    return "📚 참고 자료"
+
+
 def render_evidence_cards(cards: list[SourceCard]) -> None:
     if not cards:
         return
     st.markdown(f"##### {T['evidence_header']}")
     for c in cards:
+        authority = _source_authority(c.source_url)
         st.markdown(
             f'<div class="evidence-card">'
-            f'<h4>📜 {T["evidence_id"]} {c.id} · {c.title}</h4>'
+            f'<h4>📜 {T["evidence_id"]} <code>{c.id}</code> · {c.title}</h4>'
             f'<div class="meta">📅 {c.date} &nbsp;|&nbsp; 📍 {c.place} '
             f'&nbsp;|&nbsp; 📖 {c.source}</div>'
             f'<div class="body">{c.summary}</div>'
             f'<div class="body" style="margin-top:8px;color:#5C4A33;font-size:13.5px;">'
             f'<b>{T["original_excerpt"]}</b>: <em>{c.original_text}</em></div>'
-            f'<div style="margin-top:10px;font-size:12.5px;">'
-            f'<a href="{c.source_url}" target="_blank">{T["view_source"]}</a>'
-            f'&nbsp;&nbsp;<span style="color:#8a7560;">📄 {c.license}</span>'
-            f'</div></div>',
+            f'<div class="verify-row">'
+            f'<a class="verify-btn" href="{c.source_url}" target="_blank" '
+            f'rel="noopener">🔍 {T["view_source"]}</a>'
+            f'<span class="source-authority">{authority}</span>'
+            f'</div>'
+            f'<div class="license-tag">📄 {c.license}</div>'
+            f'</div>',
             unsafe_allow_html=True,
         )
 
@@ -1178,6 +1313,35 @@ if not st.session_state.messages:
         f'<div class="greeting-card">'
         f'  <div class="greeting-char">{char_img("umbrella", width=130)}</div>'
         f'  <div class="greeting-bubble">{greeting}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    # 차별 가치 카드 — 범용 AI와의 차이를 사용자에게 명시
+    st.markdown(
+        f'<div class="why-card">'
+        f'  <div class="why-head">'
+        f'    <span class="why-title">✨ {T["why_title"]}</span>'
+        f'    <span class="why-sub">{T["why_subtitle"]}</span>'
+        f'  </div>'
+        f'  <div class="why-grid">'
+        f'    <div class="why-cell">'
+        f'      <div class="why-num">1</div>'
+        f'      <div><b>🔍 {T["why_1_t"]}</b><p>{T["why_1_d"]}</p></div>'
+        f'    </div>'
+        f'    <div class="why-cell">'
+        f'      <div class="why-num">2</div>'
+        f'      <div><b>⚖️ {T["why_2_t"]}</b><p>{T["why_2_d"]}</p></div>'
+        f'    </div>'
+        f'    <div class="why-cell">'
+        f'      <div class="why-num">3</div>'
+        f'      <div><b>🗺 {T["why_3_t"]}</b><p>{T["why_3_d"]}</p></div>'
+        f'    </div>'
+        f'    <div class="why-cell">'
+        f'      <div class="why-num">4</div>'
+        f'      <div><b>🛡 {T["why_4_t"]}</b><p>{T["why_4_d"]}</p></div>'
+        f'    </div>'
+        f'  </div>'
         f'</div>',
         unsafe_allow_html=True,
     )
