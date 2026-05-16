@@ -102,21 +102,29 @@ def generate_question(
         else ""
     )
 
-    # K-콘텐츠 entry는 작품 ↔ 실제 장소/사건 연결 질문을 우선
+    # K-콘텐츠 entry — '과거에서 미래로 떨어진 사관' 페르소나 + 진실 강조
     kculture_hint = ""
     if card.id.startswith("kculture-"):
         kculture_hint = (
-            "\n[K-콘텐츠 출제 가이드 — 이 entry는 영화/드라마/애니메이션이 "
-            "실제 한국 사적·장소·역사 사건과 연결되는 카드입니다]\n"
-            "다음 4가지 패턴 중 1개를 골라 질문하십시오:\n"
+            "\n[K-콘텐츠 출제 페르소나 — 시간 이동 사관]\n"
+            "당신은 1905년 정동에서 갑자기 2025년으로 떨어진 졸자(拙者) 사관입니다.\n"
+            "영화·드라마·애니메이션이라는 신묘한 '활동 그림자(影戱)'를 보고\n"
+            "당황·감탄·기쁨이 섞인 옛 어투로 1인칭 서술하세요.\n"
+            "예: '어어… 후세 사람들이 K-pop이라 부르는 노래로 우리 무녀의 굿을\n"
+            "    대신하고 있더이다. 헌트릭스라 했지요…'\n"
+            "그러나 페르소나는 '톤'에만 적용 — 사실은 절대 왜곡 금지.\n"
+            "사료에 적힌 내용만으로 질문·정답·해설을 구성하고,\n"
+            "사료에 없는 장면·대사·인물·줄거리를 임의로 만들어 내지 마십시오.\n"
+            "\n"
+            "[K-콘텐츠 출제 4가지 패턴 — 1개 선택]\n"
             "  1) 무대 매핑: '이 작품의 무대가 된 실제 장소/사적은?'\n"
-            "  2) 역사 닻: '이 작품이 다룬 역사 사건은 실제로 언제·어디서?'\n"
+            "  2) 역사 닻:   '이 작품이 다룬 역사 사건은 실제로 언제·어디서?'\n"
             "  3) 모티브 출처: '이 작품 속 ○○의 모티브가 된 실제 ○○는?'\n"
-            "  4) 방문 가이드: '이 작품 촬영지/배경지를 지금 가려면 어디로?'\n"
-            "단순 작품 트리비아(주연·감독·시청률)는 피하세요 — "
-            "콘텐츠↔실제 연결이 핵심입니다.\n"
-            "explanation에서 작품의 실제 역사 배경을 짧게 풀고, "
-            "방문 가능한 장소를 명확히 언급하세요."
+            "  4) 방문 가이드: '이 작품 배경지를 지금 가려면 어디로?'\n"
+            "단순 작품 트리비아(주연·감독·시청률 수치)는 피하세요 — "
+            "콘텐츠↔실제 한국 문화·장소·역사 연결이 핵심입니다.\n"
+            "explanation에서 작품의 실제 한국 문화 배경을 짧게 풀고, "
+            "방문 가능한 장소·전통을 명확히 언급하세요."
         )
 
     user_msg = (
@@ -243,76 +251,90 @@ def pick_card(theme: str = "all", exclude_ids: list[str] | None = None) -> Sourc
 
 
 # ─────────────────────────────────────────────────────────────
-# 큐레이션 코스 — 순차 진행 + 엔딩
+# 큐레이션 코스 — 도보 권역 단위 (걸을 수 있는 거리 안)
 # ─────────────────────────────────────────────────────────────
 COURSES: dict[str, dict[str, Any]] = {
     "jeongdong": {
-        "name_ko": "정동·덕수궁 7단서 (MVP 코스)",
-        "name_en": "Jeongdong & Deoksugung — 7 clues",
-        "name_ja": "貞洞・徳寿宮 7手がかり",
-        "name_zh": "贞洞·德寿宫 7线索",
+        "name_ko": "🚶 정동·덕수궁 7단서 (중구, 도보 1.8km)",
+        "name_en": "🚶 Jeongdong & Deoksugung — 7 clues (1.8 km walk)",
+        "name_ja": "🚶 貞洞・徳寿宮 7手がかり (徒歩1.8km)",
+        "name_zh": "🚶 贞洞·德寿宫 7线索 (步行1.8km)",
+        "area_ko": "서울 중구 정동길 일대",
         "card_ids": [
-            "sillok-009",   # 1. 정동제일교회 (출발)
-            "sillok-001",   # 2. 아관파천 (구 러시아공사관 터)
-            "sillok-002",   # 3. 환궁 (덕수궁)
-            "sillok-004",   # 4. 대한제국 선포 (환구단)
-            "sillok-007",   # 5. 을사늑약 (덕수궁 중명전)
-            "place-020",    # 6. 중명전 자체
-            "sillok-010",   # 7. 헤이그 특사 (결말)
+            "sillok-009",   # 정동제일교회 (출발)
+            "sillok-001",   # 아관파천 (구 러시아공사관 터)
+            "sillok-002",   # 환궁 (덕수궁)
+            "sillok-004",   # 대한제국 선포 (환구단, 정동 인접)
+            "sillok-007",   # 을사늑약 (덕수궁 중명전)
+            "place-020",    # 중명전 자체
+            "sillok-010",   # 헤이그 특사 (결말)
         ],
     },
-    "gyeongju_5": {
-        "name_ko": "경주 신라 5단서",
-        "name_en": "Gyeongju (Silla) — 5 clues",
-        "name_ja": "慶州(新羅) 5手がかり",
-        "name_zh": "庆州(新罗)5线索",
+    "jongno_palaces": {
+        "name_ko": "🚶 종로 4대 궁궐 산책 5단서 (도보 2km)",
+        "name_en": "🚶 Jongno Palace Walk — 5 clues (2 km)",
+        "name_ja": "🚶 鍾路 王宮散歩 5手がかり",
+        "name_zh": "🚶 钟路宫阙漫步5线索",
+        "area_ko": "서울 종로구 (경복궁~창덕궁~창경궁~종묘)",
         "card_ids": [
-            "place-006",    # 첨성대
-            "hist-003",     # 삼국통일
-            "place-007",    # 안압지
-            "place-005",    # 불국사·석굴암
-            "hist-004",     # 장보고 청해진
-        ],
-    },
-    "joseon_open": {
-        "name_ko": "조선의 시작 5단서",
-        "name_en": "Joseon Origins — 5 clues",
-        "name_ja": "朝鮮のはじまり 5手がかり",
-        "name_zh": "朝鲜的起点 5线索",
-        "card_ids": [
-            "hist-009",     # 위화도 회군
-            "hist-008",     # 정몽주 선죽교
-            "hist-010",     # 조선 건국
-            "place-001",    # 경복궁 창건
+            "place-001",    # 경복궁
+            "hist-011",     # 훈민정음 반포 (경복궁)
+            "place-002",    # 창덕궁
+            "place-004",    # 창경궁
             "place-003",    # 종묘
         ],
     },
-    "kculture_seoul": {
-        "name_ko": "🎬 K-콘텐츠 ↔ 서울 7장면",
-        "name_en": "🎬 K-content × Seoul — 7 scenes",
-        "name_ja": "🎬 Kコンテンツ × ソウル 7場面",
-        "name_zh": "🎬 K内容 × 首尔7场景",
+    "bukchon_kpdh": {
+        "name_ko": "🎬 케데헌 × 북촌 5단서 (도보 1.5km)",
+        "name_en": "🎬 KPDH × Bukchon — 5 clues (1.5 km walk)",
+        "name_ja": "🎬 KPDH × 北村 5手がかり",
+        "name_zh": "🎬 KPDH × 北村5线索",
+        "area_ko": "서울 종로구 북촌·가회동·삼청동",
+        "card_ids": [
+            "kculture-017",  # KPDH 배경 ↔ 북촌 한옥마을
+            "kculture-015",  # KPDH 헌트릭스 ↔ 무녀 전통
+            "kculture-016",  # KPDH 사자 보이즈 ↔ 저승사자
+            "kculture-006",  # 케데헌 전체작 ↔ 무속·도깨비·한옥
+            "place-003",     # 종묘 (북촌 인접 — 전통 정신의 거점)
+        ],
+    },
+    "jongno_kculture": {
+        "name_ko": "🎬 K-콘텐츠 ↔ 종로·중구 5장면 (도보권)",
+        "name_en": "🎬 K-content × Jongno·Jung-gu — 5 scenes (walkable)",
+        "name_ja": "🎬 Kコンテンツ × 鍾路 5場面",
+        "name_zh": "🎬 K内容 × 钟路·中区5场景",
+        "area_ko": "서울 종로·중구 (정동~창덕궁~창경궁~낙선재)",
         "card_ids": [
             "kculture-001",  # 미스터 션샤인 ↔ 손탁호텔 (정동)
             "kculture-004",  # 광해 ↔ 창덕궁
+            "kculture-011",  # 슈룹 ↔ 창경궁·창덕궁
             "kculture-002",  # 사도 ↔ 창경궁
-            "kculture-011",  # 슈룹 ↔ 창경궁/창덕궁
-            "kculture-005",  # 덕혜옹주 ↔ 낙선재
-            "kculture-009",  # 응답하라 1988 ↔ 쌍문동
-            "kculture-007",  # 오징어 게임 ↔ 옥수동
+            "kculture-005",  # 덕혜옹주 ↔ 낙선재 (창덕궁 안)
         ],
     },
-    "kculture_period": {
-        "name_ko": "🎬 시대극으로 보는 한국사 5장면",
-        "name_en": "🎬 Korean history through period dramas",
-        "name_ja": "🎬 時代劇で見る韓国史 5場面",
-        "name_zh": "🎬 透过时代剧看韩国史",
+    "gyeongju_5": {
+        "name_ko": "🚶 경주 신라 5단서 (경주 시내 권역)",
+        "name_en": "🚶 Gyeongju (Silla) — 5 clues (city area)",
+        "name_ja": "🚶 慶州(新羅) 5手がかり (市内)",
+        "name_zh": "🚶 庆州(新罗)5线索 (市内)",
+        "area_ko": "경상북도 경주 시내",
         "card_ids": [
-            "kculture-010",  # 한산 (1592 임진왜란)
-            "kculture-004",  # 광해 (1616)
-            "kculture-002",  # 사도 (1762)
-            "kculture-001",  # 미스터 션샤인 (1885~1907)
-            "kculture-005",  # 덕혜옹주 (1962 환국)
+            "place-006",    # 첨성대
+            "place-007",    # 안압지(월지)
+            "hist-003",     # 삼국통일
+            "place-005",    # 불국사·석굴암
+            "hist-004",     # 장보고 청해진 (참고)
+        ],
+    },
+    "danyang_palgyeong": {
+        "name_ko": "🚶 단양 단양팔경 2단서 (자연 명소)",
+        "name_en": "🚶 Danyang Palgyeong — 2 clues",
+        "name_ja": "🚶 丹陽 八景 2手がかり",
+        "name_zh": "🚶 丹阳八景2线索",
+        "area_ko": "충북 단양군",
+        "card_ids": [
+            "place-008",    # 도담삼봉
+            "place-009",    # 사인암
         ],
     },
 }
@@ -335,6 +357,48 @@ def pick_course_card(course_id: str, idx: int) -> SourceCard | None:
         if c.id == target_id:
             return c
     return None
+
+
+def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """두 좌표 사이 거리 (km)."""
+    from math import radians, sin, cos, asin, sqrt
+    R = 6371.0
+    dlat = radians(lat2 - lat1)
+    dlon = radians(lon2 - lon1)
+    a = sin(dlat / 2) ** 2 + cos(radians(lat1)) * cos(radians(lat2)) * sin(dlon / 2) ** 2
+    return 2 * R * asin(sqrt(a))
+
+
+def pick_nearest_card(
+    lat: float, lon: float,
+    max_km: float = 30.0,
+    exclude_ids: list[str] | None = None,
+) -> tuple[SourceCard | None, float]:
+    """현재 위치에서 가장 가까운 사료 카드 + 거리(km).
+
+    K-콘텐츠 entry는 위치가 모호한 경우(전국/배경)가 많아 제외.
+    실제 사적·관광지·역사 사건 위치만 대상.
+    """
+    excluded = set(exclude_ids or [])
+    best: SourceCard | None = None
+    best_dist = float("inf")
+    for c in load_corpus():
+        if c.id in excluded:
+            continue
+        # K-콘텐츠는 일부만 정확한 위치 (북촌·정동 같은 명확한 곳만 허용)
+        if c.id.startswith("kculture-"):
+            # 명확한 단일 장소가 있는 K-콘텐츠만 (북촌·손탁호텔·낙선재 등)
+            if "한국 무속" in c.place or "전통 사후세계" in c.place or "(전국" in c.place:
+                continue
+        if not c.place_coords or len(c.place_coords) != 2:
+            continue
+        d = _haversine_km(lat, lon, c.place_coords[1], c.place_coords[0])
+        if d < best_dist:
+            best_dist = d
+            best = c
+    if best_dist > max_km:
+        return None, best_dist
+    return best, best_dist
 
 
 def ending_tier(score: int, total: int) -> str:

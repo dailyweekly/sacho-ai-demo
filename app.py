@@ -61,6 +61,7 @@ from core.character import (
 from core.quest import (
     generate_question, pick_card, QUEST_THEME_KEYWORDS,
     COURSES, course_card_count, pick_course_card, ending_tier,
+    pick_nearest_card,
 )
 import random as _random
 
@@ -430,6 +431,18 @@ st.markdown(
         border-left: 3px solid #8C2A18;
         padding-left: 10px;
         text-decoration: line-through;
+    }
+
+    /* nearby 모드 안내 박스 */
+    .nearby-hint {
+        background: #FFF7DA;
+        border: 1.5px dashed var(--ink-soft);
+        border-radius: 12px;
+        padding: 10px 14px;
+        margin: 8px 0 12px 0;
+        font-family: 'Gowun Batang', serif;
+        font-size: 13.5px;
+        color: var(--ink);
     }
 
     /* 코스 진행 표시 */
@@ -1969,10 +1982,11 @@ def render_quest_page() -> None:
             unsafe_allow_html=True,
         )
 
-        # 놀이 방식 선택 (라디오 — 코스 vs 자유 테마)
+        # 놀이 방식 선택 (라디오 — 코스 / 자유 테마 / 내 근처)
         play_modes = {
             T["play_mode_course"]: "course",
             T["play_mode_theme"]:  "theme",
+            T["play_mode_nearby"]: "nearby",
         }
         cur_label = next((k for k, v in play_modes.items()
                           if v == st.session_state.play_mode), list(play_modes)[0])
@@ -1984,6 +1998,43 @@ def render_quest_page() -> None:
             key="play_mode_radio",
         )
         st.session_state.play_mode = play_modes[picked]
+
+        # 모드별 picker
+        if st.session_state.play_mode == "nearby":
+            st.markdown(
+                f'<div class="nearby-hint">{T["nearby_hint"]}</div>',
+                unsafe_allow_html=True,
+            )
+            # streamlit-geolocation 버튼 (사용자 권한 요청)
+            loc = None
+            try:
+                from streamlit_geolocation import streamlit_geolocation
+                loc = streamlit_geolocation()
+            except Exception:
+                st.error("위치 라이브러리 로드 실패. requirements 확인 필요.")
+                return
+
+            if loc and loc.get("latitude") is not None:
+                lat = float(loc["latitude"])
+                lon = float(loc["longitude"])
+                nearest, dist = pick_nearest_card(lat, lon, max_km=30.0)
+                if nearest is None:
+                    st.warning(T["nearby_too_far"])
+                    return
+                st.success(
+                    f"📍 가장 가까운 사적: **{nearest.title}** "
+                    f"({T['nearby_distance'].format(km=round(dist, 1))})"
+                )
+                if st.button(T["quest_start_btn"], key="quest_start_nearby",
+                             use_container_width=True):
+                    if not api_key_present:
+                        st.error(T["api_key_missing_title"])
+                        return
+                    _generate_with_card(nearest)
+                    st.rerun()
+            else:
+                st.info(T["nearby_no_perm"])
+            return
 
         # 코스 / 테마 셀렉트
         col_a, col_b = st.columns([3, 2])
@@ -2005,6 +2056,10 @@ def render_quest_page() -> None:
                     st.session_state.course_id = new_cid
                     st.session_state.course_idx = 0
                     st.session_state.course_score = 0
+                # 권역 안내
+                area = COURSES.get(new_cid, {}).get("area_ko", "")
+                if area:
+                    st.caption(f"📍 권역: {area}")
             else:
                 themes = _theme_options()
                 theme_keys = list(themes.keys())
