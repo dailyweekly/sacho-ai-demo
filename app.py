@@ -1192,6 +1192,11 @@ st.markdown(
         letter-spacing: 0.2px;
         box-shadow: 0 1px 0 rgba(58,42,31,0.06);
     }
+    .evidence-card .dataset-chip.nearby-chip {
+        background: linear-gradient(135deg, #D4E8C9, #A8D894);
+        border-color: #5A7A3B;
+        color: #2E4A1A;
+    }
 
     /* ── 응답 메타 (품삯 띠) ──────────────────────────── */
     .meta-row {
@@ -1998,9 +2003,11 @@ def _data_sources_html() -> str:
         '<td>문화재청·궁능유적본부</td>'
         '<td>장소 좌표·경복궁/덕수궁 내부 7방 (gbg-/dsg-)</td>'
         '<td>공공데이터포털 — 제한 없음</td></tr>'
-        '<tr><td><b>관광정보 TourAPI 4.0</b></td>'
-        '<td>한국관광공사</td>'
-        '<td>관광지 다국어 안내 링크·핀 보강</td>'
+        '<tr><td><b>관광정보 TourAPI 4.0</b> '
+        '<span style="background:#5A7A3B;color:#fff;font-size:10px;'
+        'padding:1px 6px;border-radius:6px;margin-left:4px;">실시간 호출</span></td>'
+        '<td>한국관광공사 (KorService2)</td>'
+        '<td>좌표 반경 500m 등재 명소 자동 enrichment + 다국어 안내</td>'
         '<td>data.go.kr · 출처 표기</td></tr>'
         '<tr><td><b>국립국악원 자료</b></td>'
         '<td>국립국악원</td>'
@@ -2506,30 +2513,81 @@ def _place_links(c: SourceCard) -> str:
 
 
 def _special_dataset_chip(c: SourceCard) -> str:
-    """공모전 특별제공 데이터셋(한복·국악·문양) 활용 카드에 표시되는 작은 칩."""
-    text = " ".join([c.title or "", c.summary or "", " ".join(c.tags or []),
-                     c.id or ""])
-    chips = []
+    """공모전 특별제공 데이터셋(한복·국악·문양) 활용 카드 칩.
+
+    우선순위: ``c.dataset_tags`` 명시 → 본문 키워드 폴백.
+    """
+    explicit = set(getattr(c, "dataset_tags", []) or [])
+    chips: list[str] = []
+
+    if explicit:
+        if "hanbok" in explicit:
+            chips.append(
+                '<span class="dataset-chip" '
+                'title="공모전 특별제공: 한국공예·디자인문화진흥원 한복 데이터셋">'
+                '👘 한복 데이터셋</span>'
+            )
+        if "gugak" in explicit:
+            chips.append(
+                '<span class="dataset-chip" '
+                'title="공모전 특별제공: 국립국악원 자료">'
+                '🎶 국악 데이터셋</span>'
+            )
+        if "pattern" in explicit:
+            chips.append(
+                '<span class="dataset-chip" '
+                'title="공모전 특별제공: 전통문양 데이터셋">'
+                '🌀 전통문양 데이터셋</span>'
+            )
+        return ' '.join(chips)
+
+    # 폴백 — 키워드 기반 추측 (정확도 낮음)
+    text = " ".join([c.title or "", c.summary or "",
+                     " ".join(c.tags or []), c.id or ""])
     if c.id.startswith("kculture-") or any(
         k in text for k in ["한복", "곤룡포", "단령", "철릭", "장신구",
                               "갓", "비녀", "당의"]
     ):
         chips.append(
-            '<span class="dataset-chip" title="공모전 특별제공: 한국공예·디자인문화진흥원 한복·전통문양">'
+            '<span class="dataset-chip" '
+            'title="공모전 특별제공: 한국공예·디자인문화진흥원 한복·전통문양 (추정)">'
             '👘 한복·문양 데이터셋</span>'
         )
     if any(k in text for k in ["국악", "판소리", "민요", "장단", "굿거리",
                                  "사물놀이", "아악", "정악", "종묘제례악"]):
         chips.append(
-            '<span class="dataset-chip" title="공모전 특별제공: 국립국악원 자료">'
+            '<span class="dataset-chip" '
+            'title="공모전 특별제공: 국립국악원 자료 (추정)">'
             '🎶 국악 데이터셋</span>'
         )
     if any(k in text for k in ["문양", "단청", "기와", "전통 문양", "오방색"]):
         chips.append(
-            '<span class="dataset-chip" title="공모전 특별제공: 전통문양 데이터셋">'
+            '<span class="dataset-chip" '
+            'title="공모전 특별제공: 전통문양 데이터셋 (추정)">'
             '🌀 전통문양</span>'
         )
     return ' '.join(chips)
+
+
+def _nearby_tour_chip(c: SourceCard) -> str:
+    """TourAPI 4.0 enrichment 결과 — 주변 KTO 등재 명소 N곳 칩."""
+    side = getattr(c, "tour_nearby", None)
+    if not side:
+        return ''
+    spots = side.get("spots") or []
+    if not spots:
+        return ''
+    radius = side.get("radius_m", 500)
+    top = spots[:3]
+    names = " · ".join(s["title"] for s in top)
+    tip = (
+        f"한국관광공사 TourAPI 4.0 · 반경 {radius}m: {names}"
+        + (f" 외 {len(spots) - 3}곳" if len(spots) > 3 else "")
+    )
+    return (
+        f'<span class="dataset-chip nearby-chip" title="{tip}">'
+        f'🏞 주변 명소 {len(spots)}곳 · TourAPI</span>'
+    )
 
 
 def render_evidence_cards(cards: list[SourceCard]) -> None:
@@ -2538,9 +2596,11 @@ def render_evidence_cards(cards: list[SourceCard]) -> None:
     st.markdown(f"##### {T['evidence_header']}")
     for c in cards:
         authority = _source_authority(c.source_url)
-        special = _special_dataset_chip(c)
+        chip_html = " ".join(
+            x for x in [_special_dataset_chip(c), _nearby_tour_chip(c)] if x
+        )
         special_html = (
-            f'<div class="dataset-chips">{special}</div>' if special else ''
+            f'<div class="dataset-chips">{chip_html}</div>' if chip_html else ''
         )
         st.markdown(
             f'<div class="evidence-card">'

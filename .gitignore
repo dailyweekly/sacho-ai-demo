@@ -27,3 +27,6 @@ Thumbs.db
 # Local data overrides
 data/raw/
 data/processed/
+
+# TourAPI runtime cache (사이드카 data/tour_enrichment.json 은 커밋)
+.tourapi_cache.json

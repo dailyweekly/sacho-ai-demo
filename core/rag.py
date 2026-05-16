@@ -17,6 +17,7 @@ from typing import Iterable
 
 
 DATA_PATH = Path(__file__).resolve().parents[1] / "data" / "sample_sillok.json"
+TOUR_SIDECAR_PATH = DATA_PATH.parent / "tour_enrichment.json"
 
 
 @dataclass
@@ -39,6 +40,12 @@ class SourceCard:
     score: float = 0.0
     # 디버그/시연용: 매칭된 토큰과 필드별 hit 정보
     matched_tokens: list[str] = field(default_factory=list)
+    # TourAPI 4.0 사이드카 — scripts/enrich_tourapi.py 가 채움
+    # 형식: {"radius_m": 500, "spots": [{"title", "addr1", "contentid",
+    #        "contenttypeid", "dist_m", "image"}]}
+    tour_nearby: dict | None = None
+    # 공모전 특별제공 데이터셋 명시 태그 (수작업): "hanbok"|"gugak"|"pattern"
+    dataset_tags: list[str] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, d: dict) -> "SourceCard":
@@ -58,20 +65,39 @@ class SourceCard:
             license=d.get("license", ""),
             era=d.get("era", ""),
             king=d.get("king", ""),
+            dataset_tags=d.get("dataset_tags", []),
         )
 
 
 _CACHE: list[SourceCard] | None = None
 
 
+def _load_tour_sidecar() -> dict[str, dict]:
+    """TourAPI enrichment 사이드카 — 없거나 깨졌으면 빈 dict."""
+    if not TOUR_SIDECAR_PATH.exists():
+        return {}
+    try:
+        return json.loads(TOUR_SIDECAR_PATH.read_text("utf-8"))
+    except Exception:
+        return {}
+
+
 def load_corpus(path: Path = DATA_PATH) -> list[SourceCard]:
-    """샘플 사료 JSON을 로드해 SourceCard 리스트로 변환 (캐시 적용)."""
+    """샘플 사료 JSON + TourAPI 사이드카를 로드해 SourceCard 리스트 반환 (캐시)."""
     global _CACHE
     if _CACHE is not None:
         return _CACHE
     with path.open(encoding="utf-8") as f:
         data = json.load(f)
-    _CACHE = [SourceCard.from_dict(d) for d in data]
+    sidecar = _load_tour_sidecar()
+    cards: list[SourceCard] = []
+    for d in data:
+        card = SourceCard.from_dict(d)
+        side = sidecar.get(card.id)
+        if side and side.get("spots"):
+            card.tour_nearby = side
+        cards.append(card)
+    _CACHE = cards
     return _CACHE
 
 
