@@ -1124,7 +1124,136 @@ st.markdown(
         .collection-empty { flex-direction: column; text-align: center; }
     }
 
-    /* ─── 🔐 비밀번호 게이트 (초 귀엽게) ─── */
+    /* ─── 🔐 비밀번호 게이트 (세련·귀엽게) ─── */
+    /* 상단 브랜드 스트립 */
+    .gate-brand {
+        display: flex; justify-content: center; align-items: center;
+        gap: 14px;
+        padding: 8px 0 14px 0;
+        margin-bottom: 12px;
+    }
+    .gate-brand-mark {
+        animation: brand-bob 4s ease-in-out infinite;
+    }
+    @keyframes brand-bob {
+        0%, 100% { transform: translateY(0) rotate(-2deg); }
+        50% { transform: translateY(-3px) rotate(2deg); }
+    }
+    .gate-brand-text h1 {
+        margin: 0;
+        font-family: 'Yeon Sung', 'Black Han Sans', serif;
+        font-size: 32px;
+        color: var(--ink);
+        letter-spacing: 1px;
+        line-height: 1.1;
+    }
+    .gate-brand-text p {
+        margin: 4px 0 0 0;
+        font-family: 'Nanum Pen Script', cursive;
+        font-size: 17px;
+        color: var(--ink-soft);
+        opacity: 0.85;
+    }
+
+    /* 캐릭터 카드 반짝임 (sparkles) */
+    .gate-sparkle {
+        position: absolute;
+        color: var(--mustard);
+        text-shadow: 0 0 6px rgba(219, 184, 113, 0.6);
+        pointer-events: none;
+        opacity: 0;
+        animation: gate-sparkle 3.5s ease-in-out infinite;
+    }
+    .gate-sparkle.s1 { top: 20%; left: 8%;  font-size: 18px; animation-delay: 0s; }
+    .gate-sparkle.s2 { top: 60%; right: 10%; font-size: 14px; animation-delay: 1.2s; }
+    .gate-sparkle.s3 { top: 80%; left: 18%; font-size: 16px; animation-delay: 2.4s; }
+    @keyframes gate-sparkle {
+        0%, 100% { opacity: 0; transform: scale(0.4) rotate(0deg); }
+        50%      { opacity: 0.85; transform: scale(1) rotate(25deg); }
+    }
+
+    /* 대문 처마 (지붕) */
+    .door-card .door-eaves {
+        position: absolute;
+        top: -16px; left: -10px; right: -10px;
+        height: 12px;
+        background: linear-gradient(180deg, #2A1F18 0%, #1A130E 100%);
+        border-radius: 8px 8px 4px 4px;
+        box-shadow: 0 3px 0 rgba(58,42,31,0.3);
+    }
+
+    /* 가치 카드 — icon 분리 셀, 그라데이션 */
+    .gate-why-cell {
+        display: flex; gap: 12px; align-items: flex-start;
+        background: linear-gradient(135deg, #FFFCF5 0%, #FFF6E0 100%) !important;
+        border: 1.5px dashed rgba(58,42,31,0.20) !important;
+        border-radius: 14px;
+        padding: 12px 14px !important;
+        transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .gate-why-cell:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(58,42,31,0.08);
+        border-color: var(--mustard) !important;
+    }
+    .gate-why-cell .why-icon {
+        flex: 0 0 36px; height: 36px;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--mustard);
+        border: 2px solid var(--ink);
+        border-radius: 50%;
+        font-size: 18px;
+        box-shadow: 1.5px 1.5px 0 var(--ink);
+    }
+    .gate-why-cell .why-body { flex: 1; }
+    .gate-why-cell .why-body b {
+        font-family: 'Gowun Batang', serif;
+        font-size: 14.5px;
+        color: var(--red-deep) !important;
+    }
+    .gate-why-cell .why-body p {
+        margin: 4px 0 0 0;
+        font-family: 'Gowun Batang', serif;
+        font-size: 12.5px;
+        line-height: 1.55;
+        color: var(--ink);
+    }
+
+    /* 오늘의 한 줄 인용 */
+    .gate-quote {
+        max-width: 720px;
+        margin: 22px auto 8px auto;
+        padding: 20px 28px 18px 28px;
+        background: linear-gradient(135deg, #FFFCF5 0%, #F7F0E0 100%);
+        border-left: 4px solid var(--mustard);
+        border-radius: 4px 14px 14px 4px;
+        box-shadow: 0 2px 6px rgba(58,42,31,0.05);
+        position: relative;
+    }
+    .gate-quote-mark {
+        position: absolute;
+        top: -10px; left: 14px;
+        font-family: 'Gowun Batang', serif;
+        font-size: 42px;
+        color: var(--mustard);
+        line-height: 1;
+        text-shadow: 0 1px 0 #FFF, 0 2px 0 var(--ink);
+    }
+    .gate-quote-text {
+        font-family: 'Gowun Batang', serif;
+        font-size: 16px;
+        line-height: 1.6;
+        color: var(--ink);
+        font-style: italic;
+    }
+    .gate-quote-who {
+        margin-top: 8px;
+        font-family: 'Nanum Pen Script', cursive;
+        font-size: 16px;
+        color: var(--ink-soft);
+        text-align: right;
+    }
+
     .gate-wrap {
         padding: 12px 4px 40px 4px;
     }
@@ -1523,35 +1652,55 @@ def _expected_password() -> str:
 
 
 def render_password_gate(expected: str) -> None:
-    """초 귀여운 비밀번호 게이트. 통과 시 st.session_state.auth_ok = True."""
+    """세련된 게이트 — 브랜드 헤더 + 캐릭터/대문 + 가치 카드 + 오늘의 한 줄."""
+    import random as _r
     attempts = st.session_state.get("auth_attempts", 0)
     shake_class = " gate-shake" if st.session_state.pop("_just_failed", False) else ""
 
-    # 게이트 페이지만 바깥은 흰색
+    # 게이트 페이지: 흰 배경 + 미세한 점 패턴 (한지 결 느낌)
     st.markdown(
         '<style>'
-        '.stApp { background: #FFFFFF !important; }'
+        '.stApp { '
+        '  background: '
+        '    radial-gradient(rgba(58,42,31,0.035) 1px, transparent 1px),'
+        '    #FFFFFF !important;'
+        '  background-size: 26px 26px !important;'
+        '}'
         '.stApp::before, .stApp::after { display: none; }'
-        '/* 게이트 메인 컨테이너 패딩 살짝 줄여 한 화면에 더 많이 보이도록 */'
-        '.main .block-container { padding-top: 1rem !important; }'
+        '.main .block-container { padding-top: 0.5rem !important; max-width: 980px !important; }'
         '</style>',
         unsafe_allow_html=True,
     )
 
+    # ── 상단 브랜드 스트립 (중앙) ──
+    st.markdown(
+        f'<div class="gate-brand">'
+        f'  <div class="gate-brand-mark">{LOGO_SVG}</div>'
+        f'  <div class="gate-brand-text">'
+        f'    <h1>사초(史草) AI</h1>'
+        f'    <p>한국사 사료 검증형 퀴즈 게임 · Korean-history Quest</p>'
+        f'  </div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
     # ── 가로 두 칸: [캐릭터+말풍선] [대문(비밀번호)] ──
-    gate_left, gate_right = st.columns([2.4, 1.3])
+    gate_left, gate_right = st.columns([2.3, 1.3])
 
     with gate_left:
         st.markdown(
             f'<div class="gate-card{shake_class}">'
+            f'  <div class="gate-sparkle s1">✦</div>'
+            f'  <div class="gate-sparkle s2">✧</div>'
+            f'  <div class="gate-sparkle s3">✦</div>'
             f'  <div class="gate-chars">'
-            f'    <div class="char-main">{char_img("whodat", width=150)}</div>'
+            f'    <div class="char-main">{char_img("whodat", width=148)}</div>'
             f'    <div class="char-lock">{LOCK_SVG}</div>'
             f'  </div>'
             f'  <div class="gate-bubble">'
             f'    어어… <b>누구세요…?</b><br>'
-            f'    사관 두루마리 방탈출에 들어오시려면 우측 <b>대문</b>의 암호를 속삭여 주시구려.'
-            f'    <small>(Korean-history quest game. Whisper the password at the door →)</small>'
+            f'    사관 두루마리에 들려면 우측 <b>대문</b>의 암호를 살짝 속삭여 주시구려.'
+            f'    <small>(Whisper the password at the door →)</small>'
             f'  </div>'
             f'</div>',
             unsafe_allow_html=True,
@@ -1560,6 +1709,7 @@ def render_password_gate(expected: str) -> None:
     with gate_right:
         st.markdown(
             '<div class="door-card">'
+            '  <div class="door-eaves"></div>'
             '  <div class="door-knob"></div>'
             '  <div class="door-hinges"><span></span><span></span><span></span></div>'
             '  <div class="door-title">🚪 대문</div>'
@@ -1582,34 +1732,75 @@ def render_password_gate(expected: str) -> None:
             )
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # ── Why + How-to-play (한 줄 그리드, 컴팩트하게) ──
+    # ── Why + How-to-play (refined: icon 분리 셀, 그라데이션) ──
     st.markdown(
         '<div class="gate-why">'
         '  <div class="gate-why-head">'
         '    <span class="gate-why-title">✨ 왜 사초 AI?</span>'
-        '    <span class="gate-why-sub">— 한국사 사료 검증형 퀴즈 게임 —</span>'
+        '    <span class="gate-why-sub">범용 AI와 무엇이 다른가</span>'
         '  </div>'
         '  <div class="gate-why-grid">'
-        '    <div class="gate-why-cell"><b>🎮 매번 새 문제</b>'
-        '      <p>AI가 90+건의 사료·콘텐츠에서 매번 다르게 출제. 한 번 풀고 끝 X.</p></div>'
-        '    <div class="gate-why-cell"><b>🗺 관광지·드라마 촬영지까지</b>'
-        '      <p>경복궁·경주 첨성대·단양 도담삼봉·미스터 션샤인 정동까지. 지도 핀·사진 함께.</p></div>'
-        '    <div class="gate-why-cell"><b>🔍 답변마다 원문 링크</b>'
-        '      <p>조선왕조실록·고려사·한국사DB 1차 사료 클릭 검증. 출처 없는 답변 없음.</p></div>'
-        '    <div class="gate-why-cell"><b>⚖ 학설은 양면 + 4개 국어</b>'
-        '      <p>갈리는 사안은 양측 견해 함께. 한·영·일·중 동시 지원.</p></div>'
+        '    <div class="gate-why-cell">'
+        '      <div class="why-icon">🎮</div>'
+        '      <div class="why-body">'
+        '        <b>매번 새 문제</b>'
+        '        <p>AI가 120+ 사료·콘텐츠에서 매번 다르게 출제. 한 번 풀고 끝 X.</p>'
+        '      </div>'
+        '    </div>'
+        '    <div class="gate-why-cell">'
+        '      <div class="why-icon">🗺</div>'
+        '      <div class="why-body">'
+        '        <b>관광지·촬영지까지</b>'
+        '        <p>경복궁 안 7방·경주 첨성대·정동 손탁호텔. 지도 핀과 함께.</p>'
+        '      </div>'
+        '    </div>'
+        '    <div class="gate-why-cell">'
+        '      <div class="why-icon">🔍</div>'
+        '      <div class="why-body">'
+        '        <b>답변마다 원문 링크</b>'
+        '        <p>조선왕조실록·고려사·한국사DB 1차 사료. 출처 없는 답변 없음.</p>'
+        '      </div>'
+        '    </div>'
+        '    <div class="gate-why-cell">'
+        '      <div class="why-icon">⚖</div>'
+        '      <div class="why-body">'
+        '        <b>학설은 양면</b>'
+        '        <p>갈리는 사안은 양측 견해를 함께. 한·영·일·중 동시.</p>'
+        '      </div>'
+        '    </div>'
         '  </div>'
         '  <div class="gate-howto">'
         '    <b>🎯 노는 법</b>'
         '    <ol>'
-        '      <li>대문 통과 → 코스/주제 고르기 (정동 7단서·경주 5단서·K콘텐츠 등)</li>'
-        '      <li>사관이 4지선다 출제 → 힌트 쓸까(-3 사초)? 그냥 답할까?</li>'
-        '      <li>맞으면 +10 사초, 틀려도 선지별 풀이 + 사료 + 지도</li>'
-        '      <li>코스 끝까지 풀면 칭호(사관의 으뜸·동무·견습…) 획득</li>'
+        '      <li>대문 통과 → 지도에서 가까운 사적 확인</li>'
+        '      <li>코스(정동·경복궁·북촌 등) 또는 자유 테마 선택</li>'
+        '      <li>4지선다 + 힌트(-3 사초) → 시간 안에 정답 시 +15 사초</li>'
+        '      <li>완주 → 칭호(사관의 으뜸·동무·견습) 획득</li>'
         '    </ol>'
         '  </div>'
-        '</div>'
-        '<div class="gate-foot">— 졸린 사관이 지키는 두루마리 방 —</div>',
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    # ── 오늘의 한 줄 (랜덤 명언) ──
+    quotes = [
+        ("이 몸이 죽고 죽어 일백번 고쳐 죽어 …", "정몽주, 단심가"),
+        ("나라가 있으면 무엇이든 할 수 있다", "안중근, 1909 옥중 단상"),
+        ("역사가 살아 있으면 나라는 다시 일어난다", "박은식, 한국통사"),
+        ("오등은 자에 아 조선의 독립국임을 선언하노라", "기미독립선언서, 1919"),
+        ("光被四表 化及萬方 — 빛이 사방을 덮고 교화가 만방에 미친다", "경복궁 광화문 명문"),
+        ("人乃天 — 사람이 곧 하늘이다", "동학, 최제우"),
+        ("香遠益淸 — 향기는 멀수록 더 맑다", "경복궁 향원정 명문"),
+        ("나는 이름 없는 사관이외다…", "(소관)"),
+        ("勤政 — 부지런히 정사를 돌본다", "경복궁 근정전 명문"),
+    ]
+    q = _r.choice(quotes)
+    st.markdown(
+        f'<div class="gate-quote">'
+        f'  <div class="gate-quote-mark">❝</div>'
+        f'  <div class="gate-quote-text">{q[0]}</div>'
+        f'  <div class="gate-quote-who">— {q[1]}</div>'
+        f'</div>',
         unsafe_allow_html=True,
     )
 
