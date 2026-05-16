@@ -19,7 +19,7 @@ from core.rag import SourceCard
 
 
 DEFAULT_MODEL = "claude-haiku-4-5-20251001"
-DEFAULT_MAX_TOKENS = 500          # 응답은 3~4문장이므로 500토큰이면 충분
+DEFAULT_MAX_TOKENS = 900          # 길고 자세한 해설 + 출처 명시 위한 여유
 DEFAULT_TEMPERATURE = 0.35        # 낮춰 둠 — 환각 억제, 사료 충실
 
 # Anthropic 공식 가격 (USD per 1M tokens, Haiku 4.5 기준)

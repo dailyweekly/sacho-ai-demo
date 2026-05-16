@@ -74,7 +74,7 @@ st.set_page_config(
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gowun+Batang:wght@400;700&family=Nanum+Pen+Script&family=Gugi&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gowun+Batang:wght@400;700&family=Nanum+Pen+Script&family=Yeon+Sung&family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap');
 
     :root {
         --beige:     #FBF7F2;       /* 캐릭터 배경과 동일한 베이스 베이지 */
@@ -118,14 +118,8 @@ st.markdown(
         height: auto;
     }
 
-    /* ── 전체 배경 (캐릭터 베이지 + 은은한 워시) ─────────────── */
-    .stApp {
-        background:
-            radial-gradient(circle at 18% 8%, rgba(219,184,113,0.10) 0, transparent 38%),
-            radial-gradient(circle at 88% 92%, rgba(201,112,100,0.08) 0, transparent 45%),
-            radial-gradient(circle at 92% 12%, rgba(181,197,168,0.08) 0, transparent 35%),
-            #FBF7F2;
-    }
+    /* ── 전체 배경 — 캐릭터 PNG 배경과 완전 동일한 평면 베이지 ── */
+    .stApp { background: #FBF7F2; }
 
     .main .block-container {
         max-width: 1180px;
@@ -182,12 +176,12 @@ st.markdown(
     .topbar-logo .logo-svg { animation: bob 4s ease-in-out infinite; }
     @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
     .topbar-logo .brand {
-        font-family: 'Gugi', 'Gowun Batang', serif;     /* 붓글씨 캘리그래피 */
+        font-family: 'Yeon Sung', 'Black Han Sans', 'Gowun Batang', serif;
         font-weight: 400;
-        font-size: 26px;
+        font-size: 30px;
         line-height: 1.05;
         color: var(--ink) !important;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
     }
     .topbar-logo .brand-sub {
         font-family: 'Nanum Pen Script', cursive;
@@ -536,13 +530,13 @@ st.markdown(
         margin: 18px 0 12px 0 !important;
         padding: 0 !important;
     }
-    /* 입력 박스 외형 — 베이지 카드 + 도장 그림자 */
+    /* 입력 박스 외형 — 중립 회색 (베이지 카드와 시각적으로 구분) */
     [data-testid="stChatInput"] > div,
     [data-testid="stChatInputContainer"] {
-        background: #FBF7F2 !important;
-        border: 2.5px solid var(--ink) !important;
-        border-radius: 22px !important;
-        box-shadow: 4px 4px 0 var(--ink) !important;
+        background: #ECEAE5 !important;
+        border: 2px solid #BFBAB1 !important;
+        border-radius: 18px !important;
+        box-shadow: none !important;
         overflow: hidden;
     }
     /* 텍스트 영역 자체 */
@@ -914,14 +908,7 @@ if _pw and not st.session_state.get("auth_ok"):
     st.stop()
 
 
-# ─────────────────────────────────────────────────────────────
-# 여백 데코 캐릭터 (좌하·우하, 큰 화면에서만 보임)
-# ─────────────────────────────────────────────────────────────
-st.markdown(
-    f'<div class="deco-left">{char_img("sleep_bed", width=150)}</div>'
-    f'<div class="deco-right">{char_img("peeking", width=120)}</div>',
-    unsafe_allow_html=True,
-)
+# 여백 데코 캐릭터는 답변 중에도 거슬려서 제거
 
 
 # ─────────────────────────────────────────────────────────────
