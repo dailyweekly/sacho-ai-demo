@@ -501,6 +501,35 @@ st.markdown(
         text-decoration: line-through;
     }
 
+    /* 랜딩 지도 헤더 + 범례 */
+    .landing-map-head {
+        display: flex; align-items: baseline; gap: 12px;
+        flex-wrap: wrap;
+        margin: 0 0 8px 0;
+        padding-bottom: 6px;
+        border-bottom: 1px solid rgba(58,42,31,0.10);
+    }
+    .landing-map-sub {
+        font-family: 'Nanum Pen Script', cursive;
+        font-size: 15px;
+        color: var(--ink-soft);
+        opacity: 0.85;
+    }
+    .map-legend {
+        display: flex; flex-wrap: wrap; gap: 10px 18px;
+        background: #FBF7F2;
+        border: 1.5px dashed var(--ink-soft);
+        border-radius: 10px;
+        padding: 8px 14px;
+        margin: 8px 0 14px 0;
+        font-family: 'Gowun Batang', serif;
+        font-size: 13px;
+        color: var(--ink);
+    }
+    .map-legend span b {
+        font-size: 15px; margin-right: 4px;
+    }
+
     /* nearby 모드 안내 박스 */
     .nearby-hint {
         background: #FFF7DA;
@@ -1851,6 +1880,197 @@ def render_evidence_map(cards: list[SourceCard]) -> None:
     st.map(pd.DataFrame(rows), size=40, zoom=14)
 
 
+def _site_category(card: SourceCard) -> tuple[str, str, str]:
+    """카테고리 식별 — (이모지 아이콘, 색, 라벨). 마커 색상으로도 구분."""
+    text = " ".join([card.title, card.place, " ".join(card.tags), card.id])
+
+    if card.id.startswith("kculture-"):
+        return "🎬", "#C97064", "K-콘텐츠"
+    if card.id.startswith("gbg-"):
+        return "🏯", "#8C5A2E", "경복궁 내"
+    if card.id.startswith("dsg-"):
+        return "🏛", "#B8763C", "덕수궁 내"
+    if any(k in text for k in ["임진왜란", "한산", "명량", "병자호란", "삼전도",
+                                 "진주성", "남한산성", "위화도"]):
+        return "⚔", "#5B4438", "전적지"
+    if any(k in text for k in ["불국사", "석굴암", "첨성대", "안압지", "월지",
+                                 "정림사", "무령왕릉", "종묘", "도담삼봉", "사인암"]):
+        return "🗿", "#7A6240", "유적·유물"
+    if any(k in text for k in ["3.1운동", "안중근", "윤봉길", "유관순", "임시정부",
+                                 "광복", "독립", "의병", "광주학생", "광복군",
+                                 "신간회", "의열단", "이회영", "한일강제병합", "한국전쟁",
+                                 "을사늑약", "을미사변", "아관파천"]):
+        return "🇰🇷", "#A04030", "독립·근대"
+    if any(k in text for k in ["경복궁", "창덕궁", "창경궁", "덕수궁", "경운궁",
+                                 "수원화성", "경기전", "오죽헌", "도산서원", "하회"]):
+        return "🏯", "#8C1D18", "궁궐·서원"
+    if any(k in text for k in ["단양", "강릉", "안동", "전주", "공주", "부여", "경주",
+                                 "정동", "관광지"]):
+        return "🏞", "#5A7A3B", "자연·관광"
+    return "📜", "#A8554A", "사료"
+
+
+_LANDING_LEGEND = [
+    ("🏯", "궁궐·서원"),
+    ("🏛", "궁궐 내부"),
+    ("🗿", "유적·유물"),
+    ("⚔",  "전적지"),
+    ("🇰🇷", "독립·근대"),
+    ("🏞", "자연·관광"),
+    ("🎬", "K-콘텐츠"),
+    ("📜", "사료"),
+    ("👤", "내 위치"),
+]
+
+
+def render_landing_map() -> None:
+    """게임 진입 화면 상단 — 모든 게임 장소를 카테고리별 아이콘으로 표시.
+    사용자 위치가 있으면 함께 표시. 클릭 시 popup 으로 장소 안내.
+    """
+    if not st.session_state.show_map:
+        return
+
+    corpus = load_corpus()
+    # 좌표가 있는 entry만 (K-콘텐츠 추상 entry 일부는 제외)
+    valid = []
+    for c in corpus:
+        if not c.place_coords or len(c.place_coords) != 2:
+            continue
+        # 의미 없는 일반/전국 위치는 스킵
+        place_lower = c.place.lower()
+        if any(s in place_lower for s in ["전국", "한국 무속", "전통 사후세계"]):
+            continue
+        valid.append(c)
+
+    user_loc = st.session_state.user_geo
+
+    # 헤더 + 위치 요청 안내
+    st.markdown(
+        '<div class="landing-map-head">'
+        '  <h5 style="margin:0;border:none;">'
+        '    🗺 어디서 놀까요? — <span style="color:#A8554A;font-weight:700;">'
+        f'    게임 장소 {len(valid)}곳</span>'
+        '  </h5>'
+        '  <span class="landing-map-sub">'
+        '    핀을 누르면 장소 안내, 모드를 골라 시작하시면 됩니다'
+        '  </span>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    try:
+        import folium
+        from streamlit_folium import st_folium
+
+        # 중심: 사용자 위치 우선, 없으면 광화문
+        if user_loc:
+            center = list(user_loc)
+            zoom = 14
+        else:
+            center = [37.5759, 126.9769]  # 광화문
+            zoom = 11
+
+        m = folium.Map(
+            location=center, zoom_start=zoom,
+            tiles="OpenStreetMap",
+        )
+
+        for c in valid:
+            icon, color, label = _site_category(c)
+            popup_html = (
+                f'<div style="font-family:serif;font-size:13px;width:240px;">'
+                f'<div style="font-weight:700;color:{color};margin-bottom:4px;">'
+                f'{icon} {c.title}</div>'
+                f'<div style="color:#666;font-size:11.5px;margin-bottom:3px;">'
+                f'📍 {c.place}</div>'
+                f'<div style="color:#888;font-size:11px;font-style:italic;">'
+                f'{label} · {c.era}</div>'
+                f'</div>'
+            )
+            folium.Marker(
+                [c.place_coords[1], c.place_coords[0]],
+                tooltip=f"{icon} {c.title}",
+                popup=folium.Popup(popup_html, max_width=280),
+                icon=folium.DivIcon(
+                    html=(
+                        f'<div style="font-size:22px;'
+                        f'text-shadow:0 0 3px white, 0 0 5px white;">'
+                        f'{icon}</div>'
+                    ),
+                    icon_size=(30, 30),
+                    icon_anchor=(15, 15),
+                ),
+            ).add_to(m)
+
+        if user_loc:
+            folium.Marker(
+                list(user_loc),
+                tooltip="📍 내 위치",
+                icon=folium.DivIcon(
+                    html=(
+                        '<div style="font-size:32px;'
+                        'text-shadow:0 0 4px white, 0 0 8px white;">👤</div>'
+                    ),
+                    icon_size=(40, 40),
+                    icon_anchor=(20, 32),
+                ),
+            ).add_to(m)
+            # 반경 5km 원 (가까운 사적 시각화)
+            folium.Circle(
+                list(user_loc),
+                radius=5000,
+                color="#2E6418",
+                weight=2,
+                opacity=0.45,
+                fill=True,
+                fill_opacity=0.06,
+            ).add_to(m)
+
+        st_folium(m, width=None, height=380, returned_objects=[])
+
+        # 범례 (legend)
+        legend_html = '<div class="map-legend">'
+        for icon, label in _LANDING_LEGEND:
+            legend_html += f'<span><b>{icon}</b> {label}</span>'
+        legend_html += '</div>'
+        st.markdown(legend_html, unsafe_allow_html=True)
+
+        # 위치 받기 버튼 (아직 못 받았으면)
+        if not user_loc:
+            with st.expander("📍 내 위치를 지도에 표시 (브라우저 위치 권한 허용)",
+                              expanded=False):
+                try:
+                    from streamlit_geolocation import streamlit_geolocation
+                    loc = streamlit_geolocation()
+                    if loc and loc.get("latitude") is not None:
+                        st.session_state.user_geo = (
+                            float(loc["latitude"]),
+                            float(loc["longitude"]),
+                        )
+                        st.rerun()
+                except ImportError:
+                    st.info("위치 라이브러리 미설치 — requirements 재배포 필요.")
+        return
+    except ImportError:
+        # 폴백: st.map (아이콘은 안 됨, 색상으로만)
+        rows = []
+        for c in valid:
+            _, color, _ = _site_category(c)
+            rows.append({
+                "lat": c.place_coords[1],
+                "lon": c.place_coords[0],
+                "color": color,
+                "size": 60,
+            })
+        if user_loc:
+            rows.append({
+                "lat": user_loc[0], "lon": user_loc[1],
+                "color": "#2E6418", "size": 150,
+            })
+        if rows:
+            st.map(pd.DataFrame(rows), size="size", color="color")
+
+
 def render_course_map(course_id: str, current_idx: int,
                        user_loc: tuple[float, float] | None = None) -> None:
     """코스 모드 — Folium 지도에 모든 단서 마커 + 사용자 위치 표시.
@@ -2183,8 +2403,12 @@ def render_quest_page() -> None:
 
     q = st.session_state.current_q
 
-    # ── 문제 없을 때 — 모드/주제 선택 + 시작 ──
+    # ── 문제 없을 때 — 랜딩 지도 + 모드/주제 선택 + 시작 ──
     if q is None:
+        # 첫 화면: 지도 (사용자 위치 + 모든 게임 장소 카테고리 아이콘)
+        render_landing_map()
+        st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
+
         st.markdown(
             f'<div class="quest-intro">'
             f'  <div class="quest-intro-char">{char_img("start", width=110)}</div>'
