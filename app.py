@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import os
+import time
 from datetime import datetime
 from pathlib import Path
 
@@ -129,9 +130,27 @@ st.markdown(
 
     .main .block-container {
         max-width: 1180px;
-        padding: 1rem 2rem 1.5rem 2rem;
+        padding: 0.75rem 1.75rem 1.5rem 1.75rem;
         font-family: 'Noto Sans KR', sans-serif;
         color: var(--ink);
+    }
+    /* 세련된 섹션 구분선 */
+    h5 {
+        font-family: 'Gowun Batang', serif !important;
+        font-size: 15px !important;
+        color: var(--ink-soft) !important;
+        letter-spacing: 0.3px;
+        margin: 18px 0 8px 0 !important;
+        padding-bottom: 6px;
+        border-bottom: 1px solid rgba(58,42,31,0.10);
+        font-weight: 600 !important;
+    }
+    /* 모든 selectbox · radio 라벨 톤 통일 */
+    [data-testid="stRadio"] label,
+    [data-testid="stSelectbox"] label {
+        font-family: 'Gowun Batang', serif !important;
+        font-size: 13.5px !important;
+        color: var(--ink-soft) !important;
     }
     h1, h2, h3, h4 {
         font-family: 'Gowun Batang', 'Gowun Dodum', serif;
@@ -139,15 +158,15 @@ st.markdown(
         letter-spacing: -0.3px;
     }
 
-    /* ── 가로형 톱바 ─────────────────────────────────────── */
+    /* ── 가로형 톱바 (컴팩트·세련) ─────────────────────────── */
     .topbar {
-        display: flex; align-items: center; gap: 14px;
-        padding: 12px 18px;
+        display: flex; align-items: center; gap: 12px;
+        padding: 10px 16px;
         background: #FBF7F2;
-        border: 2.5px solid var(--ink);
-        border-radius: 22px;
-        box-shadow: 4px 4px 0 var(--ink);
-        margin: 4px 0 22px 0;
+        border: 2px solid var(--ink);
+        border-radius: 18px;
+        box-shadow: 3px 3px 0 var(--ink);
+        margin: 2px 0 18px 0;
         position: relative;
         backdrop-filter: blur(6px);
     }
@@ -385,7 +404,7 @@ st.markdown(
         color: var(--ink);
     }
 
-    /* 결과 띠 */
+    /* 결과 띠 (구) */
     .quest-result {
         padding: 12px 16px;
         border-radius: 12px;
@@ -403,6 +422,55 @@ st.markdown(
     .quest-result.wrong {
         background: #FFE0D6;
         color: #8C2A18;
+    }
+    /* 결과 패널 (NEW) — 캐릭터 + 멘트 + 시간 */
+    .quest-result-panel {
+        display: flex; gap: 16px; align-items: center;
+        border: 2.5px solid var(--ink);
+        border-radius: 16px;
+        padding: 14px 18px;
+        margin: 14px 0;
+        box-shadow: 3px 3px 0 var(--ink);
+    }
+    .quest-result-panel.correct {
+        background: linear-gradient(135deg, #E8F4D8 0%, #C8E0AC 100%);
+    }
+    .quest-result-panel.wrong {
+        background: linear-gradient(135deg, #FFE8DC 0%, #FFCFB6 100%);
+    }
+    .quest-result-panel .qr-char {
+        flex: 0 0 100px;
+        animation: result-bob 1.2s ease-in-out infinite;
+    }
+    .quest-result-panel.correct .qr-char { animation-name: result-jump; }
+    @keyframes result-bob {
+        0%, 100% { transform: rotate(-3deg); }
+        50% { transform: rotate(3deg); }
+    }
+    @keyframes result-jump {
+        0%, 100% { transform: translateY(0); }
+        30% { transform: translateY(-8px); }
+        60% { transform: translateY(0); }
+    }
+    .quest-result-panel .qr-body { flex: 1; }
+    .quest-result-panel .qr-label {
+        font-family: 'Yeon Sung', 'Black Han Sans', serif;
+        font-size: 19px;
+        margin-bottom: 6px;
+    }
+    .quest-result-panel.correct .qr-label { color: #1E4D0F; }
+    .quest-result-panel.wrong   .qr-label { color: #7A1F0F; }
+    .quest-result-panel .qr-taunt {
+        font-family: 'Gowun Batang', serif;
+        font-size: 14.5px;
+        font-style: italic;
+        color: var(--ink);
+        margin-bottom: 6px;
+    }
+    .quest-result-panel .qr-time {
+        font-family: 'Nanum Pen Script', cursive;
+        font-size: 17px;
+        color: var(--ink-soft);
     }
 
     /* 답변 후 선지 회고 */
@@ -1387,6 +1455,15 @@ def init_state() -> None:
         st.session_state.course_score = 0
     if "course_finished" not in st.session_state:
         st.session_state.course_finished = False
+    # ─── 시간 추적 ───
+    if "q_start_time" not in st.session_state:
+        st.session_state.q_start_time = None
+    if "last_elapsed" not in st.session_state:
+        st.session_state.last_elapsed = 0.0
+    if "last_bonus" not in st.session_state:
+        st.session_state.last_bonus = 0
+    if "user_geo" not in st.session_state:
+        st.session_state.user_geo = None  # (lat, lon) or None
 
 
 init_state()
@@ -1774,34 +1851,118 @@ def render_evidence_map(cards: list[SourceCard]) -> None:
     st.map(pd.DataFrame(rows), size=40, zoom=14)
 
 
-def render_course_map(course_id: str, current_idx: int) -> None:
-    """코스 모드 — 모든 단서 위치를 한 지도에 표시. 현재 위치는 크고 진하게."""
+def render_course_map(course_id: str, current_idx: int,
+                       user_loc: tuple[float, float] | None = None) -> None:
+    """코스 모드 — Folium 지도에 모든 단서 마커 + 사용자 위치 표시.
+
+    각 단서는 사관·두루마리 아이콘으로 표시 (📜 = 다음·🏛 = 지나온·👤 = 본인)
+    """
     if not st.session_state.show_map:
         return
     from core.quest import COURSES
     course = COURSES.get(course_id)
     if not course:
         return
-    rows = []
+
     corpus = load_corpus()
+    cards = []
     for i, cid in enumerate(course["card_ids"]):
         card = next((c for c in corpus if c.id == cid), None)
-        if not card or not card.place_coords or len(card.place_coords) != 2:
-            continue
-        is_current = (i == current_idx)
-        is_done = (i < current_idx)
+        if card and card.place_coords and len(card.place_coords) == 2:
+            cards.append((i, card))
+    if not cards:
+        return
+
+    # Folium 사용 가능하면 풀 기능, 아니면 st.map 폴백
+    try:
+        import folium
+        from streamlit_folium import st_folium
+
+        # 중심 좌표 — 모든 단서의 평균
+        avg_lat = sum(c.place_coords[1] for _, c in cards) / len(cards)
+        avg_lon = sum(c.place_coords[0] for _, c in cards) / len(cards)
+
+        st.markdown(
+            "##### 🗺 코스 지도 — "
+            "<span style='color:#C97064'>📜 현재</span> · "
+            "<span style='color:#5C4A38'>🏛 지나온 곳</span> · "
+            "<span style='color:#9A958C'>두루마리 다음</span>"
+            + (" · <span style='color:#2E6418'>👤 내 위치</span>" if user_loc else ""),
+            unsafe_allow_html=True,
+        )
+
+        m = folium.Map(
+            location=[avg_lat, avg_lon], zoom_start=17,
+            tiles="OpenStreetMap",
+        )
+
+        # 단서 마커
+        for i, card in cards:
+            is_current = (i == current_idx)
+            is_done = (i < current_idx)
+            if is_current:
+                icon_html = '<div style="font-size:28px;">📜</div>'
+                color = "#C97064"
+            elif is_done:
+                icon_html = '<div style="font-size:22px;opacity:0.7;">🏛</div>'
+                color = "#5C4A38"
+            else:
+                icon_html = '<div style="font-size:22px;opacity:0.5;">📜</div>'
+                color = "#9A958C"
+            popup_html = (
+                f'<div style="font-family:serif;font-size:13px;width:200px;">'
+                f'<b>{i+1}. {card.title}</b><br>'
+                f'<span style="color:#666;font-size:11.5px;">📍 {card.place}</span>'
+                f'</div>'
+            )
+            folium.Marker(
+                [card.place_coords[1], card.place_coords[0]],
+                tooltip=f"{i+1}. {card.title}",
+                popup=folium.Popup(popup_html, max_width=240),
+                icon=folium.DivIcon(html=icon_html, icon_size=(36, 36),
+                                    icon_anchor=(18, 18)),
+            ).add_to(m)
+
+        # 사용자 위치 (있으면)
+        if user_loc:
+            folium.Marker(
+                list(user_loc),
+                tooltip="내 위치",
+                icon=folium.DivIcon(
+                    html='<div style="font-size:30px;">👤</div>',
+                    icon_size=(36, 36), icon_anchor=(18, 30),
+                ),
+            ).add_to(m)
+            # 사용자 → 현재 단서 연결선
+            cur_card = next((c for i, c in cards if i == current_idx), None)
+            if cur_card:
+                folium.PolyLine(
+                    locations=[
+                        list(user_loc),
+                        [cur_card.place_coords[1], cur_card.place_coords[0]],
+                    ],
+                    color="#2E6418", weight=3, opacity=0.6, dash_array="6",
+                ).add_to(m)
+
+        st_folium(m, width=None, height=360, returned_objects=[])
+        return
+    except ImportError:
+        pass
+
+    # 폴백: st.map
+    rows = []
+    for i, card in cards:
         rows.append({
             "lat": card.place_coords[1],
             "lon": card.place_coords[0],
-            "size": 220 if is_current else (90 if is_done else 70),
-            "color": "#C97064" if is_current else ("#5C4A38" if is_done else "#BFBAB1"),
+            "size": 220 if i == current_idx else (90 if i < current_idx else 70),
+            "color": "#C97064" if i == current_idx else ("#5C4A38" if i < current_idx else "#BFBAB1"),
         })
-    if not rows:
-        return
-    st.markdown(f"##### 🗺 코스 지도 — 현재 위치(빨강) · 지나온 곳(갈색) · 다음(회색)")
-    df = pd.DataFrame(rows)
-    # 자동 줌 (좌표 범위에 맞춰 Streamlit이 잡아 줌)
-    st.map(df, size="size", color="color")
+    if user_loc:
+        rows.append({"lat": user_loc[0], "lon": user_loc[1],
+                     "size": 180, "color": "#2E6418"})
+    st.markdown("##### 🗺 코스 지도")
+    st.map(pd.DataFrame(rows), size="size", color="color")
 
 
 def render_collection_page() -> None:
@@ -1927,6 +2088,59 @@ def _generate_with_card(card: SourceCard) -> None:
     st.session_state.q_user_choice = None
     st.session_state.eliminated_options = []
     st.session_state.q_seen_ids.append(card.id)
+    # 문제 시작 시각 기록 — 시간 보너스/페널티 계산용
+    st.session_state.q_start_time = time.time()
+
+
+# ─── 캐릭터 모션 + 멘트 ───
+# 정답 응원 (캐릭터 + 멘트)
+CHEERS = [
+    ("celebrate", "오오! 정답이외다! 사관도 놀랐소이다"),
+    ("happy",     "참으로 박학다식하시오! 사관의 동무가 될 만하오"),
+    ("proud",     "그렇소이다! 다음 단서로 가시지요"),
+    ("start",     "정답이외다! 붓을 들고 적어 두겠소"),
+    ("cheer",     "훌륭하외다! 연속 정답이라니, 사관도 부럽소이다"),
+]
+# 오답 조롱 (캐릭터 + 멘트)
+TAUNTS = [
+    ("facedown",      "허허… 그게 정답인 줄 아셨소이까? 졸자가 다 부끄럽소이다"),
+    ("yawning",       "이런… 오늘은 두루마리를 좀 더 펼쳐 보시구려"),
+    ("hmm",           "어이쿠, 옆 마을 무녀 할매도 이건 맞히실 텐데"),
+    ("snack",         "사초가 슬슬 부족해 보이시는데, 한 문제만 더?"),
+    ("confused",      "흠… 사관도 한참 생각해야 알 일이긴 하오만…"),
+    ("facedown",      "어어… 졸자가 본 두루마리에는 분명 답이 있는데 말이외다"),
+]
+
+# 문제 유형 → 출제 시 캐릭터 포즈
+QTYPE_POSES = {
+    "source_inference":     "cheek",          # 사료 보며 생각
+    "character_motivation": "hmm",            # 인물 생각 갸우뚱
+    "place_significance":   "pointing",       # 장소 가리키기
+    "wrong_compare":        "reading",        # 책 펴 비교
+    "consequence":          "writing",        # 결과 기록
+    "fallback":             "cheek",
+}
+
+
+def _result_character(is_correct: bool) -> tuple[str, str]:
+    """결과에 맞는 캐릭터 포즈 + 멘트 (라운드마다 다르게)."""
+    import random as _r
+    pool = CHEERS if is_correct else TAUNTS
+    # streak 또는 question count로 시드를 살짝 분산
+    idx = (st.session_state.total_attempts +
+           (1 if is_correct else 7)) % len(pool)
+    return pool[idx]
+
+
+def _time_bonus(elapsed: float) -> tuple[int, str]:
+    """경과 시간 → 사초 보너스/페널티 + 안내 멘트."""
+    if elapsed <= 15:
+        return +5, f"⚡ {elapsed:.0f}초만에! +5 사초 시간 보너스"
+    if elapsed <= 60:
+        return 0, f"⏱ {elapsed:.0f}초 걸렸소이다"
+    if elapsed <= 120:
+        return -3, f"🐢 {elapsed:.0f}초… -3 사초 시간 페널티"
+    return -5, f"💤 {elapsed:.0f}초… 사관이 잠들 뻔했소이다 (-5 사초)"
 
 
 def render_quest_page() -> None:
@@ -2017,6 +2231,7 @@ def render_quest_page() -> None:
             if loc and loc.get("latitude") is not None:
                 lat = float(loc["latitude"])
                 lon = float(loc["longitude"])
+                st.session_state.user_geo = (lat, lon)
                 nearest, dist = pick_nearest_card(lat, lon, max_km=30.0)
                 if nearest is None:
                     st.warning(T["nearby_too_far"])
@@ -2112,8 +2327,11 @@ def render_quest_page() -> None:
             f'</div>',
             unsafe_allow_html=True,
         )
-        # 코스 전체 지도 (모든 단서 위치 + 현재 강조)
-        render_course_map(cid, st.session_state.course_idx)
+        # 코스 전체 지도 (모든 단서 위치 + 현재 강조 + 사용자 위치)
+        render_course_map(
+            cid, st.session_state.course_idx,
+            user_loc=st.session_state.user_geo,
+        )
 
     st.markdown(
         f'<div class="quest-q">'
@@ -2168,14 +2386,25 @@ def render_quest_page() -> None:
                 st.session_state.q_user_choice = i
                 st.session_state.q_answered = True
                 st.session_state.total_attempts += 1
+                # 경과 시간 계산 + 보너스
+                elapsed = (
+                    time.time() - st.session_state.q_start_time
+                    if st.session_state.q_start_time else 30.0
+                )
+                st.session_state.last_elapsed = elapsed
+                bonus, _ = _time_bonus(elapsed)
+                st.session_state.last_bonus = bonus
                 is_correct = (i == q["correct_idx"])
                 if is_correct:
-                    st.session_state.credits += 10
+                    st.session_state.credits += 10 + bonus
                     st.session_state.streak += 1
                     st.session_state.total_correct += 1
                     if st.session_state.streak > st.session_state.best_streak:
                         st.session_state.best_streak = st.session_state.streak
                 else:
+                    # 오답이면 시간 페널티만 적용 (보너스 없음)
+                    if bonus < 0:
+                        st.session_state.credits = max(0, st.session_state.credits + bonus)
                     st.session_state.streak = 0
                 # 코스 점수
                 if st.session_state.play_mode == "course" and is_correct:
@@ -2183,20 +2412,28 @@ def render_quest_page() -> None:
                 st.rerun()
         return
 
-    # ── 답변 후 — 결과 + 선지 회고 + 옵션 노트 + 해설 + 사료 + 지도 ──
+    # ── 답변 후 — 결과 + 캐릭터 멘트 + 시간 + 선지 회고 ──
     user = st.session_state.q_user_choice
     correct = q["correct_idx"]
-    if user == correct:
-        st.markdown(
-            f'<div class="quest-result correct">{T["quest_correct"]}</div>',
-            unsafe_allow_html=True,
-        )
-    else:
-        st.markdown(
-            f'<div class="quest-result wrong">{T["quest_wrong"]} '
-            f'<b>{marks[correct]} {q["options"][correct]}</b></div>',
-            unsafe_allow_html=True,
-        )
+    is_correct = (user == correct)
+    char_pose, taunt_text = _result_character(is_correct)
+    _, time_msg = _time_bonus(st.session_state.last_elapsed)
+
+    result_cls = "correct" if is_correct else "wrong"
+    result_label = T["quest_correct"] if is_correct else (
+        f"{T['quest_wrong']} <b>{marks[correct]} {q['options'][correct]}</b>"
+    )
+    st.markdown(
+        f'<div class="quest-result-panel {result_cls}">'
+        f'  <div class="qr-char">{char_img(char_pose, width=100)}</div>'
+        f'  <div class="qr-body">'
+        f'    <div class="qr-label">{result_label}</div>'
+        f'    <div class="qr-taunt">"{taunt_text}"</div>'
+        f'    <div class="qr-time">{time_msg}</div>'
+        f'  </div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
     # 회고 (정답=녹색, 오답=취소선)
     rows = []

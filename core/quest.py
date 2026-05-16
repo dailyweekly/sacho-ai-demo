@@ -337,6 +337,36 @@ COURSES: dict[str, dict[str, Any]] = {
             "place-009",    # 사인암
         ],
     },
+    "gbg_inside": {
+        "name_ko": "🏯 경복궁 안에서 7단서 (300m 반경)",
+        "name_en": "🏯 Inside Gyeongbokgung — 7 clues (300m radius)",
+        "name_ja": "🏯 景福宮の内側 7手がかり",
+        "name_zh": "🏯 景福宫内7线索",
+        "area_ko": "경복궁 정문~건청궁 (도보 300m 반경)",
+        "card_ids": [
+            "gbg-001",   # 광화문 (출발)
+            "gbg-002",   # 근정전
+            "gbg-004",   # 사정전
+            "gbg-005",   # 강녕전·교태전
+            "gbg-003",   # 경회루
+            "gbg-006",   # 향원정
+            "gbg-007",   # 건청궁 옥호루 (을미사변 — 결말)
+        ],
+    },
+    "dsg_inside": {
+        "name_ko": "🏛 덕수궁 안에서 5단서 (250m 반경)",
+        "name_en": "🏛 Inside Deoksugung — 5 clues (250m radius)",
+        "name_ja": "🏛 徳寿宮の内側 5手がかり",
+        "name_zh": "🏛 德寿宫内5线索",
+        "area_ko": "덕수궁 대한문~함녕전 (도보 250m 반경)",
+        "card_ids": [
+            "dsg-001",   # 대한문 (출발)
+            "dsg-002",   # 중화전
+            "dsg-003",   # 석조전
+            "dsg-004",   # 정관헌
+            "dsg-005",   # 함녕전 (고종 승하 — 결말)
+        ],
+    },
 }
 
 
