@@ -145,12 +145,110 @@ st.markdown(
         border-bottom: 1px solid rgba(58,42,31,0.10);
         font-weight: 600 !important;
     }
-    /* 모든 selectbox · radio 라벨 톤 통일 */
-    [data-testid="stRadio"] label,
-    [data-testid="stSelectbox"] label {
+    /* ── 폼 위젯 톤 통일 (radio · selectbox · expander · caption) ── */
+    /* 라벨 — 작은 손글씨/세리프 톤 */
+    [data-testid="stWidgetLabel"] p,
+    [data-testid="stRadio"] > label,
+    [data-testid="stSelectbox"] > label,
+    [data-testid="stTextInput"] > label {
         font-family: 'Gowun Batang', serif !important;
         font-size: 13.5px !important;
         color: var(--ink-soft) !important;
+        font-weight: 600 !important;
+        letter-spacing: 0.2px;
+    }
+
+    /* 라디오 — 가로 정렬 + 옵션마다 카드 같은 hover */
+    [data-testid="stRadio"] [role="radiogroup"] {
+        gap: 10px !important;
+    }
+    [data-testid="stRadio"] [role="radiogroup"] label {
+        font-family: 'Gowun Batang', serif !important;
+        font-size: 14.5px !important;
+        color: var(--ink) !important;
+        padding: 6px 12px 6px 8px;
+        border-radius: 12px;
+        transition: background 0.12s;
+        cursor: pointer;
+    }
+    [data-testid="stRadio"] [role="radiogroup"] label:hover {
+        background: rgba(219,184,113,0.18);
+    }
+    /* 라디오 원 — 채워진 상태 강조 */
+    [data-testid="stRadio"] input[type="radio"] + div {
+        border: 2px solid var(--ink-soft) !important;
+        background: #FFF !important;
+    }
+
+    /* 셀렉트박스 — 크림 카드 + 도장 그림자 */
+    [data-testid="stSelectbox"] [data-baseweb="select"] > div {
+        background: #FBF7F2 !important;
+        border: 2px solid var(--ink) !important;
+        border-radius: 12px !important;
+        box-shadow: 2px 2px 0 var(--ink) !important;
+        font-family: 'Gowun Batang', serif !important;
+        font-size: 14.5px !important;
+        color: var(--ink) !important;
+        min-height: 40px !important;
+        transition: transform 0.08s;
+    }
+    [data-testid="stSelectbox"] [data-baseweb="select"]:hover > div {
+        transform: translate(-1px, -1px);
+        box-shadow: 3px 3px 0 var(--ink) !important;
+        background: #FFFCF0 !important;
+    }
+    /* 셀렉트 드롭다운 메뉴 옵션 */
+    [data-baseweb="popover"] [role="listbox"] li {
+        font-family: 'Gowun Batang', serif !important;
+        font-size: 14px !important;
+    }
+    [data-baseweb="popover"] [role="listbox"] li:hover {
+        background: rgba(219,184,113,0.20) !important;
+    }
+
+    /* expander — 점선 카드 + 손글씨 헤더 */
+    [data-testid="stExpander"] {
+        border: 2px dashed var(--ink-soft) !important;
+        border-radius: 14px !important;
+        background: #FFFCF5 !important;
+        margin: 10px 0 !important;
+        box-shadow: none !important;
+    }
+    [data-testid="stExpander"] summary,
+    [data-testid="stExpander"] details > summary {
+        font-family: 'Gowun Batang', serif !important;
+        font-size: 14px !important;
+        color: var(--ink) !important;
+        font-weight: 600 !important;
+        padding: 10px 14px !important;
+    }
+    [data-testid="stExpander"] summary:hover {
+        background: rgba(219,184,113,0.10) !important;
+    }
+    [data-testid="stExpander"] [data-testid="stMarkdownContainer"] {
+        font-family: 'Gowun Batang', serif !important;
+        font-size: 13.5px !important;
+    }
+
+    /* st.caption — 손글씨 + 자그마한 흙색 */
+    [data-testid="stCaptionContainer"],
+    .stCaption,
+    [data-testid="stMarkdownContainer"] small {
+        font-family: 'Nanum Pen Script', cursive !important;
+        font-size: 16px !important;
+        color: var(--ink-soft) !important;
+        opacity: 0.9 !important;
+    }
+
+    /* 시작 버튼 ("새 문제 받기" 등 primary action) — 강조 */
+    .stButton > button:has(span:has-text("새 문제")),
+    .stButton > button:has(span:has-text("시작")) {
+        background: var(--mustard) !important;
+    }
+    /* 모든 버튼에 적용된 기본 — 만약 새 문제 버튼이 식별 안 되면 일반적으로 강조 */
+    .stButton > button p {
+        font-family: 'Gowun Batang', serif !important;
+        font-weight: 700 !important;
     }
     h1, h2, h3, h4 {
         font-family: 'Gowun Batang', 'Gowun Dodum', serif;
@@ -528,6 +626,40 @@ st.markdown(
     }
     .map-legend span b {
         font-size: 15px; margin-right: 4px;
+    }
+
+    /* 권역 라벨 (코스 선택 직후) — 손글씨 + 핀 */
+    .area-tag {
+        display: inline-block;
+        margin-top: 6px;
+        padding: 4px 14px;
+        background: #FFF7DA;
+        border: 1.5px dashed var(--mustard);
+        border-radius: 999px;
+        font-family: 'Nanum Pen Script', cursive;
+        font-size: 16.5px;
+        color: var(--ink-soft);
+    }
+
+    /* '새 문제 받기' primary 시작 버튼 강조 */
+    .start-btn-wrap button {
+        background: linear-gradient(135deg, #FFE7A0 0%, #FFD55A 100%) !important;
+        border: 2.5px solid var(--ink) !important;
+        box-shadow: 4px 4px 0 var(--ink) !important;
+        font-size: 16px !important;
+        padding: 14px 18px !important;
+        min-height: 64px !important;
+        font-family: 'Yeon Sung', 'Gowun Batang', serif !important;
+        letter-spacing: 0.5px;
+    }
+    .start-btn-wrap button:hover {
+        background: linear-gradient(135deg, #FFD55A 0%, #FFC640 100%) !important;
+        transform: translate(-2px, -2px) !important;
+        box-shadow: 6px 6px 0 var(--ink) !important;
+    }
+    .start-btn-wrap button:active {
+        transform: translate(2px, 2px) !important;
+        box-shadow: 1px 1px 0 var(--ink) !important;
     }
 
     /* nearby 모드 안내 박스 */
@@ -2686,10 +2818,13 @@ def render_quest_page() -> None:
                     st.session_state.course_id = new_cid
                     st.session_state.course_idx = 0
                     st.session_state.course_score = 0
-                # 권역 안내
+                # 권역 안내 (손글씨 톤)
                 area = COURSES.get(new_cid, {}).get("area_ko", "")
                 if area:
-                    st.caption(f"📍 권역: {area}")
+                    st.markdown(
+                        f'<div class="area-tag">📍 권역 — {area}</div>',
+                        unsafe_allow_html=True,
+                    )
             else:
                 themes = _theme_options()
                 theme_keys = list(themes.keys())
@@ -2706,7 +2841,10 @@ def render_quest_page() -> None:
 
         with col_b:
             st.markdown('<div style="height:30px"></div>', unsafe_allow_html=True)
-            if st.button(T["quest_start_btn"], key="quest_start", use_container_width=True):
+            st.markdown('<div class="start-btn-wrap">', unsafe_allow_html=True)
+            clicked = st.button(T["quest_start_btn"], key="quest_start", use_container_width=True)
+            st.markdown('</div>', unsafe_allow_html=True)
+            if clicked:
                 if not api_key_present:
                     st.error(T["api_key_missing_title"])
                     return
