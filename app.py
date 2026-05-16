@@ -1016,18 +1016,118 @@ st.markdown(
 
     /* ─── 🔐 비밀번호 게이트 (초 귀엽게) ─── */
     .gate-wrap {
-        display: flex; justify-content: center;
-        padding: 36px 12px 60px 12px;
+        padding: 12px 4px 40px 4px;
     }
     .gate-card {
-        width: 100%; max-width: 520px;
+        width: 100%;
         background: #FBF7F2;     /* 캐릭터 PNG 배경과 동일한 베이지 */
         border: 3px solid var(--ink);
-        border-radius: 28px;
-        padding: 28px 28px 22px 28px;
-        box-shadow: 6px 6px 0 var(--ink);
+        border-radius: 24px;
+        padding: 22px 24px 20px 24px;
+        box-shadow: 5px 5px 0 var(--ink);
         position: relative;
         overflow: visible;
+        height: 100%;
+    }
+    /* ── 우측 대문 (한옥 솟을대문 풍) ── */
+    .door-card {
+        position: relative;
+        background:
+            repeating-linear-gradient(180deg,
+                rgba(0,0,0,0.04) 0 22px,
+                rgba(0,0,0,0.10) 22px 24px),
+            linear-gradient(180deg, #C97064 0%, #A8554A 100%);
+        border: 3px solid var(--ink);
+        border-radius: 14px 14px 8px 8px;
+        padding: 26px 22px 18px 22px;
+        box-shadow: 5px 5px 0 var(--ink);
+        height: 100%;
+        min-height: 240px;
+    }
+    /* 대문 윗부분 처마 같은 띠 */
+    .door-card::before {
+        content: '';
+        position: absolute; top: -8px; left: -3px; right: -3px;
+        height: 10px;
+        background: var(--ink);
+        border-radius: 6px 6px 0 0;
+    }
+    /* 가운데 세로선 (양 문짝 경계) */
+    .door-card::after {
+        content: '';
+        position: absolute; top: 18px; bottom: 12px;
+        left: 50%; width: 2px;
+        background: rgba(42,31,24,0.45);
+        transform: translateX(-50%);
+        pointer-events: none;
+    }
+    .door-card .door-knob {
+        position: absolute; right: 16px; top: 56%;
+        width: 14px; height: 14px; border-radius: 50%;
+        background: var(--mustard);
+        border: 2px solid var(--ink);
+        box-shadow: 1px 1px 0 var(--ink);
+    }
+    .door-card .door-hinges {
+        position: absolute; left: 8px; top: 22px; bottom: 22px;
+        display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .door-card .door-hinges span {
+        display: block; width: 6px; height: 18px;
+        background: var(--ink); border-radius: 2px;
+    }
+    .door-card .door-title {
+        text-align: center;
+        font-family: 'Yeon Sung', serif;
+        font-size: 22px; color: #FFF8E5;
+        text-shadow: 1.5px 1.5px 0 var(--ink);
+        margin-bottom: 4px;
+    }
+    .door-card .door-sub {
+        text-align: center;
+        font-family: 'Nanum Pen Script', cursive;
+        font-size: 16px; color: #FFE9DD;
+        margin-bottom: 14px;
+    }
+    .door-card .door-err {
+        margin-top: 10px;
+        background: rgba(255,255,255,0.92);
+        border: 1.5px dashed var(--ink);
+        border-radius: 10px;
+        padding: 8px 12px;
+        text-align: center;
+        font-family: 'Gowun Batang', serif;
+        font-size: 13px;
+        color: #8C2A18;
+    }
+    /* 대문 안 입력칸 — 종이 색으로 도드라지게 */
+    .door-card [data-testid="stTextInput"] input {
+        background: #FFFDF6 !important;
+        border: 2px solid var(--ink) !important;
+        border-radius: 10px !important;
+        text-align: center !important;
+        font-family: 'Gowun Batang', serif !important;
+        letter-spacing: 3px;
+        font-size: 16px !important;
+        padding: 11px 14px !important;
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.08) !important;
+    }
+    /* 대문 안 제출 버튼 */
+    .door-card [data-testid="stFormSubmitButton"] button {
+        width: 100%;
+        margin-top: 6px;
+        background: var(--mustard) !important;
+        color: var(--ink) !important;
+        border: 2px solid var(--ink) !important;
+        border-radius: 10px !important;
+        box-shadow: 2px 2px 0 var(--ink) !important;
+        font-family: 'Gowun Batang', serif !important;
+        font-weight: 700 !important;
+    }
+    .door-card [data-testid="stFormSubmitButton"] button:hover {
+        background: #FFD55A !important;
+        transform: translate(-1px, -1px);
+        box-shadow: 3px 3px 0 var(--ink) !important;
     }
     .gate-card::after {
         content: ''; position: absolute; inset: 8px;
@@ -1152,8 +1252,8 @@ st.markdown(
     }
     /* 게이트 안쪽 Why + How-to-play */
     .gate-why {
-        margin-top: 22px;
-        padding-top: 18px;
+        margin-top: 18px;
+        padding-top: 16px;
         border-top: 2px dashed rgba(58,42,31,0.20);
     }
     .gate-why-head {
@@ -1308,49 +1408,62 @@ def render_password_gate(expected: str) -> None:
     attempts = st.session_state.get("auth_attempts", 0)
     shake_class = " gate-shake" if st.session_state.pop("_just_failed", False) else ""
 
-    # 게이트 페이지만 바깥은 흰색 (캐릭터 박스만 베이지로 보이도록)
+    # 게이트 페이지만 바깥은 흰색
     st.markdown(
         '<style>'
         '.stApp { background: #FFFFFF !important; }'
         '.stApp::before, .stApp::after { display: none; }'
+        '/* 게이트 메인 컨테이너 패딩 살짝 줄여 한 화면에 더 많이 보이도록 */'
+        '.main .block-container { padding-top: 1rem !important; }'
         '</style>',
         unsafe_allow_html=True,
     )
 
-    st.markdown(
-        f'<div class="gate-wrap">'
-        f'<div class="gate-card{shake_class}">'
-        f'  <div class="gate-chars">'
-        f'    <div class="char-main">{char_img("whodat", width=170)}</div>'
-        f'    <div class="char-lock">{LOCK_SVG}</div>'
-        f'  </div>'
-        f'  <div class="gate-bubble">'
-        f'    어어… <b>누구세요…?</b><br>'
-        f'    사관 두루마리 방탈출에 들어오시려면 암호를 살짝 속삭여 주시구려.'
-        f'    <small>(Korean-history quest game. Whisper the password to enter.)</small>'
-        f'  </div>',
-        unsafe_allow_html=True,
-    )
+    # ── 가로 두 칸: [캐릭터+말풍선] [대문(비밀번호)] ──
+    gate_left, gate_right = st.columns([2.4, 1.3])
 
-    with st.form("pw_form", clear_on_submit=True):
-        pw = st.text_input(
-            "암호",
-            type="password",
-            label_visibility="collapsed",
-            placeholder="• • • • • •",
-            key="pw_input",
-        )
-        submitted = st.form_submit_button("들여 보내 주시오")
-
-    if attempts > 0:
+    with gate_left:
         st.markdown(
-            '<div class="gate-err">'
-            '어어… 그 암호가 아닌 것 같소이다… 다시 한 번?'
-            '</div>',
+            f'<div class="gate-card{shake_class}">'
+            f'  <div class="gate-chars">'
+            f'    <div class="char-main">{char_img("whodat", width=150)}</div>'
+            f'    <div class="char-lock">{LOCK_SVG}</div>'
+            f'  </div>'
+            f'  <div class="gate-bubble">'
+            f'    어어… <b>누구세요…?</b><br>'
+            f'    사관 두루마리 방탈출에 들어오시려면 우측 <b>대문</b>의 암호를 속삭여 주시구려.'
+            f'    <small>(Korean-history quest game. Whisper the password at the door →)</small>'
+            f'  </div>'
+            f'</div>',
             unsafe_allow_html=True,
         )
 
-    # ── 왜 사초 AI? + 어떻게 노나요 (게이트 안쪽) ──
+    with gate_right:
+        st.markdown(
+            '<div class="door-card">'
+            '  <div class="door-knob"></div>'
+            '  <div class="door-hinges"><span></span><span></span><span></span></div>'
+            '  <div class="door-title">🚪 대문</div>'
+            '  <div class="door-sub">암호를 속삭여 주오</div>',
+            unsafe_allow_html=True,
+        )
+        with st.form("pw_form", clear_on_submit=True):
+            pw = st.text_input(
+                "암호",
+                type="password",
+                label_visibility="collapsed",
+                placeholder="• • • • • •",
+                key="pw_input",
+            )
+            submitted = st.form_submit_button("들여 보내 주시오")
+        if attempts > 0:
+            st.markdown(
+                '<div class="door-err">어어… 그 암호가 아닌 듯하오…</div>',
+                unsafe_allow_html=True,
+            )
+        st.markdown('</div>', unsafe_allow_html=True)
+
+    # ── Why + How-to-play (한 줄 그리드, 컴팩트하게) ──
     st.markdown(
         '<div class="gate-why">'
         '  <div class="gate-why-head">'
@@ -1359,26 +1472,25 @@ def render_password_gate(expected: str) -> None:
         '  </div>'
         '  <div class="gate-why-grid">'
         '    <div class="gate-why-cell"><b>🎮 매번 새 문제</b>'
-        '      <p>AI가 90건의 사료에서 매번 다르게 출제합니다. 한 번 풀고 끝나는 게임이 아닙니다.</p></div>'
-        '    <div class="gate-why-cell"><b>🗺 관광지·세부 위치까지</b>'
-        '      <p>경복궁·경주 첨성대·단양 도담삼봉. 지도 핀·사진과 함께 그 자리의 역사를 즉시.</p></div>'
+        '      <p>AI가 90+건의 사료·콘텐츠에서 매번 다르게 출제. 한 번 풀고 끝 X.</p></div>'
+        '    <div class="gate-why-cell"><b>🗺 관광지·드라마 촬영지까지</b>'
+        '      <p>경복궁·경주 첨성대·단양 도담삼봉·미스터 션샤인 정동까지. 지도 핀·사진 함께.</p></div>'
         '    <div class="gate-why-cell"><b>🔍 답변마다 원문 링크</b>'
-        '      <p>조선왕조실록·고려사·한국사DB 1차 사료를 클릭해 직접 확인. 출처 없는 답변은 없습니다.</p></div>'
+        '      <p>조선왕조실록·고려사·한국사DB 1차 사료 클릭 검증. 출처 없는 답변 없음.</p></div>'
         '    <div class="gate-why-cell"><b>⚖ 학설은 양면 + 4개 국어</b>'
-        '      <p>견해가 갈리는 사안은 한쪽으로 단정하지 않고 양측을 함께. 한·영·일·중 동시 지원.</p></div>'
+        '      <p>갈리는 사안은 양측 견해 함께. 한·영·일·중 동시 지원.</p></div>'
         '  </div>'
         '  <div class="gate-howto">'
         '    <b>🎯 노는 법</b>'
         '    <ol>'
-        '      <li>주제(서울 궁궐 · 경주 · 단양 · 일제강점기 등) 고르기</li>'
-        '      <li>사관이 4지선다 문제를 출제 → 한 줄 골라 답하기</li>'
-        '      <li>맞으면 +10 사초, 틀려도 상세 해설 + 사료 + 지도 보여드림</li>'
-        '      <li>연속 정답 = 연승, 누적 사초 = 자랑할 거리</li>'
+        '      <li>대문 통과 → 코스/주제 고르기 (정동 7단서·경주 5단서·K콘텐츠 등)</li>'
+        '      <li>사관이 4지선다 출제 → 힌트 쓸까(-3 사초)? 그냥 답할까?</li>'
+        '      <li>맞으면 +10 사초, 틀려도 선지별 풀이 + 사료 + 지도</li>'
+        '      <li>코스 끝까지 풀면 칭호(사관의 으뜸·동무·견습…) 획득</li>'
         '    </ol>'
         '  </div>'
         '</div>'
-        '<div class="gate-foot">— 졸린 사관이 지키는 두루마리 방 —</div>'
-        '</div></div>',
+        '<div class="gate-foot">— 졸린 사관이 지키는 두루마리 방 —</div>',
         unsafe_allow_html=True,
     )
 
@@ -1741,6 +1853,7 @@ def _theme_options() -> dict[str, str]:
         "joseon_kings": T["theme_joseon_kings"],
         "colonial":     T["theme_colonial"],
         "historians":   T["theme_historians"],
+        "kculture":     T["theme_kculture"],
     }
 
 
