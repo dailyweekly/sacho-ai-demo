@@ -34,6 +34,8 @@ class SourceCard:
     related_persons: list[str]
     source_url: str
     license: str
+    era: str = ""
+    king: str = ""
     score: float = 0.0
     # 디버그/시연용: 매칭된 토큰과 필드별 hit 정보
     matched_tokens: list[str] = field(default_factory=list)
@@ -54,6 +56,8 @@ class SourceCard:
             related_persons=d.get("related_persons", []),
             source_url=d.get("source_url", ""),
             license=d.get("license", ""),
+            era=d.get("era", ""),
+            king=d.get("king", ""),
         )
 
 

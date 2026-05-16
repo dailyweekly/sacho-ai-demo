@@ -52,12 +52,13 @@ except Exception:
     pass
 
 from core.llm import stream_sagwan_response
-from core.rag import search_corpus, SourceCard
+from core.rag import search_corpus, SourceCard, load_corpus
 from core.badge import parse_response, render_badge_html, sanitize_streaming_text
 from core.prompts import GREETING_BY_LANG, SUGGESTED_QUESTIONS_BY_LANG, UI_TEXT
 from core.character import (
     LOGO_SVG, LOCK_SVG, char_img,
 )
+from core.quest import generate_question, pick_card, QUEST_THEME_KEYWORDS
 
 
 st.set_page_config(
@@ -308,6 +309,125 @@ st.markdown(
         border-right: 11px solid #FFF;
     }
 
+    /* ── 🎮 퀘스트 게임 페이지 ───────────────────────────── */
+    /* 사초·연승·정답률 띠 */
+    .credit-bar {
+        display: flex; flex-wrap: wrap; gap: 18px;
+        background: #FFF7DA;
+        border: 2px solid var(--ink);
+        border-radius: 14px;
+        padding: 10px 18px;
+        margin-bottom: 16px;
+        font-family: 'Gowun Batang', serif;
+        font-size: 14.5px;
+    }
+    .credit-bar b { color: var(--red-deep); font-weight: 700; }
+    .credit-bar .credit-num {
+        font-family: 'Yeon Sung', serif;
+        font-size: 18px;
+        color: var(--ink);
+        margin-left: 4px;
+    }
+    .credit-bar .credit-best {
+        font-family: 'Nanum Pen Script', cursive;
+        color: var(--ink-soft); font-size: 14px;
+    }
+
+    /* 퀘스트 인트로 (문제 없을 때) */
+    .quest-intro {
+        display: flex; gap: 18px; align-items: center;
+        background: #FBF7F2;
+        border: 2.5px solid var(--ink);
+        border-radius: 22px;
+        padding: 18px 22px;
+        margin-bottom: 14px;
+        box-shadow: 4px 4px 0 var(--ink);
+    }
+    .quest-intro-char { flex: 0 0 110px; animation: float-y 5s ease-in-out infinite; }
+    .quest-intro-text h3 {
+        margin: 0; font-family: 'Yeon Sung', serif; font-size: 22px;
+    }
+    .quest-intro-text p {
+        margin: 4px 0 0 0; font-family: 'Gowun Batang', serif;
+        font-size: 14.5px; color: var(--ink); line-height: 1.6;
+    }
+
+    /* 문제 카드 */
+    .quest-q {
+        display: flex; gap: 14px; align-items: flex-start;
+        background: #FFFCF0;
+        border: 2.5px solid var(--ink);
+        border-radius: 18px;
+        padding: 18px 20px;
+        margin-bottom: 14px;
+        box-shadow: 4px 4px 0 var(--ink);
+    }
+    .quest-q-tag {
+        flex: 0 0 38px; height: 38px; line-height: 36px;
+        text-align: center;
+        background: var(--mustard);
+        border: 2px solid var(--ink);
+        border-radius: 10px;
+        font-family: 'Yeon Sung', serif;
+        font-size: 22px;
+        box-shadow: 2px 2px 0 var(--ink);
+    }
+    .quest-q-body {
+        flex: 1;
+        font-family: 'Gowun Batang', serif;
+        font-size: 17px;
+        line-height: 1.7;
+        color: var(--ink);
+    }
+
+    /* 결과 띠 */
+    .quest-result {
+        padding: 12px 16px;
+        border-radius: 12px;
+        font-family: 'Gowun Batang', serif;
+        font-weight: 700;
+        font-size: 15.5px;
+        margin: 12px 0;
+        border: 2px solid var(--ink);
+        box-shadow: 2px 2px 0 var(--ink);
+    }
+    .quest-result.correct {
+        background: #DDF0CB;
+        color: #2E6418;
+    }
+    .quest-result.wrong {
+        background: #FFE0D6;
+        color: #8C2A18;
+    }
+
+    /* 답변 후 선지 회고 */
+    .opt-recap {
+        background: #FBF7F2;
+        border: 1.5px dashed rgba(58,42,31,0.22);
+        border-radius: 12px;
+        padding: 10px 14px;
+        margin-bottom: 14px;
+        font-family: 'Gowun Batang', serif;
+    }
+    .opt-recap .opt-row {
+        padding: 4px 6px;
+        font-size: 14px;
+        color: var(--ink-soft);
+    }
+    .opt-recap .opt-row.opt-correct {
+        color: #2E6418; font-weight: 700;
+        background: rgba(181,197,168,0.30);
+        border-left: 3px solid #2E6418;
+        padding-left: 10px;
+    }
+    .opt-recap .opt-row.opt-wrong {
+        color: #8C2A18;
+        background: rgba(201,112,100,0.20);
+        border-left: 3px solid #8C2A18;
+        padding-left: 10px;
+        text-decoration: line-through;
+    }
+
     /* ── 왜 사초 AI? 차별 가치 카드 ────────────────────────── */
     .why-card {
         background: #FBF7F2;
@@ -549,6 +669,29 @@ st.markdown(
         font-size: 12px;
         color: var(--ink-soft);
         font-family: 'Noto Sans KR', sans-serif;
+    }
+    /* 지도·사진 검색 링크 */
+    .evidence-card .place-row {
+        display: flex; gap: 8px; flex-wrap: wrap;
+        margin-top: 10px;
+    }
+    .evidence-card .place-link {
+        display: inline-block;
+        padding: 5px 11px;
+        background: #FFFCF0;
+        color: var(--ink) !important;
+        border: 1.5px solid var(--ink-soft);
+        border-radius: 999px;
+        font-family: 'Gowun Batang', serif;
+        font-size: 12.5px;
+        font-weight: 600;
+        text-decoration: none !important;
+        border-bottom: 1.5px solid var(--ink-soft) !important;
+        transition: background 0.12s;
+    }
+    .evidence-card .place-link:hover {
+        background: #FFE7A0;
+        border-color: var(--ink) !important;
     }
     .evidence-card .license-tag {
         margin-top: 6px;
@@ -885,6 +1028,62 @@ st.markdown(
         font-family: 'Nanum Pen Script', cursive;
         font-size: 16px; color: var(--ink-soft); opacity: 0.7;
     }
+    /* 게이트 안쪽 Why + How-to-play */
+    .gate-why {
+        margin-top: 22px;
+        padding-top: 18px;
+        border-top: 2px dashed rgba(58,42,31,0.20);
+    }
+    .gate-why-head {
+        display: flex; align-items: baseline; gap: 12px;
+        margin-bottom: 12px; flex-wrap: wrap;
+    }
+    .gate-why-title {
+        font-family: 'Yeon Sung', 'Black Han Sans', serif;
+        font-size: 22px; color: var(--ink); letter-spacing: 0.4px;
+    }
+    .gate-why-sub {
+        font-family: 'Nanum Pen Script', cursive;
+        font-size: 17px; color: var(--ink-soft);
+    }
+    .gate-why-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+        margin-bottom: 14px;
+    }
+    .gate-why-cell {
+        background: #FFFCF5;
+        border: 1.5px dashed rgba(58,42,31,0.22);
+        border-radius: 12px;
+        padding: 10px 12px;
+        font-family: 'Gowun Batang', serif;
+    }
+    .gate-why-cell b {
+        font-size: 13.5px; color: var(--red-deep);
+    }
+    .gate-why-cell p {
+        margin: 4px 0 0 0;
+        font-size: 12.5px; line-height: 1.5; color: var(--ink);
+    }
+    .gate-howto {
+        background: #FFF7DA;
+        border: 1.5px solid var(--ink);
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-family: 'Gowun Batang', serif;
+    }
+    .gate-howto b {
+        display: block; margin-bottom: 6px;
+        font-size: 14px; color: var(--ink);
+    }
+    .gate-howto ol {
+        margin: 4px 0 0 18px; padding: 0;
+        font-size: 13px; line-height: 1.7; color: var(--ink);
+    }
+    @media (max-width: 720px) {
+        .gate-why-grid { grid-template-columns: 1fr; }
+    }
 
     /* 모바일 폴백 */
     @media (max-width: 720px) {
@@ -916,9 +1115,30 @@ def init_state() -> None:
     if "show_map" not in st.session_state:
         st.session_state.show_map = True
     if "view" not in st.session_state:
-        st.session_state.view = "chat"          # "chat" | "collection"
+        st.session_state.view = "quest"         # "quest" | "chat" | "collection"
     if "collection" not in st.session_state:
-        st.session_state.collection = {}        # id -> SourceCard
+        st.session_state.collection = {}
+    # ─── 퀘스트 게임 상태 ───
+    if "credits" not in st.session_state:
+        st.session_state.credits = 0
+    if "streak" not in st.session_state:
+        st.session_state.streak = 0
+    if "best_streak" not in st.session_state:
+        st.session_state.best_streak = 0
+    if "total_attempts" not in st.session_state:
+        st.session_state.total_attempts = 0
+    if "total_correct" not in st.session_state:
+        st.session_state.total_correct = 0
+    if "current_q" not in st.session_state:
+        st.session_state.current_q = None
+    if "q_answered" not in st.session_state:
+        st.session_state.q_answered = False
+    if "q_user_choice" not in st.session_state:
+        st.session_state.q_user_choice = None
+    if "q_seen_ids" not in st.session_state:
+        st.session_state.q_seen_ids = []
+    if "quest_theme" not in st.session_state:
+        st.session_state.quest_theme = "all"
 
 
 init_state()
@@ -966,13 +1186,13 @@ def render_password_gate(expected: str) -> None:
         f'<div class="gate-wrap">'
         f'<div class="gate-card{shake_class}">'
         f'  <div class="gate-chars">'
-        f'    <div class="char-main">{char_img("whodat", width=180)}</div>'
+        f'    <div class="char-main">{char_img("whodat", width=170)}</div>'
         f'    <div class="char-lock">{LOCK_SVG}</div>'
         f'  </div>'
         f'  <div class="gate-bubble">'
         f'    어어… <b>누구세요…?</b><br>'
-        f'    문 안쪽 두루마리는 잠금이라… 암호를 살짝 속삭여 주시구려.'
-        f'    <small>(Who is there? This scroll is locked. Whisper the password.)</small>'
+        f'    사관 두루마리 방탈출에 들어오시려면 암호를 살짝 속삭여 주시구려.'
+        f'    <small>(Korean-history quest game. Whisper the password to enter.)</small>'
         f'  </div>',
         unsafe_allow_html=True,
     )
@@ -995,8 +1215,34 @@ def render_password_gate(expected: str) -> None:
             unsafe_allow_html=True,
         )
 
+    # ── 왜 사초 AI? + 어떻게 노나요 (게이트 안쪽) ──
     st.markdown(
-        '<div class="gate-foot">— 졸린 사관이 지키는 두루마리 —</div>'
+        '<div class="gate-why">'
+        '  <div class="gate-why-head">'
+        '    <span class="gate-why-title">✨ 왜 사초 AI?</span>'
+        '    <span class="gate-why-sub">— 한국사 방탈출 게임 —</span>'
+        '  </div>'
+        '  <div class="gate-why-grid">'
+        '    <div class="gate-why-cell"><b>🎮 묻지 말고, 풀어 보세요</b>'
+        '      <p>사관이 한국사 4지선다 문제를 냅니다. 정답마다 사초(史草) 적립.</p></div>'
+        '    <div class="gate-why-cell"><b>🗺 관광지·세부 위치까지</b>'
+        '      <p>경복궁 중명전·경주 첨성대·단양 도담삼봉 — 지도 핀과 함께 그 자리의 역사를.</p></div>'
+        '    <div class="gate-why-cell"><b>🔍 출처 클릭 검증</b>'
+        '      <p>해설마다 조선왕조실록·고려사·한국사DB 1차 사료 링크. 학설 갈리면 양측 견해를 함께.</p></div>'
+        '    <div class="gate-why-cell"><b>🛡 환각 거부</b>'
+        '      <p>사료에 없는 건 "확인 불가". 신뢰 배지(사료 확인됨·AI 각색·추정)로 매 답변마다 표시.</p></div>'
+        '  </div>'
+        '  <div class="gate-howto">'
+        '    <b>🎯 노는 법</b>'
+        '    <ol>'
+        '      <li>주제(서울 궁궐 · 경주 · 단양 · 일제강점기 등) 고르기</li>'
+        '      <li>사관이 4지선다 문제를 출제 → 한 줄 골라 답하기</li>'
+        '      <li>맞으면 +10 사초, 틀려도 상세 해설 + 사료 + 지도 보여드림</li>'
+        '      <li>연속 정답 = 연승, 누적 사초 = 자랑할 거리</li>'
+        '    </ol>'
+        '  </div>'
+        '</div>'
+        '<div class="gate-foot">— 졸린 사관이 지키는 두루마리 방 —</div>'
         '</div></div>',
         unsafe_allow_html=True,
     )
@@ -1026,7 +1272,7 @@ if _pw and not st.session_state.get("auth_ok"):
 # ─────────────────────────────────────────────────────────────
 st.markdown('<div class="topbar-tools">', unsafe_allow_html=True)
 
-bar_cols = st.columns([2.3, 1.0, 1.0, 1.1, 0.7, 0.7])
+bar_cols = st.columns([2.0, 1.2, 1.0, 1.0, 1.0, 0.7, 0.7])
 
 with bar_cols[0]:
     st.markdown(
@@ -1042,6 +1288,26 @@ with bar_cols[0]:
     )
 
 with bar_cols[1]:
+    # 게임 모드 토글 (퀘스트 ↔ 자유 대화)
+    view_options = {
+        T["mode_quest"]: "quest",
+        T["mode_chat"]:  "chat",
+    }
+    inv_v = {v: k for k, v in view_options.items()}
+    current_view = "chat" if st.session_state.view == "chat" else "quest"
+    new_view_label = st.selectbox(
+        "view",
+        list(view_options.keys()),
+        index=list(view_options.keys()).index(inv_v.get(current_view, T["mode_quest"])),
+        label_visibility="collapsed",
+        key="view_select",
+    )
+    new_view = view_options[new_view_label]
+    if new_view != st.session_state.view and st.session_state.view != "collection":
+        st.session_state.view = new_view
+        st.rerun()
+
+with bar_cols[2]:
     lang_options = {"한국어": "ko", "English": "en", "日本語": "ja", "中文 (简体)": "zh"}
     inv = {v: k for k, v in lang_options.items()}
     lang_label = st.selectbox(
@@ -1056,7 +1322,7 @@ with bar_cols[1]:
         st.session_state.messages = []
         st.rerun()
 
-with bar_cols[2]:
+with bar_cols[3]:
     mode_options = ["일반", "가족 (만 8세+)"]
     cur = mode_options.index(st.session_state.mode) if st.session_state.mode in mode_options else 0
     new_mode = st.selectbox(
@@ -1068,16 +1334,16 @@ with bar_cols[2]:
     )
     st.session_state.mode = new_mode
 
-with bar_cols[3]:
+with bar_cols[4]:
     n_seen = len(st.session_state.collection)
     label = f"{T['collection_btn']} ({n_seen})" if n_seen else T["collection_btn"]
     is_in_collection = st.session_state.view == "collection"
     if st.button(label, key="btn_collection", use_container_width=True,
                  help="내가 마주한 사료 모음"):
-        st.session_state.view = "chat" if is_in_collection else "collection"
+        st.session_state.view = "quest" if is_in_collection else "collection"
         st.rerun()
 
-with bar_cols[4]:
+with bar_cols[5]:
     with st.popover("⚙", use_container_width=True):
         st.markdown("**시연 옵션**")
         st.session_state.show_rag_debug = st.toggle(
@@ -1116,11 +1382,18 @@ with bar_cols[4]:
                 use_container_width=True,
             )
 
-with bar_cols[5]:
+with bar_cols[6]:
     if st.button("🔄", help=T["reset_label"], use_container_width=True):
         st.session_state.messages = []
         st.session_state.collection = {}
-        st.session_state.view = "chat"
+        st.session_state.view = "quest"
+        st.session_state.current_q = None
+        st.session_state.q_answered = False
+        st.session_state.credits = 0
+        st.session_state.streak = 0
+        st.session_state.total_attempts = 0
+        st.session_state.total_correct = 0
+        st.session_state.q_seen_ids = []
         st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
@@ -1177,6 +1450,31 @@ def _source_authority(url: str) -> str:
     return "📚 참고 자료"
 
 
+def _place_links(c: SourceCard) -> str:
+    """장소 좌표 + 제목으로 지도·사진 검색 링크 생성."""
+    import urllib.parse as up
+    bits = []
+    title_q = up.quote(c.title.split("—")[0].strip())
+    place_q = up.quote(c.place.split("(")[0].strip())
+    # Google Maps — 좌표가 있으면 좌표 핀, 없으면 장소명 검색
+    if c.place_coords and len(c.place_coords) == 2:
+        lon, lat = c.place_coords
+        gmap = f"https://www.google.com/maps?q={lat},{lon}({title_q})"
+    else:
+        gmap = f"https://www.google.com/maps/search/{title_q}"
+    bits.append(
+        f'<a class="place-link" href="{gmap}" target="_blank" rel="noopener">'
+        f'{T["map_open"]}</a>'
+    )
+    # 네이버 이미지 검색 (한국어 검색이 풍부)
+    img = f"https://search.naver.com/search.naver?where=image&query={place_q}"
+    bits.append(
+        f'<a class="place-link" href="{img}" target="_blank" rel="noopener">'
+        f'{T["photo_search"]}</a>'
+    )
+    return " ".join(bits)
+
+
 def render_evidence_cards(cards: list[SourceCard]) -> None:
     if not cards:
         return
@@ -1191,6 +1489,7 @@ def render_evidence_cards(cards: list[SourceCard]) -> None:
             f'<div class="body">{c.summary}</div>'
             f'<div class="body" style="margin-top:8px;color:#5C4A33;font-size:13.5px;">'
             f'<b>{T["original_excerpt"]}</b>: <em>{c.original_text}</em></div>'
+            f'<div class="place-row">{_place_links(c)}</div>'
             f'<div class="verify-row">'
             f'<a class="verify-btn" href="{c.source_url}" target="_blank" '
             f'rel="noopener">🔍 {T["view_source"]}</a>'
@@ -1269,7 +1568,184 @@ def render_collection_page() -> None:
 
     st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
     if st.button(T["back_to_chat"], key="back_chat_bottom"):
-        st.session_state.view = "chat"
+        st.session_state.view = "quest"
+        st.rerun()
+
+
+# ─────────────────────────────────────────────────────────────
+# 🎮 퀘스트 페이지 — AI가 4지선다 출제, 사용자가 풀고 사초 적립
+# ─────────────────────────────────────────────────────────────
+def _credit_bar() -> None:
+    accuracy = (
+        f"{st.session_state.total_correct}/{st.session_state.total_attempts}"
+        if st.session_state.total_attempts else "0/0"
+    )
+    st.markdown(
+        f'<div class="credit-bar">'
+        f'  <span><b>📜 {T["credit_label"]}</b> '
+        f'<span class="credit-num">{st.session_state.credits}</span></span>'
+        f'  <span><b>🔥 {T["streak_label"]}</b> '
+        f'<span class="credit-num">{st.session_state.streak}</span> '
+        f'<span class="credit-best">(best {st.session_state.best_streak})</span></span>'
+        f'  <span><b>🎯 {T["accuracy_label"]}</b> '
+        f'<span class="credit-num">{accuracy}</span></span>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+
+def _theme_options() -> dict[str, str]:
+    """테마 키 -> 표시 라벨 매핑."""
+    return {
+        "all":          T["theme_all"],
+        "palaces":      T["theme_palaces"],
+        "gyeongju":     T["theme_gyeongju"],
+        "danyang":      T["theme_danyang"],
+        "andong":       T["theme_andong"],
+        "imjin":        T["theme_imjin"],
+        "joseon_kings": T["theme_joseon_kings"],
+        "colonial":     T["theme_colonial"],
+        "historians":   T["theme_historians"],
+    }
+
+
+def render_quest_page() -> None:
+    _credit_bar()
+
+    q = st.session_state.current_q
+
+    # 문제 없을 때 — 인트로 + 새 문제 받기
+    if q is None:
+        st.markdown(
+            f'<div class="quest-intro">'
+            f'  <div class="quest-intro-char">{char_img("start", width=110)}</div>'
+            f'  <div class="quest-intro-text">'
+            f'    <h3>{T["quest_intro_title"]}</h3>'
+            f'    <p>{T["quest_intro_desc"]}</p>'
+            f'  </div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+
+        themes = _theme_options()
+        col_a, col_b = st.columns([3, 2])
+        with col_a:
+            theme_keys = list(themes.keys())
+            theme_labels = [themes[k] for k in theme_keys]
+            current_theme = st.session_state.quest_theme
+            cur_idx = theme_keys.index(current_theme) if current_theme in theme_keys else 0
+            picked_label = st.selectbox(
+                T["quest_theme_label"],
+                theme_labels,
+                index=cur_idx,
+                key="theme_select",
+            )
+            st.session_state.quest_theme = theme_keys[theme_labels.index(picked_label)]
+        with col_b:
+            st.markdown('<div style="height:30px"></div>', unsafe_allow_html=True)
+            if st.button(T["quest_start_btn"], key="quest_start", use_container_width=True):
+                if not api_key_present:
+                    st.error(T["api_key_missing_title"])
+                    return
+                with st.spinner(T["quest_thinking"]):
+                    card = pick_card(
+                        st.session_state.quest_theme,
+                        exclude_ids=st.session_state.q_seen_ids[-10:],
+                    )
+                    new_q = generate_question(
+                        card,
+                        language=st.session_state.language,
+                        mode=st.session_state.mode,
+                    )
+                st.session_state.current_q = new_q
+                st.session_state.q_answered = False
+                st.session_state.q_user_choice = None
+                st.session_state.q_seen_ids.append(card.id)
+                st.rerun()
+        return
+
+    # 문제 표시
+    st.markdown(
+        f'<div class="quest-q">'
+        f'  <div class="quest-q-tag">Q.</div>'
+        f'  <div class="quest-q-body">{q["question"]}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    answered = st.session_state.q_answered
+
+    # 답변 전 — 4지선다 버튼
+    if not answered:
+        marks = ["①", "②", "③", "④"]
+        for i, opt in enumerate(q["options"]):
+            if st.button(
+                f"{marks[i]}  {opt}",
+                key=f"quest_opt_{i}",
+                use_container_width=True,
+            ):
+                st.session_state.q_user_choice = i
+                st.session_state.q_answered = True
+                st.session_state.total_attempts += 1
+                if i == q["correct_idx"]:
+                    st.session_state.credits += 10
+                    st.session_state.streak += 1
+                    st.session_state.total_correct += 1
+                    if st.session_state.streak > st.session_state.best_streak:
+                        st.session_state.best_streak = st.session_state.streak
+                else:
+                    st.session_state.streak = 0
+                st.rerun()
+        return
+
+    # 답변 후 — 결과 + 해설 + 사료 + 다음 버튼
+    user = st.session_state.q_user_choice
+    correct = q["correct_idx"]
+    marks = ["①", "②", "③", "④"]
+    if user == correct:
+        st.markdown(
+            f'<div class="quest-result correct">{T["quest_correct"]}</div>',
+            unsafe_allow_html=True,
+        )
+    else:
+        st.markdown(
+            f'<div class="quest-result wrong">{T["quest_wrong"]} '
+            f'<b>{marks[correct]} {q["options"][correct]}</b></div>',
+            unsafe_allow_html=True,
+        )
+
+    # 사용자가 고른 선지 + 정답 시각 표시
+    rows = []
+    for i, opt in enumerate(q["options"]):
+        cls = ""
+        if i == correct:
+            cls = "opt-correct"
+        elif i == user:
+            cls = "opt-wrong"
+        rows.append(f'<div class="opt-row {cls}">{marks[i]} {opt}</div>')
+    st.markdown('<div class="opt-recap">' + "".join(rows) + '</div>',
+                unsafe_allow_html=True)
+
+    # 해설
+    st.markdown(f"##### {T['quest_explanation']}")
+    st.markdown(q["explanation"])
+
+    # 사료 카드 + 지도
+    card_id = q["card_id"]
+    cards = [c for c in load_corpus() if c.id == card_id]
+    if cards:
+        render_evidence_cards(cards)
+        render_evidence_map(cards)
+        # 보관함에 누적
+        for cc in cards:
+            st.session_state.collection[cc.id] = cc
+
+    # 다음 문제
+    st.markdown('<div style="height:10px"></div>', unsafe_allow_html=True)
+    if st.button(T["quest_next_btn"], key="quest_next", use_container_width=True):
+        st.session_state.current_q = None
+        st.session_state.q_answered = False
+        st.session_state.q_user_choice = None
         st.rerun()
 
 
@@ -1297,10 +1773,14 @@ def render_meta(usage: dict | None, rag_cards: list[SourceCard]) -> None:
 
 
 # ─────────────────────────────────────────────────────────────
-# 사료 보관함 뷰 — 별도 페이지
+# 뷰 라우팅
 # ─────────────────────────────────────────────────────────────
 if st.session_state.view == "collection":
     render_collection_page()
+    st.stop()
+
+if st.session_state.view == "quest":
+    render_quest_page()
     st.stop()
 
 
@@ -1317,34 +1797,7 @@ if not st.session_state.messages:
         unsafe_allow_html=True,
     )
 
-    # 차별 가치 카드 — 범용 AI와의 차이를 사용자에게 명시
-    st.markdown(
-        f'<div class="why-card">'
-        f'  <div class="why-head">'
-        f'    <span class="why-title">✨ {T["why_title"]}</span>'
-        f'    <span class="why-sub">{T["why_subtitle"]}</span>'
-        f'  </div>'
-        f'  <div class="why-grid">'
-        f'    <div class="why-cell">'
-        f'      <div class="why-num">1</div>'
-        f'      <div><b>🔍 {T["why_1_t"]}</b><p>{T["why_1_d"]}</p></div>'
-        f'    </div>'
-        f'    <div class="why-cell">'
-        f'      <div class="why-num">2</div>'
-        f'      <div><b>⚖️ {T["why_2_t"]}</b><p>{T["why_2_d"]}</p></div>'
-        f'    </div>'
-        f'    <div class="why-cell">'
-        f'      <div class="why-num">3</div>'
-        f'      <div><b>🗺 {T["why_3_t"]}</b><p>{T["why_3_d"]}</p></div>'
-        f'    </div>'
-        f'    <div class="why-cell">'
-        f'      <div class="why-num">4</div>'
-        f'      <div><b>🛡 {T["why_4_t"]}</b><p>{T["why_4_d"]}</p></div>'
-        f'    </div>'
-        f'  </div>'
-        f'</div>',
-        unsafe_allow_html=True,
-    )
+    # Why 카드는 게이트(로그인) 화면으로 이동 — 메인에서는 노출하지 않음
 
     st.markdown(
         f'<div class="suggest-section"><h5>{T["suggested_header"]}</h5></div>',
