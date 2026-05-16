@@ -1174,6 +1174,24 @@ st.markdown(
         color: #8a7560;
         font-family: 'Noto Sans KR', sans-serif;
     }
+    /* 공모전 특별제공 데이터셋 칩 (한복·국악·문양) */
+    .evidence-card .dataset-chips {
+        display: flex; flex-wrap: wrap; gap: 6px;
+        margin: 6px 0 8px 0;
+    }
+    .evidence-card .dataset-chip {
+        display: inline-block;
+        padding: 3px 10px;
+        font-family: 'Gowun Batang', serif;
+        font-size: 11.5px;
+        font-weight: 700;
+        color: #5C3A1F;
+        background: linear-gradient(135deg, #FFE8C6, #FFD9A6);
+        border: 1px solid #C78A4E;
+        border-radius: 999px;
+        letter-spacing: 0.2px;
+        box-shadow: 0 1px 0 rgba(58,42,31,0.06);
+    }
 
     /* ── 응답 메타 (품삯 띠) ──────────────────────────── */
     .meta-row {
@@ -1230,6 +1248,20 @@ st.markdown(
         font-size: 19px; line-height: 1.4; color: var(--ink-soft);
         letter-spacing: 0.2px;
     }
+    .footer-attrib {
+        max-width: 880px;
+        margin: 6px auto 18px auto;
+        padding: 10px 14px;
+        font-family: 'Gowun Batang', serif;
+        font-size: 11.5px;
+        line-height: 1.6;
+        color: rgba(58,42,31,0.7);
+        background: rgba(255, 244, 222, 0.55);
+        border: 1px dashed rgba(58,42,31,0.18);
+        border-radius: 8px;
+        text-align: left;
+    }
+    .footer-attrib::before { display: none; }
 
     /* ── 여백 데코 캐릭터 (좌·우) ───────────────────── */
     .deco-left, .deco-right {
@@ -1789,6 +1821,49 @@ st.markdown(
         .gate-why-grid { grid-template-columns: 1fr; }
     }
 
+    /* ── 데이터 출처 · 차별성 매트릭스 (게이트/popover 공용) ── */
+    .data-sources {
+        font-family: 'Gowun Batang', serif;
+        color: var(--ink);
+    }
+    .sources-tbl {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12.5px;
+        line-height: 1.55;
+        background: #FFFCEF;
+        border: 1.5px solid var(--ink);
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    .sources-tbl th {
+        background: #FFE9A6;
+        color: var(--ink);
+        font-weight: 800;
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1.5px solid var(--ink);
+        font-family: 'Gaegu', 'Gowun Batang', serif;
+        font-size: 13px;
+    }
+    .sources-tbl td {
+        padding: 8px 10px;
+        border-bottom: 1px dashed rgba(58,42,31,0.25);
+        vertical-align: top;
+    }
+    .sources-tbl tbody tr:last-child td { border-bottom: none; }
+    .sources-tbl tbody tr:nth-child(odd) { background: rgba(255, 247, 218, 0.45); }
+    .sources-tbl b { color: #6B4226; }
+    .sources-note {
+        margin-top: 10px;
+        padding: 8px 12px;
+        background: #FFF3D0;
+        border-left: 4px solid #C97064;
+        border-radius: 6px;
+        font-size: 12px;
+        color: var(--ink);
+    }
+
     /* 모바일 폴백 */
     @media (max-width: 720px) {
         .hero { flex-direction: column; align-items: flex-start; }
@@ -1894,6 +1969,96 @@ def _expected_password() -> str:
     return os.getenv("APP_PASSWORD", "").strip()
 
 
+def _data_sources_html() -> str:
+    """공공데이터 9종 출처 표 — 게이트·⚙ popover 공용."""
+    return (
+        '<div class="data-sources">'
+        '<table class="sources-tbl">'
+        '<thead><tr>'
+        '<th>출처</th><th>제공기관</th><th>활용 방식</th><th>라이선스</th>'
+        '</tr></thead>'
+        '<tbody>'
+        '<tr><td><b>조선왕조실록 정보</b></td>'
+        '<td>국사편찬위원회</td>'
+        '<td>1차 사료 원문·번역 인용 (sillok-/hist-)</td>'
+        '<td>공공데이터포털 — 제한 없음</td></tr>'
+        '<tr><td><b>승정원일기</b></td>'
+        '<td>국사편찬위원회</td>'
+        '<td>국왕 일과·정사 보조 사료</td>'
+        '<td>공공데이터포털 — 제한 없음</td></tr>'
+        '<tr><td><b>한국사데이터베이스</b></td>'
+        '<td>국사편찬위원회</td>'
+        '<td>고려사·근대사 보조 사료 (hist-/mod-)</td>'
+        '<td>db.history.go.kr · 학술 인용</td></tr>'
+        '<tr><td><b>한국고전종합DB</b></td>'
+        '<td>한국고전번역원</td>'
+        '<td>문집·일성록 등 인용 보강</td>'
+        '<td>itkc.or.kr · 학술 인용</td></tr>'
+        '<tr><td><b>문화재 공간정보</b></td>'
+        '<td>문화재청·궁능유적본부</td>'
+        '<td>장소 좌표·경복궁/덕수궁 내부 7방 (gbg-/dsg-)</td>'
+        '<td>공공데이터포털 — 제한 없음</td></tr>'
+        '<tr><td><b>관광정보 TourAPI 4.0</b></td>'
+        '<td>한국관광공사</td>'
+        '<td>관광지 다국어 안내 링크·핀 보강</td>'
+        '<td>data.go.kr · 출처 표기</td></tr>'
+        '<tr><td><b>국립국악원 자료</b></td>'
+        '<td>국립국악원</td>'
+        '<td>K-콘텐츠 카드 음악/장단 배경 (kculture-)</td>'
+        '<td>공공누리 1유형</td></tr>'
+        '<tr><td><b>한복·전통문양</b></td>'
+        '<td>한국공예·디자인문화진흥원</td>'
+        '<td>캐릭터·UI 모티프 + K-콘텐츠 설명</td>'
+        '<td>공공누리 1·2유형</td></tr>'
+        '<tr><td><b>지자체 향토 사료</b></td>'
+        '<td>경주시·단양군·안동시 등</td>'
+        '<td>도보 코스 단서 (경주 5릉·단양 8경)</td>'
+        '<td>지자체 개방 자료</td></tr>'
+        '</tbody></table>'
+        '<div class="sources-note">'
+        '  모든 사료 카드 하단에 <b>원문 링크</b>와 <b>출처 라이선스</b>를 명시합니다. '
+        '  학설이 갈리는 사안은 <b>양측 견해를 함께</b> 노출합니다.'
+        '</div>'
+        '</div>'
+    )
+
+
+def _diff_matrix_html(corpus_n: int) -> str:
+    """범용 AI vs 사초 AI 차별성 매트릭스 — 게이트·⚙ popover 공용."""
+    return (
+        '<div class="data-sources">'
+        '<table class="sources-tbl">'
+        '<thead><tr>'
+        '<th>축</th><th>범용 AI<br>(ChatGPT·Gemini·Perplexity)</th>'
+        '<th>오디오가이드<br>(KTO Odii)</th>'
+        '<th>위치게임<br>(Questo·Adventure Lab)</th>'
+        '<th><b>사초 AI</b></th>'
+        '</tr></thead>'
+        '<tbody>'
+        '<tr><td><b>1차 사료 인용</b></td>'
+        '<td>불확실·환각 위험</td><td>해설형</td><td>없음</td>'
+        '<td><b>매 답변 원문 링크 + 라이선스</b></td></tr>'
+        '<tr><td><b>학설 다양성</b></td>'
+        '<td>단일 답변 강요</td><td>공식 견해만</td><td>—</td>'
+        '<td><b>갈리는 사안 양측 견해</b></td></tr>'
+        '<tr><td><b>현장 위치 게임</b></td>'
+        '<td>없음</td><td>수동 청취</td><td>있음</td>'
+        '<td><b>GPS + 도보 권역 코스 8종</b></td></tr>'
+        '<tr><td><b>한국사 사전 큐레이션</b></td>'
+        '<td>일반 웹</td><td>관광지 중심</td><td>없음</td>'
+        f'<td><b>{corpus_n}건 사료·콘텐츠 카드</b></td></tr>'
+        '<tr><td><b>다국어 동시 검증</b></td>'
+        '<td>언어별 품질 편차</td><td>4~8개</td><td>29개(영문 중심)</td>'
+        '<td><b>한·영·일·중 동시 + 학설 라벨 번역</b></td></tr>'
+        '</tbody></table>'
+        '<div class="sources-note">'
+        '  <b>핵심</b>: 검증된 도시 탐험 게임 모델 × 한국사 사료 검증 × AI 무한 출제. '
+        '  한국형 위치기반 학습 게임 시장의 첫 사료 검증형 솔루션.'
+        '</div>'
+        '</div>'
+    )
+
+
 def render_password_gate(expected: str) -> None:
     """세련된 게이트 — 브랜드 헤더 + 캐릭터/대문 + 가치 카드 + 오늘의 한 줄."""
     import random as _r
@@ -1976,54 +2141,72 @@ def render_password_gate(expected: str) -> None:
         st.markdown('</div>', unsafe_allow_html=True)
 
     # ── Why + How-to-play (refined: icon 분리 셀, 그라데이션) ──
+    try:
+        _corpus_n = len(load_corpus())
+    except Exception:
+        _corpus_n = 120
+    try:
+        from core.quest import COURSES as _COURSES
+        _course_n = len(_COURSES)
+    except Exception:
+        _course_n = 8
     st.markdown(
-        '<div class="gate-why">'
-        '  <div class="gate-why-head">'
-        '    <span class="gate-why-title">✨ 왜 사초 AI?</span>'
-        '    <span class="gate-why-sub">범용 AI와 무엇이 다른가</span>'
-        '  </div>'
-        '  <div class="gate-why-grid">'
-        '    <div class="gate-why-cell">'
-        '      <div class="why-icon">🎮</div>'
-        '      <div class="why-body">'
-        '        <b>매번 새 문제</b>'
-        '        <p>AI가 120+ 사료·콘텐츠에서 매번 다르게 출제. 한 번 풀고 끝 X.</p>'
-        '      </div>'
-        '    </div>'
-        '    <div class="gate-why-cell">'
-        '      <div class="why-icon">🗺</div>'
-        '      <div class="why-body">'
-        '        <b>관광지·촬영지까지</b>'
-        '        <p>경복궁 안 7방·경주 첨성대·정동 손탁호텔. 지도 핀과 함께.</p>'
-        '      </div>'
-        '    </div>'
-        '    <div class="gate-why-cell">'
-        '      <div class="why-icon">🔍</div>'
-        '      <div class="why-body">'
-        '        <b>답변마다 원문 링크</b>'
-        '        <p>조선왕조실록·고려사·한국사DB 1차 사료. 출처 없는 답변 없음.</p>'
-        '      </div>'
-        '    </div>'
-        '    <div class="gate-why-cell">'
-        '      <div class="why-icon">⚖</div>'
-        '      <div class="why-body">'
-        '        <b>학설은 양면</b>'
-        '        <p>갈리는 사안은 양측 견해를 함께. 한·영·일·중 동시.</p>'
-        '      </div>'
-        '    </div>'
-        '  </div>'
-        '  <div class="gate-howto">'
-        '    <b>🎯 노는 법</b>'
-        '    <ol>'
-        '      <li>대문 통과 → 지도에서 가까운 사적 확인</li>'
-        '      <li>코스(정동·경복궁·북촌 등) 또는 자유 테마 선택</li>'
-        '      <li>4지선다 + 힌트(-3 사초) → 시간 안에 정답 시 +15 사초</li>'
-        '      <li>완주 → 칭호(사관의 으뜸·동무·견습) 획득</li>'
-        '    </ol>'
-        '  </div>'
-        '</div>',
+        f'<div class="gate-why">'
+        f'  <div class="gate-why-head">'
+        f'    <span class="gate-why-title">✨ 왜 사초 AI?</span>'
+        f'    <span class="gate-why-sub">범용 AI와 무엇이 다른가</span>'
+        f'  </div>'
+        f'  <div class="gate-why-grid">'
+        f'    <div class="gate-why-cell">'
+        f'      <div class="why-icon">🎮</div>'
+        f'      <div class="why-body">'
+        f'        <b>매번 새 문제</b>'
+        f'        <p>AI가 <b>{_corpus_n}건</b> 사료·콘텐츠에서 매번 다르게 출제. 한 번 풀고 끝 X.</p>'
+        f'      </div>'
+        f'    </div>'
+        f'    <div class="gate-why-cell">'
+        f'      <div class="why-icon">🗺</div>'
+        f'      <div class="why-body">'
+        f'        <b>관광지·촬영지까지</b>'
+        f'        <p>경복궁 안 7방·경주 첨성대·정동 손탁호텔. 도보 코스 <b>{_course_n}종</b>.</p>'
+        f'      </div>'
+        f'    </div>'
+        f'    <div class="gate-why-cell">'
+        f'      <div class="why-icon">🔍</div>'
+        f'      <div class="why-body">'
+        f'        <b>답변마다 원문 링크</b>'
+        f'        <p>조선왕조실록·고려사·한국사DB 1차 사료. 출처 없는 답변 없음.</p>'
+        f'      </div>'
+        f'    </div>'
+        f'    <div class="gate-why-cell">'
+        f'      <div class="why-icon">⚖</div>'
+        f'      <div class="why-body">'
+        f'        <b>학설은 양면</b>'
+        f'        <p>갈리는 사안은 양측 견해를 함께. 한·영·일·중 동시.</p>'
+        f'      </div>'
+        f'    </div>'
+        f'  </div>'
+        f'  <div class="gate-howto">'
+        f'    <b>🎯 노는 법</b>'
+        f'    <ol>'
+        f'      <li>대문 통과 → 지도에서 가까운 사적 확인</li>'
+        f'      <li>코스(정동·경복궁·북촌 등 {_course_n}종) 또는 자유 테마 선택</li>'
+        f'      <li>4지선다 + 힌트(-3 사초) → 시간 안에 정답 시 +15 사초</li>'
+        f'      <li>완주 → 칭호(사관의 으뜸·동무·견습) 획득</li>'
+        f'    </ol>'
+        f'  </div>'
+        f'</div>',
         unsafe_allow_html=True,
     )
+
+    # ── 데이터 출처 9종 + 차별성 매트릭스 (심사·신뢰 어필) ──
+    with st.expander("📚 어떤 공공데이터로? — 출처 9종 · 라이선스",
+                      expanded=False):
+        st.markdown(_data_sources_html(), unsafe_allow_html=True)
+
+    with st.expander("⚔ 범용 AI와 무엇이 다른가 — 4축 비교",
+                      expanded=False):
+        st.markdown(_diff_matrix_html(_corpus_n), unsafe_allow_html=True)
 
     # ── 오늘의 한 줄 (랜덤 명언) ──
     quotes = [
@@ -2155,6 +2338,17 @@ with bar_cols[5]:
             value=st.session_state.show_map,
         )
         st.markdown("---")
+        # ── 데이터·차별성 패널 (로그인 후에도 검토 가능) ──
+        try:
+            _corpus_n_pop = len(load_corpus())
+        except Exception:
+            _corpus_n_pop = 0
+        with st.expander("📚 공공데이터 출처 9종", expanded=False):
+            st.markdown(_data_sources_html(), unsafe_allow_html=True)
+        with st.expander("⚔ 범용 AI 대비 차별성", expanded=False):
+            st.markdown(_diff_matrix_html(_corpus_n_pop),
+                        unsafe_allow_html=True)
+        st.markdown("---")
         st.markdown(
             f"**API 키**: {'✨ 깨어 있음' if api_key_present else '💤 잠들어 있음'}"
         )
@@ -2251,12 +2445,15 @@ def _source_authority(url: str) -> str:
 
 
 def _place_links(c: SourceCard) -> str:
-    """장소 좌표 + 제목으로 지도·사진 검색 링크 생성."""
+    """장소 좌표 + 제목으로 지도·사진·관광공사(다국어) 링크 생성."""
     import urllib.parse as up
     bits = []
-    title_q = up.quote(c.title.split("—")[0].strip())
-    place_q = up.quote(c.place.split("(")[0].strip())
-    # Google Maps — 좌표가 있으면 좌표 핀, 없으면 장소명 검색
+    title_raw = c.title.split("—")[0].strip()
+    place_raw = c.place.split("(")[0].strip()
+    title_q = up.quote(title_raw)
+    place_q = up.quote(place_raw)
+
+    # 1) Google Maps — 좌표가 있으면 좌표 핀, 없으면 장소명 검색
     if c.place_coords and len(c.place_coords) == 2:
         lon, lat = c.place_coords
         gmap = f"https://www.google.com/maps?q={lat},{lon}({title_q})"
@@ -2266,13 +2463,73 @@ def _place_links(c: SourceCard) -> str:
         f'<a class="place-link" href="{gmap}" target="_blank" rel="noopener">'
         f'{T["map_open"]}</a>'
     )
-    # 네이버 이미지 검색 (한국어 검색이 풍부)
-    img = f"https://search.naver.com/search.naver?where=image&query={place_q}"
+
+    # 2) 사진 검색 — 한국어는 네이버, 외국어는 Google 이미지
+    lang = st.session_state.language
+    if lang == "ko":
+        img = f"https://search.naver.com/search.naver?where=image&query={place_q}"
+    else:
+        img = f"https://www.google.com/search?tbm=isch&q={place_q}"
     bits.append(
         f'<a class="place-link" href="{img}" target="_blank" rel="noopener">'
         f'{T["photo_search"]}</a>'
     )
+
+    # 3) 한국관광공사 Visit Korea — 다국어 (TourAPI 4.0 데이터 기반 공식 안내)
+    visit_domain = {
+        "ko": "korean.visitkorea.or.kr",
+        "en": "english.visitkorea.or.kr",
+        "ja": "japanese.visitkorea.or.kr",
+        "zh": "chinese.visitkorea.or.kr",
+    }.get(lang, "english.visitkorea.or.kr")
+    visit_url = (
+        f"https://{visit_domain}/search/search_list.do?keyword={place_q}"
+    )
+    bits.append(
+        f'<a class="place-link" href="{visit_url}" target="_blank" rel="noopener" '
+        f'title="한국관광공사 — TourAPI 4.0 기반 공식 안내">'
+        f'{T["tour_info"]}</a>'
+    )
+
+    # 4) KTO Odii 오디오가이드 — 다국어 (관광 명소 한정, 추상 entry는 제외)
+    abstract = any(s in (c.place or "").lower()
+                   for s in ["전국", "한국 무속", "전통 사후세계", "조선 전체"])
+    if not abstract:
+        odii_url = f"https://www.odii.or.kr/search/main?keyword={place_q}"
+        bits.append(
+            f'<a class="place-link" href="{odii_url}" target="_blank" rel="noopener" '
+            f'title="문화체육관광부·한국관광공사 무료 다국어 오디오가이드">'
+            f'{T["audio_guide"]}</a>'
+        )
+
     return " ".join(bits)
+
+
+def _special_dataset_chip(c: SourceCard) -> str:
+    """공모전 특별제공 데이터셋(한복·국악·문양) 활용 카드에 표시되는 작은 칩."""
+    text = " ".join([c.title or "", c.summary or "", " ".join(c.tags or []),
+                     c.id or ""])
+    chips = []
+    if c.id.startswith("kculture-") or any(
+        k in text for k in ["한복", "곤룡포", "단령", "철릭", "장신구",
+                              "갓", "비녀", "당의"]
+    ):
+        chips.append(
+            '<span class="dataset-chip" title="공모전 특별제공: 한국공예·디자인문화진흥원 한복·전통문양">'
+            '👘 한복·문양 데이터셋</span>'
+        )
+    if any(k in text for k in ["국악", "판소리", "민요", "장단", "굿거리",
+                                 "사물놀이", "아악", "정악", "종묘제례악"]):
+        chips.append(
+            '<span class="dataset-chip" title="공모전 특별제공: 국립국악원 자료">'
+            '🎶 국악 데이터셋</span>'
+        )
+    if any(k in text for k in ["문양", "단청", "기와", "전통 문양", "오방색"]):
+        chips.append(
+            '<span class="dataset-chip" title="공모전 특별제공: 전통문양 데이터셋">'
+            '🌀 전통문양</span>'
+        )
+    return ' '.join(chips)
 
 
 def render_evidence_cards(cards: list[SourceCard]) -> None:
@@ -2281,11 +2538,16 @@ def render_evidence_cards(cards: list[SourceCard]) -> None:
     st.markdown(f"##### {T['evidence_header']}")
     for c in cards:
         authority = _source_authority(c.source_url)
+        special = _special_dataset_chip(c)
+        special_html = (
+            f'<div class="dataset-chips">{special}</div>' if special else ''
+        )
         st.markdown(
             f'<div class="evidence-card">'
             f'<h4>📜 {T["evidence_id"]} <code>{c.id}</code> · {c.title}</h4>'
             f'<div class="meta">📅 {c.date} &nbsp;|&nbsp; 📍 {c.place} '
             f'&nbsp;|&nbsp; 📖 {c.source}</div>'
+            f'{special_html}'
             f'<div class="body">{c.summary}</div>'
             f'<div class="body" style="margin-top:8px;color:#5C4A33;font-size:13.5px;">'
             f'<b>{T["original_excerpt"]}</b>: <em>{c.original_text}</em></div>'
@@ -3451,13 +3713,46 @@ FOOTER_TAGLINE = {
     "ko": "당신이 쓰는, 살아 있는 실록.",
     "en": "A living chronicle, written with you.",
     "ja": "あなたと書く、生きた実録。",
-    "zh": "与你共同写就的、活着的实录。",
+    "zh": "与你共同写就的、活着的実録。",
+}
+FOOTER_ATTRIB = {
+    "ko": (
+        "데이터: 국사편찬위원회 「조선왕조실록·승정원일기·한국사DB」 · "
+        "한국고전번역원 「한국고전종합DB」 · 문화재청 「문화재 공간정보」 · "
+        "한국관광공사 「TourAPI 4.0·Visit Korea」 · "
+        "국립국악원·한국공예디자인문화진흥원 「한복·전통문양·국악」 (공모전 특별제공) · "
+        "지자체 향토 사료 — 공공누리/공공데이터포털 라이선스 준수."
+    ),
+    "en": (
+        "Data: National Institute of Korean History (Annals of Joseon, Seungjeongwon Ilgi, Korean History DB) · "
+        "ITKC Korean Classics DB · Cultural Heritage Administration (heritage geo-data) · "
+        "Korea Tourism Organization (TourAPI 4.0, Visit Korea) · "
+        "National Gugak Center & KCDF (hanbok, traditional patterns, Korean music — competition-provided) · "
+        "local government archives — used under KOGL / public-data licenses."
+    ),
+    "ja": (
+        "データ: 国史編纂委員会(朝鮮王朝実録・承政院日記・韓国史DB)・"
+        "韓国古典翻訳院(韓国古典総合DB)・文化財庁(文化財空間情報)・"
+        "韓国観光公社(TourAPI 4.0・Visit Korea)・"
+        "国立国楽院・韓国工芸デザイン文化振興院(韓服・伝統文様・国楽 — コンテスト特別提供)・"
+        "自治体郷土資料 — 公共ヌリ/公共データポータルに準拠。"
+    ),
+    "zh": (
+        "数据:国史编纂委员会(朝鲜王朝实录·承政院日记·韩国史DB)·"
+        "韩国古典翻译院(韩国古典综合DB)·文化财厅(文化遗产空间信息)·"
+        "韩国观光公社(TourAPI 4.0·Visit Korea)·"
+        "国立国乐院·韩国工艺设计文化振兴院(韩服·传统纹样·国乐 — 大赛特别提供数据)·"
+        "地方政府乡土资料 — 遵守公共Nuri/公共数据门户许可。"
+    ),
 }
 st.markdown(
     f'<div style="text-align:center;">'
     f'<div class="footer-strip">'
     f'  <div class="footer-char">{char_img("cheer", width=58)}</div>'
     f'  <div class="footer-text">{FOOTER_TAGLINE[st.session_state.language]}</div>'
+    f'</div>'
+    f'<div class="footer-attrib">'
+    f'  📜 {FOOTER_ATTRIB[st.session_state.language]}'
     f'</div>'
     f'</div>',
     unsafe_allow_html=True,
