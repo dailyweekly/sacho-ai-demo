@@ -158,26 +158,80 @@ st.markdown(
         letter-spacing: 0.2px;
     }
 
-    /* 라디오 — 가로 정렬 + 옵션마다 카드 같은 hover */
+    /* ── 라디오 = 도장 토글 카드 (큰 머스타드 카드형) ── */
     [data-testid="stRadio"] [role="radiogroup"] {
-        gap: 10px !important;
+        gap: 12px !important;
+        display: flex !important;
+        flex-wrap: wrap !important;
     }
-    [data-testid="stRadio"] [role="radiogroup"] label {
-        font-family: 'Gowun Batang', serif !important;
-        font-size: 14.5px !important;
-        color: var(--ink) !important;
-        padding: 6px 12px 6px 8px;
-        border-radius: 12px;
-        transition: background 0.12s;
+    /* 각 라디오 옵션 = 카드 */
+    [data-testid="stRadio"] [role="radiogroup"] > label {
+        flex: 1 1 0;
+        min-width: 150px;
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        background: #FFFCF5 !important;
+        border: 2.5px dashed var(--ink-soft) !important;
+        border-radius: 16px !important;
+        padding: 14px 16px !important;
         cursor: pointer;
+        transition: transform 0.1s, box-shadow 0.1s, background 0.15s,
+                    border-color 0.15s, border-style 0.15s !important;
+        font-family: 'Gowun Batang', serif !important;
+        font-size: 15px !important;
+        font-weight: 600 !important;
+        color: var(--ink) !important;
+        text-align: center;
+        line-height: 1.3;
+        box-shadow: 0 0 0 transparent;
     }
-    [data-testid="stRadio"] [role="radiogroup"] label:hover {
-        background: rgba(219,184,113,0.18);
+    /* 라디오 옵션 내부 텍스트 박스도 폰트 강제 */
+    [data-testid="stRadio"] [role="radiogroup"] > label > div {
+        font-family: 'Gowun Batang', serif !important;
+        font-size: 15px !important;
+        color: var(--ink) !important;
     }
-    /* 라디오 원 — 채워진 상태 강조 */
-    [data-testid="stRadio"] input[type="radio"] + div {
-        border: 2px solid var(--ink-soft) !important;
-        background: #FFF !important;
+    /* hover — 살짝 떠오름 + 노란 tint */
+    [data-testid="stRadio"] [role="radiogroup"] > label:hover {
+        background: #FFF7DA !important;
+        border-color: var(--ink) !important;
+        transform: translate(-1px, -1px);
+        box-shadow: 2px 2px 0 var(--ink);
+    }
+    /* selected (input checked) — 머스타드 도장 카드 */
+    [data-testid="stRadio"] [role="radiogroup"] > label:has(input:checked) {
+        background: linear-gradient(135deg, #FFE7A0 0%, #FFD55A 100%) !important;
+        border: 2.5px solid var(--ink) !important;
+        border-style: solid !important;
+        box-shadow: 3px 3px 0 var(--ink) !important;
+        color: var(--ink) !important;
+        font-weight: 700 !important;
+        transform: translate(-1px, -1px);
+    }
+    [data-testid="stRadio"] [role="radiogroup"] > label:has(input:checked) > div {
+        font-weight: 700 !important;
+    }
+    /* 기본 라디오 동그라미 마커 숨김 — 카드 전체가 토글 역할 */
+    [data-testid="stRadio"] [role="radiogroup"] > label > div:first-child {
+        display: none !important;
+    }
+    /* selected 카드에 작은 ✓ 표시 (가상 요소) */
+    [data-testid="stRadio"] [role="radiogroup"] > label:has(input:checked)::after {
+        content: '✓';
+        position: absolute;
+        top: -8px; right: -8px;
+        width: 22px; height: 22px;
+        background: var(--ink);
+        color: #FFF;
+        border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 13px; font-weight: 700;
+        box-shadow: 1px 1px 0 var(--mustard);
+    }
+    [data-testid="stRadio"] [role="radiogroup"] > label {
+        position: relative;
     }
 
     /* 셀렉트박스 — 크림 카드 + 도장 그림자 */
