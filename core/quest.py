@@ -102,6 +102,23 @@ def generate_question(
         else ""
     )
 
+    # K-콘텐츠 entry는 작품 ↔ 실제 장소/사건 연결 질문을 우선
+    kculture_hint = ""
+    if card.id.startswith("kculture-"):
+        kculture_hint = (
+            "\n[K-콘텐츠 출제 가이드 — 이 entry는 영화/드라마/애니메이션이 "
+            "실제 한국 사적·장소·역사 사건과 연결되는 카드입니다]\n"
+            "다음 4가지 패턴 중 1개를 골라 질문하십시오:\n"
+            "  1) 무대 매핑: '이 작품의 무대가 된 실제 장소/사적은?'\n"
+            "  2) 역사 닻: '이 작품이 다룬 역사 사건은 실제로 언제·어디서?'\n"
+            "  3) 모티브 출처: '이 작품 속 ○○의 모티브가 된 실제 ○○는?'\n"
+            "  4) 방문 가이드: '이 작품 촬영지/배경지를 지금 가려면 어디로?'\n"
+            "단순 작품 트리비아(주연·감독·시청률)는 피하세요 — "
+            "콘텐츠↔실제 연결이 핵심입니다.\n"
+            "explanation에서 작품의 실제 역사 배경을 짧게 풀고, "
+            "방문 가능한 장소를 명확히 언급하세요."
+        )
+
     user_msg = (
         f"[사료]\n"
         f"id: {card.id}\n"
@@ -113,7 +130,8 @@ def generate_question(
         f"summary: {card.summary}\n"
         f"easy_explanation: {card.easy_explanation}\n"
         f"related_persons: {', '.join(card.related_persons)}\n\n"
-        f"[문제 유형]\n{type_hint}\n\n"
+        f"[문제 유형]\n{type_hint}\n"
+        f"{kculture_hint}\n"
         f"[응답 언어] {lang_name}로 작성. 단, 사료 id 마커는 [{card.id}] 그대로.\n"
         f"{family_hint}"
     )
@@ -267,6 +285,34 @@ COURSES: dict[str, dict[str, Any]] = {
             "hist-010",     # 조선 건국
             "place-001",    # 경복궁 창건
             "place-003",    # 종묘
+        ],
+    },
+    "kculture_seoul": {
+        "name_ko": "🎬 K-콘텐츠 ↔ 서울 7장면",
+        "name_en": "🎬 K-content × Seoul — 7 scenes",
+        "name_ja": "🎬 Kコンテンツ × ソウル 7場面",
+        "name_zh": "🎬 K内容 × 首尔7场景",
+        "card_ids": [
+            "kculture-001",  # 미스터 션샤인 ↔ 손탁호텔 (정동)
+            "kculture-004",  # 광해 ↔ 창덕궁
+            "kculture-002",  # 사도 ↔ 창경궁
+            "kculture-011",  # 슈룹 ↔ 창경궁/창덕궁
+            "kculture-005",  # 덕혜옹주 ↔ 낙선재
+            "kculture-009",  # 응답하라 1988 ↔ 쌍문동
+            "kculture-007",  # 오징어 게임 ↔ 옥수동
+        ],
+    },
+    "kculture_period": {
+        "name_ko": "🎬 시대극으로 보는 한국사 5장면",
+        "name_en": "🎬 Korean history through period dramas",
+        "name_ja": "🎬 時代劇で見る韓国史 5場面",
+        "name_zh": "🎬 透过时代剧看韩国史",
+        "card_ids": [
+            "kculture-010",  # 한산 (1592 임진왜란)
+            "kculture-004",  # 광해 (1616)
+            "kculture-002",  # 사도 (1762)
+            "kculture-001",  # 미스터 션샤인 (1885~1907)
+            "kculture-005",  # 덕혜옹주 (1962 환국)
         ],
     },
 }

@@ -1761,6 +1761,36 @@ def render_evidence_map(cards: list[SourceCard]) -> None:
     st.map(pd.DataFrame(rows), size=40, zoom=14)
 
 
+def render_course_map(course_id: str, current_idx: int) -> None:
+    """코스 모드 — 모든 단서 위치를 한 지도에 표시. 현재 위치는 크고 진하게."""
+    if not st.session_state.show_map:
+        return
+    from core.quest import COURSES
+    course = COURSES.get(course_id)
+    if not course:
+        return
+    rows = []
+    corpus = load_corpus()
+    for i, cid in enumerate(course["card_ids"]):
+        card = next((c for c in corpus if c.id == cid), None)
+        if not card or not card.place_coords or len(card.place_coords) != 2:
+            continue
+        is_current = (i == current_idx)
+        is_done = (i < current_idx)
+        rows.append({
+            "lat": card.place_coords[1],
+            "lon": card.place_coords[0],
+            "size": 220 if is_current else (90 if is_done else 70),
+            "color": "#C97064" if is_current else ("#5C4A38" if is_done else "#BFBAB1"),
+        })
+    if not rows:
+        return
+    st.markdown(f"##### 🗺 코스 지도 — 현재 위치(빨강) · 지나온 곳(갈색) · 다음(회색)")
+    df = pd.DataFrame(rows)
+    # 자동 줌 (좌표 범위에 맞춰 Streamlit이 잡아 줌)
+    st.map(df, size="size", color="color")
+
+
 def render_collection_page() -> None:
     """사관과 함께 본 사료 보관함."""
     cards = list(st.session_state.collection.values())
@@ -2013,7 +2043,7 @@ def render_quest_page() -> None:
         return
 
     # ── 문제 표시 ──
-    # 코스 진행 표시
+    # 코스 진행 표시 + 전체 코스 지도
     if st.session_state.play_mode == "course":
         cid = st.session_state.course_id
         total = course_card_count(cid)
@@ -2027,6 +2057,8 @@ def render_quest_page() -> None:
             f'</div>',
             unsafe_allow_html=True,
         )
+        # 코스 전체 지도 (모든 단서 위치 + 현재 강조)
+        render_course_map(cid, st.session_state.course_idx)
 
     st.markdown(
         f'<div class="quest-q">'
