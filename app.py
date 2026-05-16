@@ -1753,6 +1753,311 @@ st.markdown(
         30%, 50%, 70% { transform: translateX(-6px); }
         40%, 60% { transform: translateX(6px); }
     }
+
+    /* ───────── 게이트 v2 — 한옥 지붕·풍경·꽃잎·두루마리·도장 ───────── */
+    /* 브랜드 라인 + 오늘 날짜 태그 */
+    .gate-brand-wrap {
+        display: flex; flex-direction: column; align-items: center;
+        gap: 4px;
+        margin: 4px 0 16px 0;
+        position: relative; z-index: 2;
+    }
+    .gate-brand-tag {
+        display: inline-flex; gap: 8px; align-items: center;
+        padding: 4px 14px;
+        background: #FFF7DA;
+        border: 1.5px dashed rgba(58,42,31,0.35);
+        border-radius: 999px;
+        font-family: 'Nanum Pen Script', cursive;
+        font-size: 14.5px;
+        color: var(--ink);
+        opacity: 0.85;
+    }
+    .brand-tag-dot { color: var(--mustard); font-weight: 700; }
+
+    /* 떨어지는 꽃잎·종이조각 — 절제된 무드 (z-index 0, 매우 약함) */
+    .gate-petals {
+        position: fixed; inset: 0; pointer-events: none;
+        z-index: 0; overflow: hidden;
+    }
+    .gate-petals .petal {
+        position: absolute;
+        top: -32px;
+        font-size: 15px;
+        opacity: 0;
+        animation: petal-fall 18s linear infinite;
+        filter: drop-shadow(0 1px 1px rgba(0,0,0,0.05));
+    }
+    .gate-petals .p1 { left: 6%;  font-size: 14px; animation-delay: 0s;  }
+    .gate-petals .p2 { left: 18%; font-size: 17px; animation-delay: 2.5s; animation-duration: 21s; }
+    .gate-petals .p3 { left: 31%; font-size: 13px; animation-delay: 5s;  animation-duration: 16s; }
+    .gate-petals .p4 { left: 44%; font-size: 12px; animation-delay: 1s;  animation-duration: 22s; }
+    .gate-petals .p5 { left: 58%; font-size: 16px; animation-delay: 7s;  animation-duration: 19s; }
+    .gate-petals .p6 { left: 71%; font-size: 14px; animation-delay: 3s;  animation-duration: 23s; }
+    .gate-petals .p7 { left: 83%; font-size: 11px; animation-delay: 9s;  animation-duration: 17s; }
+    .gate-petals .p8 { left: 92%; font-size: 15px; animation-delay: 5.5s; animation-duration: 20s; }
+    @keyframes petal-fall {
+        0%   { transform: translateY(-32px) rotate(0deg);    opacity: 0; }
+        8%   { opacity: 0.55; }
+        92%  { opacity: 0.55; }
+        100% { transform: translateY(110vh) rotate(420deg);  opacity: 0; }
+    }
+
+    /* 본 게이트 콘텐츠는 꽃잎 위로 */
+    .gate-brand-wrap, .gate-card, .door-wrap,
+    .gate-why, .gate-quote, .gate-foot,
+    [data-testid="stExpander"] { position: relative; z-index: 2; }
+
+    /* ── 한옥 대문 — 지붕·풍경·단청 메달 ── */
+    .door-wrap {
+        position: relative;
+        padding-top: 36px;     /* 지붕 공간 */
+        height: 100%;
+    }
+    .door-roof {
+        position: absolute;
+        top: 0; left: -12px; right: -12px;
+        height: 36px;
+        pointer-events: none;
+    }
+    /* 기와 곡선 — clip-path 로 솟을대문 처마 곡선 흉내 */
+    .door-roof .roof-tile {
+        position: absolute; inset: 6px 0 0 0;
+        background:
+            repeating-linear-gradient(90deg,
+                rgba(255,255,255,0.10) 0 6px,
+                rgba(0,0,0,0.18) 6px 7px),
+            linear-gradient(180deg, #5A3F28 0%, #3A2A1F 100%);
+        border: 2px solid #1A130E;
+        border-radius: 4px 4px 0 0;
+        clip-path: polygon(0% 100%, 6% 30%, 24% 14%, 50% 0%, 76% 14%, 94% 30%, 100% 100%);
+        box-shadow: inset 0 -3px 0 rgba(0,0,0,0.25);
+    }
+    /* 용마루 가운데 단청 캡 */
+    .door-roof .roof-cap {
+        position: absolute; top: -2px; left: 50%;
+        width: 18px; height: 14px;
+        background: linear-gradient(180deg, #C97064 0%, #8C1D18 100%);
+        border: 2px solid #1A130E;
+        border-radius: 50% 50% 4px 4px;
+        transform: translateX(-50%);
+        box-shadow: 0 1px 0 rgba(0,0,0,0.3);
+    }
+    /* 추녀 끝에 매달린 풍경(風磬) */
+    .door-roof .roof-chime {
+        position: absolute; right: 6px; top: 26px;
+        font-size: 18px;
+        transform-origin: top center;
+        animation: chime-swing 3.2s ease-in-out infinite;
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.25));
+    }
+    @keyframes chime-swing {
+        0%, 100% { transform: rotate(-14deg); }
+        50%      { transform: rotate(16deg); }
+    }
+
+    /* 대문 카드 자체 — 기존 .door-card 와 함께 동작 */
+    .door-wrap .door-card { height: calc(100% - 36px); }
+
+    /* 두 짝 문 — 양쪽 둥근 문고리 (배치 수정) */
+    .door-card .door-knob {
+        position: absolute; top: 56%;
+        width: 14px; height: 14px; border-radius: 50%;
+        background: radial-gradient(circle at 30% 30%, #F2D58A, var(--mustard));
+        border: 2px solid var(--ink);
+        box-shadow: 1px 1px 0 var(--ink),
+                    inset 0 0 0 1px rgba(255,255,255,0.4);
+    }
+    .door-card .door-knob.left  { left:  calc(50% - 22px); right: auto; }
+    .door-card .door-knob.right { right: calc(50% - 22px); left:  auto; }
+
+    /* 두 짝 문 — 양쪽 경첩(좌·우 모두) */
+    .door-card .door-hinges {
+        position: absolute; top: 22px; bottom: 22px;
+        display: flex; flex-direction: column; justify-content: space-between;
+    }
+    .door-card .door-hinges.left  { left: 6px; }
+    .door-card .door-hinges.right { right: 6px; }
+    .door-card .door-hinges span {
+        background:
+            linear-gradient(180deg, #2A1F18 0%, #6A4A28 50%, #2A1F18 100%);
+    }
+
+    /* 가운데 단청 꽃 메달 — 문 양쪽이 만나는 지점 장식 */
+    .door-card .door-medallion {
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 46px; height: 46px;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        opacity: 0.85;
+    }
+    .door-card .door-medallion .med-petal {
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 18px; height: 18px;
+        background: linear-gradient(135deg, #FFE7A0, #C97064);
+        border: 1.5px solid #1A130E;
+        border-radius: 60% 0 60% 0;
+        transform-origin: center;
+    }
+    .door-card .door-medallion .med-petal:nth-child(1) {
+        transform: translate(-50%, -50%) rotate(0deg) translate(0, -10px);
+    }
+    .door-card .door-medallion .med-petal:nth-child(2) {
+        transform: translate(-50%, -50%) rotate(90deg) translate(0, -10px);
+    }
+    .door-card .door-medallion .med-petal:nth-child(3) {
+        transform: translate(-50%, -50%) rotate(180deg) translate(0, -10px);
+    }
+    .door-card .door-medallion .med-petal:nth-child(4) {
+        transform: translate(-50%, -50%) rotate(270deg) translate(0, -10px);
+    }
+    .door-card .door-medallion .med-core {
+        position: absolute;
+        top: 50%; left: 50%;
+        width: 14px; height: 14px;
+        background: radial-gradient(circle at 35% 35%, #FFE9A6, var(--mustard));
+        border: 2px solid var(--ink);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        box-shadow: 0 1px 0 rgba(0,0,0,0.3),
+                    inset 0 0 0 1.5px rgba(255,255,255,0.4);
+    }
+
+    /* 도장형 에러 — 빨간 직인 분위기 */
+    .door-card .door-err {
+        position: relative;
+        display: flex; align-items: center; gap: 8px;
+        justify-content: center;
+    }
+    .door-card .door-err-stamp {
+        background: #B0322A; color: #FFF;
+        padding: 1px 8px;
+        font-family: 'Yeon Sung', serif;
+        font-size: 12px;
+        border-radius: 4px;
+        letter-spacing: 1px;
+        transform: rotate(-3deg);
+        box-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+    }
+    .door-card .door-err-tag {
+        background: #FFF7DA; color: #8C2A18;
+        padding: 1px 8px;
+        font-family: 'Nanum Pen Script', cursive;
+        font-size: 13px;
+        border: 1px dashed #B0322A;
+        border-radius: 4px;
+        transform: rotate(2deg);
+    }
+
+    /* ── 두루마리 인용 — 위·아래 막대 + 직인 ── */
+    .gate-scroll-wrap {
+        max-width: 720px;
+        margin: 24px auto 8px auto;
+        position: relative;
+    }
+    .gate-scroll-wrap .scroll-rod {
+        height: 14px;
+        background: linear-gradient(180deg, #6A4A28 0%, #3A2A18 100%);
+        border: 2px solid #1A130E;
+        border-radius: 8px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.15),
+                    0 1px 2px rgba(0,0,0,0.2);
+        position: relative;
+    }
+    .gate-scroll-wrap .scroll-rod::before,
+    .gate-scroll-wrap .scroll-rod::after {
+        content: '';
+        position: absolute;
+        top: -3px; bottom: -3px;
+        width: 8px;
+        background: linear-gradient(180deg, #8C6A3C 0%, #6A4A28 50%, #3A2A18 100%);
+        border: 2px solid #1A130E;
+        border-radius: 50%;
+    }
+    .gate-scroll-wrap .scroll-rod::before { left: -10px; }
+    .gate-scroll-wrap .scroll-rod::after  { right: -10px; }
+    .gate-scroll-wrap .scroll-rod-top    { margin-bottom: -1px; }
+    .gate-scroll-wrap .scroll-rod-bottom { margin-top: -1px; }
+
+    /* 기존 .gate-quote 위에 두루마리 종이 느낌 덧입힘 */
+    .gate-scroll-wrap .gate-quote {
+        max-width: none;
+        margin: 0 8px;
+        padding: 26px 36px 22px 36px;
+        background:
+            radial-gradient(ellipse at top, rgba(140,106,60,0.10), transparent 60%),
+            radial-gradient(ellipse at bottom, rgba(140,106,60,0.10), transparent 60%),
+            linear-gradient(180deg, #FBF1D8 0%, #F2E2BC 100%);
+        border: 2px solid #8C6A3C;
+        border-left: 4px solid #8C6A3C;
+        border-right: 4px solid #8C6A3C;
+        border-radius: 2px;
+        box-shadow: inset 0 0 0 1px rgba(140,106,60,0.20),
+                    inset 0 -10px 14px rgba(140,106,60,0.06),
+                    2px 2px 0 rgba(140,106,60,0.25);
+    }
+    /* 직인 도장 */
+    .gate-quote .gate-quote-seal {
+        position: absolute;
+        top: 10px; right: 18px;
+        width: 42px; height: 42px;
+        background: #B0322A;
+        border: 2.5px solid #6A1F18;
+        border-radius: 6px;
+        color: #FFE9A6;
+        font-family: 'Yeon Sung', 'Black Han Sans', serif;
+        font-size: 13px;
+        display: flex; align-items: center; justify-content: center;
+        transform: rotate(-9deg);
+        letter-spacing: 1.5px;
+        box-shadow: 0 0 0 1.5px #B0322A inset,
+                    0 2px 0 rgba(0,0,0,0.25);
+        text-shadow: 0 0 1px rgba(0,0,0,0.4);
+        opacity: 0.92;
+    }
+
+    /* ── 사관실 도장 푸터 ── */
+    .gate-foot {
+        display: flex; align-items: center; justify-content: center;
+        gap: 12px; flex-wrap: wrap;
+        margin: 28px auto 4px auto;
+        opacity: 0.85;
+        position: relative; z-index: 2;
+    }
+    .gate-foot .foot-stamp {
+        background: #B0322A;
+        color: #FFE9A6;
+        padding: 3px 12px;
+        font-family: 'Yeon Sung', 'Black Han Sans', serif;
+        font-size: 13px;
+        letter-spacing: 3px;
+        border-radius: 4px;
+        transform: rotate(-3deg);
+        box-shadow: 1.5px 1.5px 0 rgba(0,0,0,0.3),
+                    inset 0 0 0 1px rgba(255,255,255,0.15);
+        text-shadow: 0 0 1px rgba(0,0,0,0.4);
+    }
+    .gate-foot .foot-stamp-jade {
+        background: #2E6418;
+        color: #FFF8E0;
+        transform: rotate(4deg);
+        font-size: 11.5px;
+        letter-spacing: 1.5px;
+        padding: 3px 10px;
+    }
+    .gate-foot .foot-tag {
+        font-family: 'Nanum Pen Script', cursive;
+        font-size: 14px;
+        color: var(--ink-soft);
+    }
+    @media (max-width: 720px) {
+        .gate-petals { display: none; }   /* 모바일은 거슬리니 끔 */
+        .door-roof .roof-chime { right: 0; }
+        .gate-foot { gap: 8px; }
+        .gate-foot .foot-tag { display: none; }
+    }
     .gate-err {
         background: #FFE3D6;
         border: 2px dashed #C97064;
@@ -2066,11 +2371,53 @@ def _diff_matrix_html(corpus_n: int) -> str:
     )
 
 
+# ── 게이트 — 사관의 대사(랜덤 + 시도 횟수 에스컬레이션) ──
+_GATE_GREETINGS = [
+    ("어어… <b>누구세요…?</b>",
+     "사관 두루마리에 들려면 우측 <b>대문</b>에 암호를 살짝 속삭여 주시구려."),
+    ("음… <b>낯이 익은 듯도 한데…</b>",
+     "기억이 가물가물하오. 어쨌든 우측 대문에 암호 한 자 적어 주시오."),
+    ("어허, <b>드디어 깨우셨소.</b>",
+     "곤히 자던 사관이외다… 우측 대문 안에 암호를 적어 주시오."),
+    ("실은 말이오, <b>이 두루마리…</b>",
+     "잘못된 손에 들어가면 큰일이오. 우측 대문에 암호를 적어 주오."),
+    ("어어, <b>관계자시오?</b>",
+     "사초는 함부로 펼 수 없는 것이외다. 우측 대문에 암호를 적어 주시오."),
+]
+# 시도 횟수가 늘수록 점점 의심·짜증 (코믹 에스컬레이션)
+_GATE_ERR_LINES = [
+    None,  # 0회: 일반 그리팅
+    ("어어… <b>그 암호가 아니오.</b>",
+     "혹시 한·영 자판이 잘못된 건 아닌지… 한 번만 더."),
+    ("정말이오…? <b>두 번째 틀리셨소.</b>",
+     "비밀번호는 한 자 한 자… 천천히 적으시오. 사관도 놀라오."),
+    ("…음. <b>이쯤 되면 사관도 의심하오.</b>",
+     "관계자분이면 아실 텐데… 진짜 마지막으로 한 번만 더?"),
+    ("허허… <b>이거 참 곤란하오.</b>",
+     "사초는 함부로 보일 수 없소. 관계자께 한 번 더 여쭤 보오."),
+    ("…<b>외인이시구려.</b>",
+     "사관실 문은 닫겠소이다. 진정한 관계자께만 열리는 문이외다."),
+]
+
+
 def render_password_gate(expected: str) -> None:
-    """세련된 게이트 — 브랜드 헤더 + 캐릭터/대문 + 가치 카드 + 오늘의 한 줄."""
+    """세련된 게이트 — 브랜드 + 한옥 대문 + 회전 그리팅 + 두루마리 인용."""
     import random as _r
+    from datetime import datetime as _dt
     attempts = st.session_state.get("auth_attempts", 0)
     shake_class = " gate-shake" if st.session_state.pop("_just_failed", False) else ""
+
+    # 시도 횟수가 있으면 에스컬레이션 라인, 아니면 회전 그리팅
+    if attempts > 0:
+        idx = min(attempts, len(_GATE_ERR_LINES) - 1)
+        line_top, line_sub = _GATE_ERR_LINES[idx]
+    else:
+        # 세션마다 같은 라인 유지 (rerun 시 깜박임 방지)
+        if "_gate_line_idx" not in st.session_state:
+            st.session_state._gate_line_idx = _r.randrange(len(_GATE_GREETINGS))
+        line_top, line_sub = _GATE_GREETINGS[
+            st.session_state._gate_line_idx % len(_GATE_GREETINGS)
+        ]
 
     # 게이트 페이지: 흰 배경 + 미세한 점 패턴 (한지 결 느낌)
     st.markdown(
@@ -2087,13 +2434,36 @@ def render_password_gate(expected: str) -> None:
         unsafe_allow_html=True,
     )
 
-    # ── 상단 브랜드 스트립 (중앙) ──
+    # ── 떨어지는 꽃잎·종이조각 (배경 무드) ──
     st.markdown(
-        f'<div class="gate-brand">'
-        f'  <div class="gate-brand-mark">{LOGO_SVG}</div>'
-        f'  <div class="gate-brand-text">'
-        f'    <h1>사초(史草) AI</h1>'
-        f'    <p>한국사 사료 검증형 퀴즈 게임 · Korean-history Quest</p>'
+        '<div class="gate-petals" aria-hidden="true">'
+        '  <span class="petal p1">🌸</span>'
+        '  <span class="petal p2">📜</span>'
+        '  <span class="petal p3">🍂</span>'
+        '  <span class="petal p4">✦</span>'
+        '  <span class="petal p5">🌸</span>'
+        '  <span class="petal p6">📜</span>'
+        '  <span class="petal p7">✧</span>'
+        '  <span class="petal p8">🍂</span>'
+        '</div>',
+        unsafe_allow_html=True,
+    )
+
+    # ── 상단 브랜드 스트립 (현판 느낌 + 오늘 날짜) ──
+    today_str = _dt.now().strftime("%Y년 %m월 %d일")
+    st.markdown(
+        f'<div class="gate-brand-wrap">'
+        f'  <div class="gate-brand">'
+        f'    <div class="gate-brand-mark">{LOGO_SVG}</div>'
+        f'    <div class="gate-brand-text">'
+        f'      <h1>사초(史草) AI</h1>'
+        f'      <p>한국사 사료 검증형 퀴즈 게임 · Korean-history Quest</p>'
+        f'    </div>'
+        f'  </div>'
+        f'  <div class="gate-brand-tag">'
+        f'    <span class="brand-tag-date">📅 {today_str}</span>'
+        f'    <span class="brand-tag-dot">·</span>'
+        f'    <span class="brand-tag-place">🏯 사관실 · 종로</span>'
         f'  </div>'
         f'</div>',
         unsafe_allow_html=True,
@@ -2113,8 +2483,8 @@ def render_password_gate(expected: str) -> None:
             f'    <div class="char-lock">{LOCK_SVG}</div>'
             f'  </div>'
             f'  <div class="gate-bubble">'
-            f'    어어… <b>누구세요…?</b><br>'
-            f'    사관 두루마리에 들려면 우측 <b>대문</b>의 암호를 살짝 속삭여 주시구려.'
+            f'    {line_top}<br>'
+            f'    {line_sub}'
             f'    <small>(Whisper the password at the door →)</small>'
             f'  </div>'
             f'</div>',
@@ -2122,13 +2492,29 @@ def render_password_gate(expected: str) -> None:
         )
 
     with gate_right:
+        # 한옥 대문 — 기와 지붕 + 풍경 + 단청 메달 + 두 개의 둥근 문고리
         st.markdown(
-            '<div class="door-card">'
-            '  <div class="door-eaves"></div>'
-            '  <div class="door-knob"></div>'
-            '  <div class="door-hinges"><span></span><span></span><span></span></div>'
-            '  <div class="door-title">🚪 대문</div>'
-            '  <div class="door-sub">암호를 속삭여 주오</div>',
+            '<div class="door-wrap">'
+            '  <div class="door-roof">'
+            '    <div class="roof-tile"></div>'
+            '    <div class="roof-cap"></div>'
+            '    <div class="roof-chime">🎐</div>'
+            '  </div>'
+            '  <div class="door-card">'
+            '    <div class="door-eaves"></div>'
+            '    <div class="door-medallion" aria-hidden="true">'
+            '      <div class="med-petal"></div>'
+            '      <div class="med-petal"></div>'
+            '      <div class="med-petal"></div>'
+            '      <div class="med-petal"></div>'
+            '      <div class="med-core"></div>'
+            '    </div>'
+            '    <div class="door-knob left"></div>'
+            '    <div class="door-knob right"></div>'
+            '    <div class="door-hinges left"><span></span><span></span><span></span></div>'
+            '    <div class="door-hinges right"><span></span><span></span><span></span></div>'
+            '    <div class="door-title">🏯 사관실 대문</div>'
+            '    <div class="door-sub">암호를 속삭여 주오</div>',
             unsafe_allow_html=True,
         )
         with st.form("pw_form", clear_on_submit=True):
@@ -2139,13 +2525,23 @@ def render_password_gate(expected: str) -> None:
                 placeholder="• • • • • •",
                 key="pw_input",
             )
-            submitted = st.form_submit_button("들여 보내 주시오")
+            submitted = st.form_submit_button(
+                "🗝 들여 보내 주시오" if attempts == 0 else "🗝 다시 한 번"
+            )
         if attempts > 0:
+            stamp_word = (
+                "한 번 더" if attempts < 3
+                else ("위험" if attempts < 5 else "출입 금지")
+            )
             st.markdown(
-                '<div class="door-err">어어… 그 암호가 아닌 듯하오…</div>',
+                f'<div class="door-err">'
+                f'  <span class="door-err-stamp">×{attempts}</span>'
+                f'  어어… 그 암호가 아닌 듯하오…'
+                f'  <span class="door-err-tag">{stamp_word}</span>'
+                f'</div>',
                 unsafe_allow_html=True,
             )
-        st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('  </div></div>', unsafe_allow_html=True)
 
     # ── Why + How-to-play (refined: icon 분리 셀, 그라데이션) ──
     try:
@@ -2227,13 +2623,31 @@ def render_password_gate(expected: str) -> None:
         ("나는 이름 없는 사관이외다…", "(소관)"),
         ("勤政 — 부지런히 정사를 돌본다", "경복궁 근정전 명문"),
     ]
-    q = _r.choice(quotes)
+    # 동일 세션 동안 같은 인용 유지 (rerun 시 깜박임 방지)
+    if "_gate_quote_idx" not in st.session_state:
+        st.session_state._gate_quote_idx = _r.randrange(len(quotes))
+    q = quotes[st.session_state._gate_quote_idx % len(quotes)]
     st.markdown(
-        f'<div class="gate-quote">'
-        f'  <div class="gate-quote-mark">❝</div>'
-        f'  <div class="gate-quote-text">{q[0]}</div>'
-        f'  <div class="gate-quote-who">— {q[1]}</div>'
+        f'<div class="gate-scroll-wrap">'
+        f'  <div class="scroll-rod scroll-rod-top"></div>'
+        f'  <div class="gate-quote">'
+        f'    <div class="gate-quote-seal">史草</div>'
+        f'    <div class="gate-quote-mark">❝</div>'
+        f'    <div class="gate-quote-text">{q[0]}</div>'
+        f'    <div class="gate-quote-who">— {q[1]}</div>'
+        f'  </div>'
+        f'  <div class="scroll-rod scroll-rod-bottom"></div>'
         f'</div>',
+        unsafe_allow_html=True,
+    )
+
+    # ── 사관실 도장 푸터 ──
+    st.markdown(
+        '<div class="gate-foot">'
+        '  <span class="foot-stamp">史官室</span>'
+        '  <span class="foot-tag">Office of the Records · 사초 AI · v2</span>'
+        '  <span class="foot-stamp foot-stamp-jade">관계자 외 출입 금지</span>'
+        '</div>',
         unsafe_allow_html=True,
     )
 
@@ -2241,6 +2655,9 @@ def render_password_gate(expected: str) -> None:
         if pw == expected:
             st.session_state.auth_ok = True
             st.session_state.auth_attempts = 0
+            # 다음 게이트 진입 시 새 라인·새 인용 — 갱신
+            st.session_state.pop("_gate_line_idx", None)
+            st.session_state.pop("_gate_quote_idx", None)
             st.rerun()
         else:
             st.session_state.auth_attempts = attempts + 1
