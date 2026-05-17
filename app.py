@@ -57,7 +57,7 @@ from core.rag import search_corpus, SourceCard, load_corpus
 from core.badge import parse_response, render_badge_html, sanitize_streaming_text
 from core.prompts import GREETING_BY_LANG, SUGGESTED_QUESTIONS_BY_LANG, UI_TEXT
 from core.character import (
-    LOGO_SVG, LOCK_SVG, char_img,
+    LOGO_SVG, LOCK_SVG, char_img, course_thumb,
 )
 from core.quest import (
     generate_question, pick_card, QUEST_THEME_KEYWORDS,
@@ -1147,8 +1147,9 @@ st.markdown(
         margin-left: 4px;
     }
 
-    /* 코스 진행 표시 — 텍스트 + 시각 진행 바 */
+    /* 코스 진행 표시 — 미니 썸네일 + 텍스트 + 시각 진행 바 */
     .course-progress {
+        display: flex; gap: 12px; align-items: center;
         background: #FFF7DA;
         border: 1.5px dashed var(--ink);
         border-radius: 12px;
@@ -1157,6 +1158,64 @@ st.markdown(
         font-size: 13.5px;
         color: var(--ink);
         margin-bottom: 12px;
+    }
+    .course-progress-mini {
+        flex: 0 0 52px;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1.5px solid rgba(58,42,31,0.30);
+        box-shadow: 1.5px 1.5px 0 rgba(58,42,31,0.10);
+    }
+    .course-progress-mini img { display: block; width: 100%; height: auto; }
+    .course-progress-main { flex: 1; min-width: 0; }
+
+    /* ── 코스 picker 후 preview 카드 (랜딩) — 일러스트 + 메타 ── */
+    .course-preview {
+        display: flex; gap: 14px; align-items: center;
+        background: linear-gradient(135deg, #FFFCEF 0%, #FFF7DA 100%);
+        border: 2.5px solid var(--ink);
+        border-radius: 14px;
+        padding: 12px 16px;
+        margin: 8px 0 10px 0;
+        box-shadow: 3px 3px 0 var(--ink);
+        animation: course-preview-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes course-preview-in {
+        0% { opacity: 0; transform: translateY(-6px) scale(0.98); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .course-preview-thumb {
+        flex: 0 0 140px;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 2px solid var(--ink);
+        box-shadow: 2px 2px 0 var(--ink);
+    }
+    .course-preview-thumb img { display: block; width: 100%; height: auto; }
+    .course-preview-text { flex: 1; min-width: 0; }
+    .course-preview-name {
+        font-family: 'Yeon Sung', serif;
+        font-size: 15px;
+        color: var(--red-deep);
+        margin-bottom: 4px;
+        line-height: 1.3;
+    }
+    .course-preview-meta {
+        font-family: 'Nanum Pen Script', cursive;
+        font-size: 15px;
+        color: var(--ink-soft);
+        margin-bottom: 4px;
+    }
+    .course-preview-cards {
+        font-family: 'Gowun Batang', serif;
+        font-size: 12.5px;
+        color: var(--ink);
+    }
+    .course-preview-cards b { color: var(--red-deep); }
+    @media (max-width: 720px) {
+        .course-preview { flex-direction: column; text-align: center; }
+        .course-preview-thumb { flex: 0 0 auto; width: 70%; max-width: 220px; }
+        .course-progress-mini { flex: 0 0 44px; }
     }
     .course-progress b { color: var(--red-deep); }
     /* 진행 단계 점(dot) 시리즈 — ●●●○○○○ 식 시각화 */
@@ -5130,7 +5189,24 @@ def render_quest_page() -> None:
                 st.session_state.course_idx = 0
                 st.session_state.course_score = 0
             area = COURSES.get(new_cid, {}).get("area_ko", "")
-            if area:
+            # ── 코스 preview 카드 (썸네일 있으면) ─ 없으면 area-tag 폴백 ──
+            _course_thumb_html = course_thumb(new_cid, width=140)
+            _total_cards = course_card_count(new_cid)
+            if _course_thumb_html:
+                st.markdown(
+                    f'<div class="course-preview">'
+                    f'  <div class="course-preview-thumb">{_course_thumb_html}</div>'
+                    f'  <div class="course-preview-text">'
+                    f'    <div class="course-preview-name">{picked_label}</div>'
+                    f'    <div class="course-preview-meta">📍 {area or "—"}</div>'
+                    f'    <div class="course-preview-cards">'
+                    f'      🗺 단서 <b>{_total_cards}</b>개 · 예상 <b>{_total_cards * 2}분</b>'
+                    f'    </div>'
+                    f'  </div>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
+            elif area:
                 st.markdown(
                     f'<div class="area-tag">📍 권역 — {area}</div>',
                     unsafe_allow_html=True,
@@ -5209,18 +5285,27 @@ def render_quest_page() -> None:
             else:
                 _cls = ''
             dots_html += f'<div class="course-progress-step {_cls}"></div>'
+        # 미니 코스 썸네일 (52px) — 진행 헤더 좌측 부착, 지속적 시각 정체성
+        _mini_thumb = course_thumb(cid, width=52)
+        _thumb_wrap = (
+            f'<div class="course-progress-mini">{_mini_thumb}</div>'
+            if _mini_thumb else ''
+        )
         st.markdown(
             f'<div class="course-progress">'
-            f'  <div>'
-            f'    <b>🗺 {course_name}</b>'
-            f'    <span class="course-progress-meter">'
-            f'      {idx_show}<small style="color:var(--ink-soft);font-size:13px;">/{total}</small>'
-            f'    </span>'
-            f'    · {T["course_score"]}: <b>'
+            f'  {_thumb_wrap}'
+            f'  <div class="course-progress-main">'
+            f'    <div>'
+            f'      <b>🗺 {course_name}</b>'
+            f'      <span class="course-progress-meter">'
+            f'        {idx_show}<small style="color:var(--ink-soft);font-size:13px;">/{total}</small>'
+            f'      </span>'
+            f'      · {T["course_score"]}: <b>'
             f'{st.session_state.course_score}/{idx_show - 1 if not st.session_state.q_answered else idx_show}'
             f'</b>'
+            f'    </div>'
+            f'    <div class="course-progress-bar">{dots_html}</div>'
             f'  </div>'
-            f'  <div class="course-progress-bar">{dots_html}</div>'
             f'</div>',
             unsafe_allow_html=True,
         )

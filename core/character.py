@@ -34,6 +34,26 @@ def char_img(name: str, width: int | None = None, css_class: str = "") -> str:
         f'{cls}{size_attr}>'
     )
 
+
+@lru_cache(maxsize=16)
+def course_thumb(course_id: str, width: int | None = None,
+                 css_class: str = "") -> str:
+    """assets/course_<course_id>.png 코스 썸네일 base64 <img> 반환.
+
+    파일 없으면 빈 문자열 (graceful — UI 가 자연스럽게 미노출).
+    """
+    path = _ASSETS / f"course_{course_id}.png"
+    if not path.exists():
+        return ""
+    b64 = base64.b64encode(path.read_bytes()).decode("ascii")
+    size_attr = f' style="width:{width}px;height:auto;"' if width else ''
+    cls = f' class="course-thumb {css_class}"'.rstrip()
+    return (
+        f'<img src="data:image/png;base64,{b64}" alt="코스 {course_id}"'
+        f'{cls}{size_attr}>'
+    )
+
+
 # 팔레트 (참고용 주석 — SVG에는 hex 직접 박음)
 #   SKIN        #FBF1DD   얼굴·손
 #   HANBOK      #D67B5A   한복 (코랄)
