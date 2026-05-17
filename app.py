@@ -809,6 +809,76 @@ st.markdown(
         padding: 0 14px;
         margin: -4px 0 8px 0;
     }
+    /* ── 키보드 단축키 힌트 (질문 중) ── */
+    .kbd-hint-row {
+        text-align: center;
+        margin: 4px 0 10px 0;
+        font-family: 'Gowun Batang', serif;
+        font-size: 11.5px;
+        color: var(--ink-soft);
+        opacity: 0.85;
+    }
+    .kbd-hint-row .kbd-key {
+        display: inline-block;
+        min-width: 20px;
+        padding: 1px 6px;
+        margin: 0 2px;
+        background: #FFFCEF;
+        border: 1.5px solid var(--ink-soft);
+        border-bottom-width: 2.5px;
+        border-radius: 5px;
+        font-family: 'Yeon Sung', monospace;
+        font-size: 11.5px;
+        font-weight: 700;
+        color: var(--ink);
+        line-height: 1.2;
+        text-align: center;
+    }
+    @media (max-width: 720px) {
+        .kbd-hint-row { display: none; }  /* 모바일 키보드 없으니 숨김 */
+    }
+
+    /* ── K-콘텐츠 모드 페르소나 인트로 ── */
+    .kculture-intro {
+        display: flex; gap: 12px; align-items: center;
+        background: linear-gradient(135deg, #FFF0F5 0%, #FFE0E8 100%);
+        border: 2px dashed #C97064;
+        border-radius: 14px;
+        padding: 12px 16px;
+        margin: 8px 0 12px 0;
+        box-shadow: 2px 2px 0 rgba(201, 112, 100, 0.30);
+    }
+    .kculture-intro .kculture-intro-char {
+        flex: 0 0 72px;
+        animation: float-y 4s ease-in-out infinite;
+    }
+    .kculture-intro .kculture-intro-text {
+        flex: 1;
+        font-family: 'Gowun Batang', serif;
+        font-size: 13.5px;
+        line-height: 1.6;
+        color: var(--ink);
+    }
+    .kculture-intro .kc-tag {
+        display: inline-block;
+        background: #C97064;
+        color: #FFF;
+        padding: 2px 10px;
+        border-radius: 999px;
+        font-family: 'Yeon Sung', serif;
+        font-size: 12px;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+    }
+    .kculture-intro b { color: #6A1F18; }
+    .kculture-intro small { color: var(--ink-soft); opacity: 0.85; }
+    @media (max-width: 720px) {
+        .kculture-intro { flex-direction: column; text-align: center; }
+        .kculture-intro .kculture-intro-char svg, .kculture-intro .kculture-intro-char img {
+            width: 56px !important; height: 56px !important;
+        }
+    }
+
     /* ── 시간 보너스 인라인 힌트 (질문 중 시간 압박감) ── */
     .time-hint-row {
         display: flex; flex-wrap: wrap; gap: 6px;
@@ -1576,6 +1646,19 @@ st.markdown(
         box-shadow: 3px 3px 0 var(--mustard);
         position: relative;
         font-family: 'Gowun Batang', serif;
+        /* 등장 시 부드럽게 fade + 살짝 위에서 떨어짐 */
+        animation: card-drop-in 0.5s ease-out backwards;
+        transition: transform 0.18s ease-out, box-shadow 0.18s ease-out;
+    }
+    @keyframes card-drop-in {
+        0% { opacity: 0; transform: translateY(-8px) scale(0.985); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    /* hover lift — 두루마리가 책상에서 살짝 떠오르듯 */
+    .evidence-card:hover {
+        transform: translate(-2px, -3px);
+        box-shadow: 5px 6px 0 var(--mustard),
+                    0 8px 16px rgba(58,42,31,0.10);
     }
     .evidence-card::before, .evidence-card::after {
         content: '';
@@ -2924,6 +3007,11 @@ def init_state() -> None:
         st.session_state.last_bonus = 0
     if "user_geo" not in st.session_state:
         st.session_state.user_geo = None  # (lat, lon) or None
+    # ─── 랜딩 지도 표시 상태 ───
+    if "landing_map_collapsed" not in st.session_state:
+        st.session_state.landing_map_collapsed = False
+    if "landing_map_expanded" not in st.session_state:
+        st.session_state.landing_map_expanded = False
 
 
 init_state()
@@ -3734,6 +3822,9 @@ with bar_cols[6]:
         st.session_state.course_finished = False
         st.session_state.eliminated_options = []
         st.session_state.qtypes_per_card = {}
+        # 랜딩 지도 표시 모드도 기본값 복귀 (크게 보기로 둔 채 리셋하면 어색)
+        st.session_state.landing_map_collapsed = False
+        st.session_state.landing_map_expanded = False
         st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
@@ -4071,12 +4162,7 @@ def render_landing_map() -> None:
         valid.append(c)
 
     user_loc = st.session_state.user_geo
-    # 지도 접기/펼치기 (lazy) — 모바일이나 시연 시 빠르게 콘텐츠로 이동
-    if "landing_map_collapsed" not in st.session_state:
-        st.session_state.landing_map_collapsed = False
-    # 지도 크게 보기 (확대 모드) — 줌·팬을 여유롭게
-    if "landing_map_expanded" not in st.session_state:
-        st.session_state.landing_map_expanded = False
+    # landing_map_collapsed / landing_map_expanded 는 init_state 에서 초기화됨
 
     # 헤더 + 위치 요청 (한 줄, 명확히 노출) — 우측에 접기/크게보기 토글 2개
     user_loc_status = (
@@ -4436,23 +4522,37 @@ def render_collection_page() -> None:
     )
 
     # ── 필터 + 정렬 (수집한 카드가 늘어도 잘 찾도록) ──
-    # 카테고리 = id prefix 기준 (gbg/dsg/kculture/etc.)
+    # 카테고리 = _site_category 의 (icon, color, label) — UI 라벨에 icon + count 포함
     def _era_label(card: SourceCard) -> str:
         _, _, lab = _site_category(card)
         return lab
+    def _era_icon(label: str) -> str:
+        # _site_category 매핑을 역으로 — 첫 카드 기준
+        for c in cards:
+            ic, _, lb = _site_category(c)
+            if lb == label:
+                return ic
+        return "📂"
 
-    # 동적 era 옵션 — 실제 수집된 카드에 등장하는 것만
-    eras_present = sorted({_era_label(c) for c in cards})
-    eras_present.insert(0, "전체")
+    # 동적 era 옵션 — 카운트 포함, 카운트 많은 순 정렬
+    from collections import Counter as _Counter
+    _era_counts = _Counter(_era_label(c) for c in cards)
+    era_keys_sorted = [lab for lab, _ in _era_counts.most_common()]
+    # display label → 실제 매칭 label 매핑
+    era_display: dict[str, str] = {f"📂 전체 ({n})": "전체"}
+    for lab in era_keys_sorted:
+        n = _era_counts[lab]
+        era_display[f"{_era_icon(lab)} {lab} ({n})"] = lab
 
     f_cols = st.columns([2, 2, 3])
     with f_cols[0]:
-        era_pick = st.selectbox(
+        era_display_key = st.selectbox(
             "📂 분류 필터",
-            eras_present,
+            list(era_display.keys()),
             index=0,
             key="col_filter_era",
         )
+        era_pick = era_display[era_display_key]
     with f_cols[1]:
         sort_options = {
             "📅 시대순 (오래된 먼저)": "date_asc",
@@ -4489,10 +4589,17 @@ def render_collection_page() -> None:
             or any(qlow in p.lower() for p in (c.related_persons or []))
             or any(qlow in t.lower() for t in (c.tags or []))
         ]
+    # 견고한 시대순 정렬 — 카드별 date 포맷이 혼합 (YYYY-MM-DD / "1410 (정종)"
+    # / "1395 / 1865" / "-2333-10-03" BC)이라 문자열 정렬은 어긋남.
+    # 선행 (음수 가능) 정수만 추출해 1차 키로 사용, 동률은 원문으로 2차.
+    import re as _re_sort
+    def _date_key(card: SourceCard) -> tuple[int, str]:
+        m = _re_sort.match(r'-?\d+', card.date or "")
+        return (int(m.group()) if m else 99999, card.date or "")
     if sort_key == "date_asc":
-        filtered.sort(key=lambda x: x.date)
+        filtered.sort(key=_date_key)
     elif sort_key == "date_desc":
-        filtered.sort(key=lambda x: x.date, reverse=True)
+        filtered.sort(key=_date_key, reverse=True)
     elif sort_key == "title":
         filtered.sort(key=lambda x: x.title)
     elif sort_key == "place":
@@ -5025,6 +5132,22 @@ def render_quest_page() -> None:
                 key="theme_select",
             )
             st.session_state.quest_theme = theme_keys[theme_labels.index(picked_label)]
+            # K-콘텐츠 테마 선택 시 — "1905→2025 떨어진 사관" 페르소나 인트로
+            # LLM 프롬프트엔 이미 페르소나가 있으나 UI 안내가 없어 사용자가 당황
+            if st.session_state.quest_theme == "kculture":
+                st.markdown(
+                    f'<div class="kculture-intro">'
+                    f'  <div class="kculture-intro-char">{char_img("hmm", width=72)}</div>'
+                    f'  <div class="kculture-intro-text">'
+                    f'    <div class="kc-tag">🎬 K-콘텐츠 모드</div>'
+                    f'    <b>1905년 정동에서 갑자기 2025년으로 떨어진 사관이외다.</b><br>'
+                    f'    드라마·영화·예능 속 한국을 골라드리니, '
+                    f'    <b>실제 사적</b>과 <b>가상 각색</b>을 가려내 보시구려. '
+                    f'    <small>(케데헌·낭만닥터·정년이·도깨비·미스터션샤인 등 다수)</small>'
+                    f'  </div>'
+                    f'</div>',
+                    unsafe_allow_html=True,
+                )
 
         # 시작 버튼 — 풀-너비, picker 바로 아래
         st.markdown('<div class="start-btn-wrap">', unsafe_allow_html=True)
@@ -5103,6 +5226,48 @@ def render_quest_page() -> None:
     eliminated = set(st.session_state.eliminated_options)
     marks = ["①", "②", "③", "④"]
 
+    # ── 키보드 단축키 (1·2·3·4 답안, H 힌트, N 다음/Enter)
+    # 한 페이지당 단 한 번만 listener 등록 (window flag)
+    st.markdown(
+        """
+        <script>
+        (function() {
+            if (window._sacho_kbd_installed) return;
+            window._sacho_kbd_installed = true;
+            const marks = ['①', '②', '③', '④'];
+            const hintRegex = /힌트|hint|ヒント|提示/i;
+            const nextRegex = /다음|next|次の|下一|마무리/i;
+            function clickByText(matcher) {
+                const candidates = document.querySelectorAll(
+                    'button[data-testid="baseButton-secondary"], '
+                    + '[data-testid="stButton"] button'
+                );
+                for (const btn of candidates) {
+                    const txt = (btn.innerText || '').trim();
+                    if (matcher(txt)) { btn.click(); return true; }
+                }
+                return false;
+            }
+            document.addEventListener('keydown', function(e) {
+                // 입력 필드에서는 비활성
+                const tag = (e.target && e.target.tagName) || '';
+                if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+                if (e.ctrlKey || e.metaKey || e.altKey) return;
+                if (e.key >= '1' && e.key <= '4') {
+                    const idx = parseInt(e.key, 10) - 1;
+                    clickByText(t => t.startsWith(marks[idx]));
+                } else if (e.key.toLowerCase() === 'h') {
+                    clickByText(t => hintRegex.test(t));
+                } else if (e.key.toLowerCase() === 'n' || e.key === 'Enter') {
+                    clickByText(t => nextRegex.test(t));
+                }
+            });
+        })();
+        </script>
+        """,
+        unsafe_allow_html=True,
+    )
+
     # ── 답변 전 — 힌트 + 4지선다 ──
     if not answered:
         # ── 시간 보너스 인라인 힌트 (시간 압박감) ──
@@ -5113,6 +5278,12 @@ def render_quest_page() -> None:
             '  <span class="time-hint-pill neutral">⏱ ~1분 <b>0</b></span>'
             '  <span class="time-hint-pill penalty">🐢 ~2분 <b>-3 사초</b></span>'
             '  <span class="time-hint-pill bad">💤 그 이상 <b>-5 사초</b></span>'
+            '</div>'
+            '<div class="kbd-hint-row">'
+            '  ⌨ <span class="kbd-key">1</span><span class="kbd-key">2</span>'
+            '  <span class="kbd-key">3</span><span class="kbd-key">4</span> 답안 · '
+            '  <span class="kbd-key">H</span> 힌트 · '
+            '  <span class="kbd-key">N</span> 다음'
             '</div>',
             unsafe_allow_html=True,
         )
