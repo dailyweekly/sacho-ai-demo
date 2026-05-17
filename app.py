@@ -779,6 +779,18 @@ st.markdown(
     /* Folium iframe 모바일 압축 */
     @media (max-width: 720px) {
         .landing-map-folium iframe { height: 260px !important; }
+        .landing-map-folium.expanded iframe { height: 480px !important; }
+    }
+    /* 크게 보기 모드 — 강조 테두리 + 약한 그림자로 "전체 화면 느낌" */
+    .landing-map-folium.expanded {
+        border: 2.5px solid var(--ink);
+        border-radius: 14px;
+        box-shadow: 4px 4px 0 var(--ink), 0 8px 18px rgba(58,42,31,0.10);
+        overflow: hidden;
+        margin: 4px 0 14px 0;
+    }
+    .landing-map-folium.expanded iframe {
+        border-radius: 12px;
     }
     /* ── API 키 누락 경고 (랜딩 최상단) ── */
     .api-key-warn {
@@ -1019,13 +1031,17 @@ st.markdown(
         color: var(--red-deep);
     }
 
-    /* ── 4지선다 답안 — Streamlit 기본 버튼을 도장(스탬프) 카드로 ── */
-    /* 키 prefix "quest_opt_" 인 버튼만 타깃 (다른 버튼 영향 없도록 클래스 래핑) */
-    .quest-opts [data-testid="stButton"] button {
+    /* ── 4지선다 답안 — Streamlit 기본 버튼을 도장(스탬프) 카드로 ──
+     * Streamlit 은 st.markdown 의 빈 div 와 st.button 을 SIBLING 으로 렌더하므로
+     * descendant selector 는 작동하지 않는다 (.quest-opts [data-testid] X).
+     * 해결: `~` 형제 결합자로 quest-opts-zone 마커 이후 stButton 들을 모두 잡고,
+     * quest-opts-end 마커 이후 stButton 은 reset 처리해 영향 범위를 닫는다.
+     */
+    .quest-opts-zone ~ [data-testid="stButton"] button {
         width: 100% !important;
         text-align: left !important;
         padding: 14px 18px !important;
-        margin-bottom: 8px !important;
+        margin-bottom: 6px !important;
         background: linear-gradient(135deg, #FFFDF6 0%, #FFF7E2 100%) !important;
         border: 2.5px solid var(--ink) !important;
         border-radius: 14px !important;
@@ -1038,16 +1054,29 @@ st.markdown(
         transition: transform 0.12s, box-shadow 0.12s, background 0.12s !important;
         white-space: normal !important;
         min-height: 50px;
+        word-break: keep-all !important;
     }
-    .quest-opts [data-testid="stButton"] button:hover {
+    .quest-opts-zone ~ [data-testid="stButton"] button:hover {
         transform: translate(-1px, -1px);
         box-shadow: 4px 4px 0 var(--ink) !important;
         background: linear-gradient(135deg, #FFF7DA 0%, #FFE9A6 100%) !important;
         border-color: var(--red-deep) !important;
     }
-    .quest-opts [data-testid="stButton"] button:active {
+    .quest-opts-zone ~ [data-testid="stButton"] button:active {
         transform: translate(2px, 2px);
         box-shadow: 1px 1px 0 var(--ink) !important;
+    }
+    /* zone-end 이후 stButton 은 stamp 스타일을 reset (다음 섹션 버튼 보호) */
+    .quest-opts-end ~ [data-testid="stButton"] button {
+        text-align: center !important;
+        padding: revert !important;
+        background: revert !important;
+        border: revert !important;
+        border-radius: revert !important;
+        box-shadow: revert !important;
+        font-size: revert !important;
+        font-weight: revert !important;
+        min-height: revert !important;
     }
 
     /* ── 정답 시 컨페티 (master/companion 칭호 화면용) ── */
@@ -1480,6 +1509,23 @@ st.markdown(
     .evidence-card .place-link:hover {
         background: #FFE7A0;
         border-color: var(--ink) !important;
+    }
+    /* 카카오맵 / 로드뷰 — 노란 강조 (Kakao 브랜드 컬러 톤) */
+    .evidence-card .place-link.kakao-link {
+        background: #FFE500;
+        border-color: #3C2A1E !important;
+        color: #3C2A1E !important;
+    }
+    .evidence-card .place-link.kakao-link:hover {
+        background: #FFD200;
+    }
+    .evidence-card .place-link.roadview-link {
+        background: #E8F0FE;
+        border-color: #3A6FB8 !important;
+        color: #1E3A6F !important;
+    }
+    .evidence-card .place-link.roadview-link:hover {
+        background: #C4D8F5;
     }
     .evidence-card .license-tag {
         margin-top: 6px;
@@ -3252,7 +3298,7 @@ def render_password_gate(expected: str) -> None:
             f'    <ol>'
             f'      <li>대문 통과 → 지도에서 가까운 사적 확인</li>'
             f'      <li>코스(정동·경복궁·북촌 등 {_course_n}종) 또는 자유 테마 선택</li>'
-            f'      <li>4지선다 + 힌트(-3 사초) → 시간 안에 정답 시 +15 사초</li>'
+            f'      <li>4지선다 + 힌트(-3 사초) → 정답 시 +10~15 사초 (15초 이내 보너스)</li>'
             f'      <li>완주 → 칭호(사관의 으뜸·동무·견습) 획득</li>'
             f'    </ol>'
             f'  </div>'
@@ -3496,6 +3542,12 @@ with bar_cols[6]:
         st.session_state.total_attempts = 0
         st.session_state.total_correct = 0
         st.session_state.q_seen_ids = []
+        # 코스 진행 + 부수 상태 초기화 (이전엔 누락돼 중간에 🔄 누르면 어색)
+        st.session_state.course_idx = 0
+        st.session_state.course_score = 0
+        st.session_state.course_finished = False
+        st.session_state.eliminated_options = []
+        st.session_state.qtypes_per_card = {}
         st.rerun()
 
 st.markdown('</div>', unsafe_allow_html=True)
@@ -3556,16 +3608,38 @@ def _source_authority(url: str) -> str:
 
 
 def _place_links(c: SourceCard) -> str:
-    """장소 좌표 + 제목으로 지도·사진·관광공사(다국어) 링크 생성."""
+    """장소 좌표 + 제목으로 지도·사진·카카오·관광공사(다국어) 링크 생성."""
     import urllib.parse as up
     bits = []
     title_raw = c.title.split("—")[0].strip()
     place_raw = c.place.split("(")[0].strip()
     title_q = up.quote(title_raw)
     place_q = up.quote(place_raw)
+    has_coords = bool(c.place_coords) and len(c.place_coords) == 2
 
-    # 1) Google Maps — 좌표가 있으면 좌표 핀, 없으면 장소명 검색
-    if c.place_coords and len(c.place_coords) == 2:
+    # 1) 카카오맵 — 한국 관광지엔 가장 정확 (좌표 + 제목 deep link)
+    if has_coords:
+        lon, lat = c.place_coords
+        # KakaoMap Link API: /link/map/{name},{lat},{lng}
+        kakao_url = f"https://map.kakao.com/link/map/{title_q},{lat},{lon}"
+        bits.append(
+            f'<a class="place-link kakao-link" href="{kakao_url}" target="_blank" '
+            f'rel="noopener" title="카카오맵에서 위치 확인">'
+            f'{T["kakao_map"]}</a>'
+        )
+        # 2) 카카오 로드뷰 — 전경(거리뷰) 직접 진입
+        # ?roadview&urlX=lng&urlY=lat 형식 — Kakao Map 이 자동 로드뷰 모드로
+        kakao_rv = (
+            f"https://map.kakao.com/?roadview&urlX={lon}&urlY={lat}"
+        )
+        bits.append(
+            f'<a class="place-link roadview-link" href="{kakao_rv}" target="_blank" '
+            f'rel="noopener" title="카카오 로드뷰로 현장 전경 보기">'
+            f'{T["kakao_roadview"]}</a>'
+        )
+
+    # 3) Google Maps — 다국어 사용자 / 좌표 없으면 검색
+    if has_coords:
         lon, lat = c.place_coords
         gmap = f"https://www.google.com/maps?q={lat},{lon}({title_q})"
     else:
@@ -3575,7 +3649,7 @@ def _place_links(c: SourceCard) -> str:
         f'{T["map_open"]}</a>'
     )
 
-    # 2) 사진 검색 — 한국어는 네이버, 외국어는 Google 이미지
+    # 4) 사진 검색 — 한국어는 네이버, 외국어는 Google 이미지
     lang = st.session_state.language
     if lang == "ko":
         img = f"https://search.naver.com/search.naver?where=image&query={place_q}"
@@ -3812,12 +3886,15 @@ def render_landing_map() -> None:
     # 지도 접기/펼치기 (lazy) — 모바일이나 시연 시 빠르게 콘텐츠로 이동
     if "landing_map_collapsed" not in st.session_state:
         st.session_state.landing_map_collapsed = False
+    # 지도 크게 보기 (확대 모드) — 줌·팬을 여유롭게
+    if "landing_map_expanded" not in st.session_state:
+        st.session_state.landing_map_expanded = False
 
-    # 헤더 + 위치 요청 (한 줄, 명확히 노출) — 우측에 접기 토글
+    # 헤더 + 위치 요청 (한 줄, 명확히 노출) — 우측에 접기/크게보기 토글 2개
     user_loc_status = (
         f'✅ {user_loc[0]:.4f}, {user_loc[1]:.4f}' if user_loc else '미설정'
     )
-    head_col_l, head_col_r = st.columns([5, 1])
+    head_col_l, head_col_m, head_col_r = st.columns([5, 1, 1])
     with head_col_l:
         st.markdown(
             '<div class="landing-map-head">'
@@ -3836,6 +3913,20 @@ def render_landing_map() -> None:
             '</div>',
             unsafe_allow_html=True,
         )
+    with head_col_m:
+        # 크게 보기 토글 — 지도 height 340 → 720, 줌·팬 여유
+        expand_label = (
+            "🔍 보통" if st.session_state.landing_map_expanded else "🔍 크게"
+        )
+        if st.button(expand_label, key="landing_map_expand_toggle",
+                     use_container_width=True,
+                     help="지도를 크게 펼쳐 자유롭게 줌·이동"):
+            st.session_state.landing_map_expanded = \
+                not st.session_state.landing_map_expanded
+            # 크게 보기로 전환하면 접힘은 해제
+            if st.session_state.landing_map_expanded:
+                st.session_state.landing_map_collapsed = False
+            st.rerun()
     with head_col_r:
         toggle_label = (
             "🗺 펼치기" if st.session_state.landing_map_collapsed else "🗺 접기"
@@ -3950,12 +4041,24 @@ def render_landing_map() -> None:
                 fill_opacity=0.06,
             ).add_to(m)
 
-        # 데스크탑 340 / 모바일은 CSS 로 추가 압축 (.landing-map-folium 클래스)
-        # key 만 사용 — 컴포넌트가 내부적으로 줌·팬 유지, rerun 미트리거
-        st.markdown('<div class="landing-map-folium">', unsafe_allow_html=True)
+        # 크게 보기 시 720 / 보통 340 / 모바일 CSS 추가 압축
+        # key 만 사용 — 컴포넌트 내부가 줌·팬 보존, rerun 미트리거
+        _map_h = 720 if st.session_state.get("landing_map_expanded") else 340
+        _map_cls = (
+            "landing-map-folium expanded"
+            if st.session_state.get("landing_map_expanded")
+            else "landing-map-folium"
+        )
+        # key 에 expanded 상태 포함 → 모드 전환 시 컴포넌트 새로 마운트되며 height 적용
+        _map_key = (
+            "landing_map_v2_big"
+            if st.session_state.get("landing_map_expanded")
+            else "landing_map_v2"
+        )
+        st.markdown(f'<div class="{_map_cls}">', unsafe_allow_html=True)
         st_folium(
-            m, width=None, height=340,
-            key="landing_map_v2",
+            m, width=None, height=_map_h,
+            key=_map_key,
             returned_objects=[],
         )
         st.markdown('</div>', unsafe_allow_html=True)
@@ -4453,6 +4556,13 @@ def render_quest_page() -> None:
                 st.session_state.course_idx = 0
                 st.session_state.course_score = 0
                 _reset_question_state()
+                # 자동으로 첫 카드 생성 (사용자 한 번 더 클릭 안 해도 됨)
+                if api_key_present:
+                    first_card = pick_course_card(
+                        st.session_state.course_id, 0
+                    )
+                    if first_card is not None:
+                        _generate_with_card(first_card)
                 st.rerun()
         with end_m:
             if st.button("🗺 다른 코스 고르기",
@@ -4515,7 +4625,7 @@ def render_quest_page() -> None:
                 f'    <div class="onb-cell">'
                 f'      <div class="onb-icon">📜</div>'
                 f'      <b>사초</b>'
-                f'      <p>정답마다 <b>+15</b>, 오답 <b>0</b>, 힌트 <b>-3</b>. '
+                f'      <p>정답 <b>+10~15</b> (시간 보너스 ±5), 오답 <b>0</b>, 힌트 <b>-3</b>. '
                 f'      모으면 칭호 획득.</p>'
                 f'    </div>'
                 f'    <div class="onb-cell">'
@@ -4830,8 +4940,8 @@ def render_quest_page() -> None:
                     unsafe_allow_html=True,
                 )
 
-        # 4지선다 버튼 (힌트로 제외된 것은 비활성) — quest-opts 클래스로 스탬프 스타일
-        st.markdown('<div class="quest-opts">', unsafe_allow_html=True)
+        # 4지선다 버튼 — 마커 div 로 zone 정의 (CSS ~ 형제 선택자가 stamp 스타일 적용)
+        st.markdown('<div class="quest-opts-zone"></div>', unsafe_allow_html=True)
         for i, opt in enumerate(q["options"]):
             if i in eliminated:
                 st.markdown(
@@ -4872,7 +4982,9 @@ def render_quest_page() -> None:
                 if st.session_state.play_mode == "course" and is_correct:
                     st.session_state.course_score += 1
                 st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)  # close .quest-opts
+        # zone-end 마커: 이후 stButton 은 stamp 스타일 reset (이 함수는 곧 return 하지만
+        # 안전을 위해 명시)
+        st.markdown('<div class="quest-opts-end"></div>', unsafe_allow_html=True)
         return
 
     # ── 답변 후 — 결과 + 캐릭터 멘트 + 시간 + 선지 회고 ──
