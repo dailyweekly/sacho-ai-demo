@@ -689,6 +689,22 @@ st.markdown(
         padding: 0 14px;
         margin: -4px 0 8px 0;
     }
+    /* 랜딩 지도 접힘 안내 바 */
+    .landing-map-collapsed-hint {
+        background: #FFFCEF;
+        border: 1.5px dashed rgba(58,42,31,0.30);
+        border-radius: 10px;
+        padding: 10px 16px;
+        margin: 4px 0 10px 0;
+        font-family: 'Gowun Batang', serif;
+        font-size: 13px;
+        color: var(--ink-soft);
+        text-align: center;
+    }
+    /* Folium iframe 모바일 압축 */
+    @media (max-width: 720px) {
+        .landing-map-folium iframe { height: 260px !important; }
+    }
     /* ── API 키 누락 경고 (랜딩 최상단) ── */
     .api-key-warn {
         background: linear-gradient(135deg, #FFE3D6, #FFD0BB);
@@ -2263,6 +2279,63 @@ st.markdown(
         .gate-why-grid { grid-template-columns: 1fr; }
     }
 
+    /* ── 게이트 언어 토글 (국기) — 우측 상단 ── */
+    .gate-lang-row {
+        display: flex; justify-content: flex-end;
+        margin: -4px 0 6px 0;
+        position: relative; z-index: 3;
+    }
+    /* Streamlit 기본 button 위에 토글 스타일 덧입힘 (게이트 내부만) */
+    [data-testid="stHorizontalBlock"] > div [data-testid="stButton"] button[kind="secondary"][data-testid*="gate_lang"],
+    button[kind="secondary"]:has(> div:contains("🇰🇷")),
+    button[kind="secondary"]:has(> div:contains("🇺🇸")),
+    button[kind="secondary"]:has(> div:contains("🇯🇵")),
+    button[kind="secondary"]:has(> div:contains("🇨🇳")) {
+        /* :has 미지원 브라우저용 폴백 — 아래 일반 .gate-lang-row 규칙이 덮음 */
+    }
+    .gate-lang-row [data-testid="stButton"] button {
+        font-size: 16px !important;
+        padding: 4px 6px !important;
+        min-height: 30px !important;
+        background: #FBF7F2 !important;
+        border: 1.5px solid var(--ink-soft) !important;
+        border-radius: 8px !important;
+        box-shadow: 1.5px 1.5px 0 rgba(58,42,31,0.15) !important;
+        color: var(--ink) !important;
+        font-weight: 600;
+    }
+    .gate-lang-row [data-testid="stButton"] button:hover {
+        background: #FFF7DA !important;
+        border-color: var(--mustard) !important;
+    }
+
+    /* ── 게이트 1줄 티저 (접힘 상태에서도 가치 노출) ── */
+    .gate-teaser {
+        display: flex; flex-wrap: wrap; gap: 6px;
+        justify-content: center;
+        margin: 16px auto 8px auto;
+        max-width: 720px;
+        position: relative; z-index: 2;
+    }
+    .gate-teaser .teaser-pill {
+        background: #FFF7DA;
+        border: 1.5px dashed var(--ink-soft);
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-family: 'Gowun Batang', serif;
+        font-size: 12.5px;
+        color: var(--ink);
+        white-space: nowrap;
+    }
+    /* expander 내부 섹션 헤더 */
+    .gate-section-h {
+        margin: 4px 0 8px 0 !important;
+        border: none !important;
+        font-family: 'Yeon Sung', 'Gowun Batang', serif !important;
+        font-size: 16px !important;
+        color: var(--red-deep) !important;
+    }
+
     /* ── 데이터 출처 · 차별성 매트릭스 (게이트/popover 공용) ── */
     .data-sources {
         font-family: 'Gowun Batang', serif;
@@ -2517,52 +2590,231 @@ def _diff_matrix_html(corpus_n: int) -> str:
     )
 
 
-# ── 게이트 — 사관의 대사(랜덤 + 시도 횟수 에스컬레이션) ──
-_GATE_GREETINGS = [
-    ("어어… <b>누구세요…?</b>",
-     "사관 두루마리에 들려면 우측 <b>대문</b>에 암호를 살짝 속삭여 주시구려."),
-    ("음… <b>낯이 익은 듯도 한데…</b>",
-     "기억이 가물가물하오. 어쨌든 우측 대문에 암호 한 자 적어 주시오."),
-    ("어허, <b>드디어 깨우셨소.</b>",
-     "곤히 자던 사관이외다… 우측 대문 안에 암호를 적어 주시오."),
-    ("실은 말이오, <b>이 두루마리…</b>",
-     "잘못된 손에 들어가면 큰일이오. 우측 대문에 암호를 적어 주오."),
-    ("어어, <b>관계자시오?</b>",
-     "사초는 함부로 펼 수 없는 것이외다. 우측 대문에 암호를 적어 주시오."),
-]
-# 시도 횟수가 늘수록 점점 의심·짜증 (코믹 에스컬레이션)
-_GATE_ERR_LINES = [
-    None,  # 0회: 일반 그리팅
-    ("어어… <b>그 암호가 아니오.</b>",
-     "혹시 한·영 자판이 잘못된 건 아닌지… 한 번만 더."),
-    ("정말이오…? <b>두 번째 틀리셨소.</b>",
-     "비밀번호는 한 자 한 자… 천천히 적으시오. 사관도 놀라오."),
-    ("…음. <b>이쯤 되면 사관도 의심하오.</b>",
-     "관계자분이면 아실 텐데… 진짜 마지막으로 한 번만 더?"),
-    ("허허… <b>이거 참 곤란하오.</b>",
-     "사초는 함부로 보일 수 없소. 관계자께 한 번 더 여쭤 보오."),
-    ("…<b>외인이시구려.</b>",
-     "사관실 문은 닫겠소이다. 진정한 관계자께만 열리는 문이외다."),
+# ── 게이트 다국어 — 사관 대사·도장·티저 (한·영·일·중) ──
+_GATE_I18N: dict[str, dict] = {
+    "ko": {
+        "tagline": "한국사 사료 검증형 퀴즈 게임 · Korean-history Quest",
+        "brand_place": "🏯 사관실 · 종로",
+        "date_fmt": "%Y년 %m월 %d일",
+        "greetings": [
+            ("어어… <b>누구세요…?</b>",
+             "사관 두루마리에 들려면 우측 <b>대문</b>에 암호를 살짝 속삭여 주시구려."),
+            ("음… <b>낯이 익은 듯도 한데…</b>",
+             "기억이 가물가물하오. 어쨌든 우측 대문에 암호 한 자 적어 주시오."),
+            ("어허, <b>드디어 깨우셨소.</b>",
+             "곤히 자던 사관이외다… 우측 대문 안에 암호를 적어 주시오."),
+            ("실은 말이오, <b>이 두루마리…</b>",
+             "잘못된 손에 들어가면 큰일이오. 우측 대문에 암호를 적어 주오."),
+            ("어어, <b>관계자시오?</b>",
+             "사초는 함부로 펼 수 없는 것이외다. 우측 대문에 암호를 적어 주시오."),
+        ],
+        "error_lines": [
+            None,
+            ("어어… <b>그 암호가 아니오.</b>",
+             "혹시 한·영 자판이 잘못된 건 아닌지… 한 번만 더."),
+            ("정말이오…? <b>두 번째 틀리셨소.</b>",
+             "비밀번호는 한 자 한 자… 천천히 적으시오. 사관도 놀라오."),
+            ("…음. <b>이쯤 되면 사관도 의심하오.</b>",
+             "관계자분이면 아실 텐데… 진짜 마지막으로 한 번만 더?"),
+            ("허허… <b>이거 참 곤란하오.</b>",
+             "사초는 함부로 보일 수 없소. 관계자께 한 번 더 여쭤 보오."),
+            ("…<b>외인이시구려.</b>",
+             "사관실 문은 닫겠소이다. 진정한 관계자께만 열리는 문이외다."),
+        ],
+        "door_title": "🏯 사관실 대문",
+        "door_sub": "암호를 속삭여 주오",
+        "submit_first": "🗝 들여 보내 주시오",
+        "submit_retry": "🗝 다시 한 번",
+        "door_err_text": "어어… 그 암호가 아닌 듯하오…",
+        "stamp_words": ["한 번 더", "위험", "출입 금지"],
+        "bubble_hint": "(Whisper the password at the door →)",
+        "teaser": [
+            "🎮 매번 새 문제",
+            "🗺 도보 코스 {course_n}종",
+            "🔍 사료 {corpus_n}건 검증",
+            "⚖ 학설 양면",
+        ],
+        "info_expander": "✨ 사초 AI는 무엇이오? — 가치·노는 법·데이터·차별성 한꺼번에",
+        "foot_jade": "관계자 외 출입 금지",
+        "foot_tag": "Office of the Records · 사초 AI · v2",
+    },
+    "en": {
+        "tagline": "Korean-history quest with verified primary sources",
+        "brand_place": "🏯 Sagwan Office · Jongno, Seoul",
+        "date_fmt": "%b %d, %Y",
+        "greetings": [
+            ("Oh… <b>who's there…?</b>",
+             "To unroll the scroll, whisper the password into the <b>gate</b> on the right."),
+            ("Hmm… <b>have we met before?</b>",
+             "My memory's fuzzy. Either way — kindly enter the password on the right."),
+            ("Ah, you've <b>finally woken me up.</b>",
+             "This Sagwan was deep asleep… please enter the password on the right."),
+            ("Truth is, <b>this scroll…</b>",
+             "It mustn't fall into wrong hands. Please enter the password."),
+            ("Are you, perhaps, <b>a staff member?</b>",
+             "The chronicles aren't for everyone. Please enter the password."),
+        ],
+        "error_lines": [
+            None,
+            ("Hmm… <b>that's not the password.</b>",
+             "Could it be a typo? One more try."),
+            ("Really…? <b>Wrong twice now.</b>",
+             "Take it slowly — letter by letter."),
+            ("…<b>even this Sagwan grows suspicious.</b>",
+             "If you're really staff, you'd know it. Once more?"),
+            ("Heh… <b>this is getting awkward.</b>",
+             "The chronicles aren't for everyone. Maybe check with staff."),
+            ("…<b>you are clearly an outsider.</b>",
+             "This Sagwan's door is closing. Only true members may pass."),
+        ],
+        "door_title": "🏯 The Sagwan Gate",
+        "door_sub": "Whisper the password",
+        "submit_first": "🗝 Open the gate",
+        "submit_retry": "🗝 Try again",
+        "door_err_text": "Hm… that doesn't seem to be the password…",
+        "stamp_words": ["one more", "warning", "denied"],
+        "bubble_hint": "(사관 speaks in Korean — you're welcome →)",
+        "teaser": [
+            "🎮 Fresh question each time",
+            "🗺 {course_n} walking courses",
+            "🔍 {corpus_n} verified records",
+            "⚖ Multiple scholarly views",
+        ],
+        "info_expander": "✨ What is Sacho AI? — value · how to play · data · differentiators",
+        "foot_jade": "Staff only",
+        "foot_tag": "Office of the Records · Sacho AI · v2",
+    },
+    "ja": {
+        "tagline": "韓国史·原典検証クイズゲーム · Korean-history Quest",
+        "brand_place": "🏯 史官室 · 鍾路",
+        "date_fmt": "%Y年 %m月 %d日",
+        "greetings": [
+            ("おや… <b>どちらさまで…?</b>",
+             "巻物を見るには、右の<b>大門</b>で合言葉をささやいてくだされ。"),
+            ("はて… <b>見覚えがあるような…</b>",
+             "記憶が曖昧でしてな。とにかく右の門に合言葉を。"),
+            ("おお、<b>ようやく起こされたか。</b>",
+             "ぐっすり寝ていた史官でござる。右の門に合言葉を。"),
+            ("実はな、<b>この巻物…</b>",
+             "誰彼の手に渡ってはなりませぬ。合言葉を。"),
+            ("もしや、<b>関係者の方かな?</b>",
+             "史草はみだりに開けぬもの。右の門に合言葉を。"),
+        ],
+        "error_lines": [
+            None,
+            ("おや… <b>合言葉が違うようで。</b>",
+             "もしや入力ミス? もう一度だけ。"),
+            ("本当に…? <b>二回目もはずれだ。</b>",
+             "一文字ずつ慎重に。史官も驚いておるよ。"),
+            ("ふむ… <b>史官も怪しんでおる。</b>",
+             "関係者ならご存じのはず。最後にもう一度?"),
+            ("ほっほ… <b>これは困った。</b>",
+             "史草はみだりには見せられぬ。関係者にお尋ねを。"),
+            ("…<b>外の方でござったか。</b>",
+             "史官室の門は閉じまする。真の関係者のみに開く門。"),
+        ],
+        "door_title": "🏯 史官室の大門",
+        "door_sub": "合言葉をささやいて",
+        "submit_first": "🗝 通させていただきます",
+        "submit_retry": "🗝 もう一度",
+        "door_err_text": "おや… 合言葉が違うようで…",
+        "stamp_words": ["もう一度", "注意", "立入禁止"],
+        "bubble_hint": "(史官は韓国語で話します — どうぞ →)",
+        "teaser": [
+            "🎮 毎回新しい問題",
+            "🗺 徒歩コース{course_n}種",
+            "🔍 史料{corpus_n}件検証",
+            "⚖ 両論併記",
+        ],
+        "info_expander": "✨ 史草AIとは? — 価値·遊び方·データ·差別化",
+        "foot_jade": "関係者以外立入禁止",
+        "foot_tag": "Office of the Records · 史草AI · v2",
+    },
+    "zh": {
+        "tagline": "韩国史·原典验证问答游戏 · Korean-history Quest",
+        "brand_place": "🏯 史官室 · 钟路",
+        "date_fmt": "%Y年%m月%d日",
+        "greetings": [
+            ("咦… <b>哪位…?</b>",
+             "要看卷轴,请在右侧<b>大门</b>低声说出口令。"),
+            ("嗯… <b>看着有些眼熟…</b>",
+             "记忆模糊了。无论如何,请在右侧大门写下口令。"),
+            ("啊,<b>终于把我吵醒了。</b>",
+             "睡得正香的史官在下。请在右门输入口令。"),
+            ("其实呢,<b>这卷轴…</b>",
+             "落入旁人之手可不行。请输入口令。"),
+            ("莫非,<b>是同僚?</b>",
+             "史草不可轻易示人。请在右门输入口令。"),
+        ],
+        "error_lines": [
+            None,
+            ("咦… <b>口令不对呢。</b>",
+             "莫非输错? 再来一次。"),
+            ("当真…? <b>第二次也错了。</b>",
+             "请一字一字慢慢来。史官也吃了一惊。"),
+            ("唔… <b>史官也起疑了。</b>",
+             "若真是同僚定该知晓。最后一次?"),
+            ("呵呵… <b>这下尴尬了。</b>",
+             "史草不便轻示。请向同僚再确认。"),
+            ("…<b>原来是外人。</b>",
+             "史官室之门要关了。唯有同僚方可入内。"),
+        ],
+        "door_title": "🏯 史官室大门",
+        "door_sub": "低声说出口令",
+        "submit_first": "🗝 请进",
+        "submit_retry": "🗝 再来一次",
+        "door_err_text": "咦… 口令不对呢…",
+        "stamp_words": ["再来", "警告", "禁止入内"],
+        "bubble_hint": "(史官说韩语 — 欢迎您 →)",
+        "teaser": [
+            "🎮 每次新题",
+            "🗺 步行路线{course_n}种",
+            "🔍 史料{corpus_n}件验证",
+            "⚖ 学说双面",
+        ],
+        "info_expander": "✨ 何为史草AI? — 价值·玩法·数据·差异化",
+        "foot_jade": "非相关人员止步",
+        "foot_tag": "Office of the Records · 史草AI · v2",
+    },
+}
+_GATE_LANG_OPTIONS = [
+    ("ko", "🇰🇷", "한국어"),
+    ("en", "🇺🇸", "English"),
+    ("ja", "🇯🇵", "日本語"),
+    ("zh", "🇨🇳", "中文"),
 ]
 
 
 def render_password_gate(expected: str) -> None:
-    """세련된 게이트 — 브랜드 + 한옥 대문 + 회전 그리팅 + 두루마리 인용."""
+    """세련된 게이트 — 브랜드 + 한옥 대문 + 회전 그리팅 + 두루마리 인용.
+
+    한·영·일·중 4개 언어 지원 — 우측 상단 국기 토글로 전환.
+    성공 시 선택 언어를 메인 앱 ``st.session_state.language`` 로 승계.
+    """
     import random as _r
     from datetime import datetime as _dt
+
+    # 게이트 언어 (메인 앱 언어와 별도로 게이트만 적용)
+    if "_gate_lang" not in st.session_state:
+        # 메인 앱 언어 따라가도록 초기화 (선택해 둔 게 있으면 유지)
+        st.session_state._gate_lang = st.session_state.get("language", "ko")
+    glang = st.session_state._gate_lang
+    if glang not in _GATE_I18N:
+        glang = "ko"
+    GI = _GATE_I18N[glang]
+
     attempts = st.session_state.get("auth_attempts", 0)
     shake_class = " gate-shake" if st.session_state.pop("_just_failed", False) else ""
 
     # 시도 횟수가 있으면 에스컬레이션 라인, 아니면 회전 그리팅
     if attempts > 0:
-        idx = min(attempts, len(_GATE_ERR_LINES) - 1)
-        line_top, line_sub = _GATE_ERR_LINES[idx]
+        idx = min(attempts, len(GI["error_lines"]) - 1)
+        line_top, line_sub = GI["error_lines"][idx]
     else:
-        # 세션마다 같은 라인 유지 (rerun 시 깜박임 방지)
         if "_gate_line_idx" not in st.session_state:
-            st.session_state._gate_line_idx = _r.randrange(len(_GATE_GREETINGS))
-        line_top, line_sub = _GATE_GREETINGS[
-            st.session_state._gate_line_idx % len(_GATE_GREETINGS)
+            st.session_state._gate_line_idx = _r.randrange(len(GI["greetings"]))
+        line_top, line_sub = GI["greetings"][
+            st.session_state._gate_line_idx % len(GI["greetings"])
         ]
 
     # 게이트 페이지: 흰 배경 + 미세한 점 패턴 (한지 결 느낌)
@@ -2595,21 +2847,39 @@ def render_password_gate(expected: str) -> None:
         unsafe_allow_html=True,
     )
 
+    # ── 언어 토글 (우측 상단 국기 4개) ──
+    _lang_col_l, _lang_col_r = st.columns([5, 2])
+    with _lang_col_r:
+        st.markdown('<div class="gate-lang-row">', unsafe_allow_html=True)
+        flag_cols = st.columns(len(_GATE_LANG_OPTIONS))
+        for i, (code, flag, _name) in enumerate(_GATE_LANG_OPTIONS):
+            with flag_cols[i]:
+                is_active = (code == glang)
+                btn_label = f"{flag}" + (" ✓" if is_active else "")
+                if st.button(btn_label, key=f"gate_lang_{code}",
+                             use_container_width=True,
+                             help=_name):
+                    st.session_state._gate_lang = code
+                    # 토글하면 라인도 새로 뽑음
+                    st.session_state.pop("_gate_line_idx", None)
+                    st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)
+
     # ── 상단 브랜드 스트립 (현판 느낌 + 오늘 날짜) ──
-    today_str = _dt.now().strftime("%Y년 %m월 %d일")
+    today_str = _dt.now().strftime(GI["date_fmt"])
     st.markdown(
         f'<div class="gate-brand-wrap">'
         f'  <div class="gate-brand">'
         f'    <div class="gate-brand-mark">{LOGO_SVG}</div>'
         f'    <div class="gate-brand-text">'
         f'      <h1>사초(史草) AI</h1>'
-        f'      <p>한국사 사료 검증형 퀴즈 게임 · Korean-history Quest</p>'
+        f'      <p>{GI["tagline"]}</p>'
         f'    </div>'
         f'  </div>'
         f'  <div class="gate-brand-tag">'
         f'    <span class="brand-tag-date">📅 {today_str}</span>'
         f'    <span class="brand-tag-dot">·</span>'
-        f'    <span class="brand-tag-place">🏯 사관실 · 종로</span>'
+        f'    <span class="brand-tag-place">{GI["brand_place"]}</span>'
         f'  </div>'
         f'</div>',
         unsafe_allow_html=True,
@@ -2631,7 +2901,7 @@ def render_password_gate(expected: str) -> None:
             f'  <div class="gate-bubble">'
             f'    {line_top}<br>'
             f'    {line_sub}'
-            f'    <small>(Whisper the password at the door →)</small>'
+            f'    <small>{GI["bubble_hint"]}</small>'
             f'  </div>'
             f'</div>',
             unsafe_allow_html=True,
@@ -2640,49 +2910,49 @@ def render_password_gate(expected: str) -> None:
     with gate_right:
         # 한옥 대문 — 기와 지붕 + 풍경 + 단청 메달 + 두 개의 둥근 문고리
         st.markdown(
-            '<div class="door-wrap">'
-            '  <div class="door-roof">'
-            '    <div class="roof-tile"></div>'
-            '    <div class="roof-cap"></div>'
-            '    <div class="roof-chime">🎐</div>'
-            '  </div>'
-            '  <div class="door-card">'
-            '    <div class="door-eaves"></div>'
-            '    <div class="door-medallion" aria-hidden="true">'
-            '      <div class="med-petal"></div>'
-            '      <div class="med-petal"></div>'
-            '      <div class="med-petal"></div>'
-            '      <div class="med-petal"></div>'
-            '      <div class="med-core"></div>'
-            '    </div>'
-            '    <div class="door-knob left"></div>'
-            '    <div class="door-knob right"></div>'
-            '    <div class="door-hinges left"><span></span><span></span><span></span></div>'
-            '    <div class="door-hinges right"><span></span><span></span><span></span></div>'
-            '    <div class="door-title">🏯 사관실 대문</div>'
-            '    <div class="door-sub">암호를 속삭여 주오</div>',
+            f'<div class="door-wrap">'
+            f'  <div class="door-roof">'
+            f'    <div class="roof-tile"></div>'
+            f'    <div class="roof-cap"></div>'
+            f'    <div class="roof-chime">🎐</div>'
+            f'  </div>'
+            f'  <div class="door-card">'
+            f'    <div class="door-eaves"></div>'
+            f'    <div class="door-medallion" aria-hidden="true">'
+            f'      <div class="med-petal"></div>'
+            f'      <div class="med-petal"></div>'
+            f'      <div class="med-petal"></div>'
+            f'      <div class="med-petal"></div>'
+            f'      <div class="med-core"></div>'
+            f'    </div>'
+            f'    <div class="door-knob left"></div>'
+            f'    <div class="door-knob right"></div>'
+            f'    <div class="door-hinges left"><span></span><span></span><span></span></div>'
+            f'    <div class="door-hinges right"><span></span><span></span><span></span></div>'
+            f'    <div class="door-title">{GI["door_title"]}</div>'
+            f'    <div class="door-sub">{GI["door_sub"]}</div>',
             unsafe_allow_html=True,
         )
         with st.form("pw_form", clear_on_submit=True):
             pw = st.text_input(
-                "암호",
+                "password",
                 type="password",
                 label_visibility="collapsed",
                 placeholder="• • • • • •",
                 key="pw_input",
             )
             submitted = st.form_submit_button(
-                "🗝 들여 보내 주시오" if attempts == 0 else "🗝 다시 한 번"
+                GI["submit_first"] if attempts == 0 else GI["submit_retry"]
             )
         if attempts > 0:
+            sw = GI["stamp_words"]
             stamp_word = (
-                "한 번 더" if attempts < 3
-                else ("위험" if attempts < 5 else "출입 금지")
+                sw[0] if attempts < 3 else (sw[1] if attempts < 5 else sw[2])
             )
             st.markdown(
                 f'<div class="door-err">'
                 f'  <span class="door-err-stamp">×{attempts}</span>'
-                f'  어어… 그 암호가 아닌 듯하오…'
+                f'  {GI["door_err_text"]}'
                 f'  <span class="door-err-tag">{stamp_word}</span>'
                 f'</div>',
                 unsafe_allow_html=True,
@@ -2699,62 +2969,82 @@ def render_password_gate(expected: str) -> None:
         _course_n = len(_COURSES)
     except Exception:
         _course_n = 8
+    # ── 1줄 티저 (접힘 상태에서도 가치 노출) — 다국어 ──
+    _teaser_html = ''.join(
+        f'<span class="teaser-pill">'
+        f'{t.format(course_n=_course_n, corpus_n=_corpus_n)}'
+        f'</span>'
+        for t in GI["teaser"]
+    )
     st.markdown(
-        f'<div class="gate-why">'
-        f'  <div class="gate-why-head">'
-        f'    <span class="gate-why-title">✨ 왜 사초 AI?</span>'
-        f'    <span class="gate-why-sub">범용 AI와 무엇이 다른가</span>'
-        f'  </div>'
-        f'  <div class="gate-why-grid">'
-        f'    <div class="gate-why-cell">'
-        f'      <div class="why-icon">🎮</div>'
-        f'      <div class="why-body">'
-        f'        <b>매번 새 문제</b>'
-        f'        <p>AI가 <b>{_corpus_n}건</b> 사료·콘텐츠에서 매번 다르게 출제. 한 번 풀고 끝 X.</p>'
-        f'      </div>'
-        f'    </div>'
-        f'    <div class="gate-why-cell">'
-        f'      <div class="why-icon">🗺</div>'
-        f'      <div class="why-body">'
-        f'        <b>관광지·촬영지까지</b>'
-        f'        <p>경복궁 안 7방·경주 첨성대·정동 손탁호텔. 도보 코스 <b>{_course_n}종</b>.</p>'
-        f'      </div>'
-        f'    </div>'
-        f'    <div class="gate-why-cell">'
-        f'      <div class="why-icon">🔍</div>'
-        f'      <div class="why-body">'
-        f'        <b>답변마다 원문 링크</b>'
-        f'        <p>조선왕조실록·고려사·한국사DB 1차 사료. 출처 없는 답변 없음.</p>'
-        f'      </div>'
-        f'    </div>'
-        f'    <div class="gate-why-cell">'
-        f'      <div class="why-icon">⚖</div>'
-        f'      <div class="why-body">'
-        f'        <b>학설은 양면</b>'
-        f'        <p>갈리는 사안은 양측 견해를 함께. 한·영·일·중 동시.</p>'
-        f'      </div>'
-        f'    </div>'
-        f'  </div>'
-        f'  <div class="gate-howto">'
-        f'    <b>🎯 노는 법</b>'
-        f'    <ol>'
-        f'      <li>대문 통과 → 지도에서 가까운 사적 확인</li>'
-        f'      <li>코스(정동·경복궁·북촌 등 {_course_n}종) 또는 자유 테마 선택</li>'
-        f'      <li>4지선다 + 힌트(-3 사초) → 시간 안에 정답 시 +15 사초</li>'
-        f'      <li>완주 → 칭호(사관의 으뜸·동무·견습) 획득</li>'
-        f'    </ol>'
-        f'  </div>'
-        f'</div>',
+        f'<div class="gate-teaser">{_teaser_html}</div>',
         unsafe_allow_html=True,
     )
 
-    # ── 데이터 출처 9종 + 차별성 매트릭스 (심사·신뢰 어필) ──
-    with st.expander("📚 어떤 공공데이터로? — 출처 9종 · 라이선스",
-                      expanded=False):
+    # ── 정보 구역 단일 expander (4개 섹션 한꺼번에 접고 펴기) ──
+    with st.expander(GI["info_expander"], expanded=False):
+        # ① 왜 사초 AI?
+        st.markdown(
+            f'<div class="gate-why">'
+            f'  <div class="gate-why-head">'
+            f'    <span class="gate-why-title">✨ 왜 사초 AI?</span>'
+            f'    <span class="gate-why-sub">범용 AI와 무엇이 다른가</span>'
+            f'  </div>'
+            f'  <div class="gate-why-grid">'
+            f'    <div class="gate-why-cell">'
+            f'      <div class="why-icon">🎮</div>'
+            f'      <div class="why-body">'
+            f'        <b>매번 새 문제</b>'
+            f'        <p>AI가 <b>{_corpus_n}건</b> 사료·콘텐츠에서 매번 다르게 출제. 한 번 풀고 끝 X.</p>'
+            f'      </div>'
+            f'    </div>'
+            f'    <div class="gate-why-cell">'
+            f'      <div class="why-icon">🗺</div>'
+            f'      <div class="why-body">'
+            f'        <b>관광지·촬영지까지</b>'
+            f'        <p>경복궁 안 7방·경주 첨성대·정동 손탁호텔. 도보 코스 <b>{_course_n}종</b>.</p>'
+            f'      </div>'
+            f'    </div>'
+            f'    <div class="gate-why-cell">'
+            f'      <div class="why-icon">🔍</div>'
+            f'      <div class="why-body">'
+            f'        <b>답변마다 원문 링크</b>'
+            f'        <p>조선왕조실록·고려사·한국사DB 1차 사료. 출처 없는 답변 없음.</p>'
+            f'      </div>'
+            f'    </div>'
+            f'    <div class="gate-why-cell">'
+            f'      <div class="why-icon">⚖</div>'
+            f'      <div class="why-body">'
+            f'        <b>학설은 양면</b>'
+            f'        <p>갈리는 사안은 양측 견해를 함께. 한·영·일·중 동시.</p>'
+            f'      </div>'
+            f'    </div>'
+            f'  </div>'
+            f'  <div class="gate-howto">'
+            f'    <b>🎯 노는 법</b>'
+            f'    <ol>'
+            f'      <li>대문 통과 → 지도에서 가까운 사적 확인</li>'
+            f'      <li>코스(정동·경복궁·북촌 등 {_course_n}종) 또는 자유 테마 선택</li>'
+            f'      <li>4지선다 + 힌트(-3 사초) → 시간 안에 정답 시 +15 사초</li>'
+            f'      <li>완주 → 칭호(사관의 으뜸·동무·견습) 획득</li>'
+            f'    </ol>'
+            f'  </div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+        # ② 공공데이터 9종 출처
+        st.markdown('<div style="height:14px;"></div>', unsafe_allow_html=True)
+        st.markdown(
+            '<h5 class="gate-section-h">📚 어떤 공공데이터로? — 출처 9종 · 라이선스</h5>',
+            unsafe_allow_html=True,
+        )
         st.markdown(_data_sources_html(), unsafe_allow_html=True)
-
-    with st.expander("⚔ 범용 AI와 무엇이 다른가 — 4축 비교",
-                      expanded=False):
+        # ③ 차별성 매트릭스
+        st.markdown('<div style="height:14px;"></div>', unsafe_allow_html=True)
+        st.markdown(
+            '<h5 class="gate-section-h">⚔ 범용 AI와 무엇이 다른가 — 4축 비교</h5>',
+            unsafe_allow_html=True,
+        )
         st.markdown(_diff_matrix_html(_corpus_n), unsafe_allow_html=True)
 
     # ── 오늘의 한 줄 (랜덤 명언) ──
@@ -2787,13 +3077,13 @@ def render_password_gate(expected: str) -> None:
         unsafe_allow_html=True,
     )
 
-    # ── 사관실 도장 푸터 ──
+    # ── 사관실 도장 푸터 (한자 史官室은 한·중·일 공통, jade·tag는 i18n) ──
     st.markdown(
-        '<div class="gate-foot">'
-        '  <span class="foot-stamp">史官室</span>'
-        '  <span class="foot-tag">Office of the Records · 사초 AI · v2</span>'
-        '  <span class="foot-stamp foot-stamp-jade">관계자 외 출입 금지</span>'
-        '</div>',
+        f'<div class="gate-foot">'
+        f'  <span class="foot-stamp">史官室</span>'
+        f'  <span class="foot-tag">{GI["foot_tag"]}</span>'
+        f'  <span class="foot-stamp foot-stamp-jade">{GI["foot_jade"]}</span>'
+        f'</div>',
         unsafe_allow_html=True,
     )
 
@@ -2801,6 +3091,9 @@ def render_password_gate(expected: str) -> None:
         if pw == expected:
             st.session_state.auth_ok = True
             st.session_state.auth_attempts = 0
+            # 게이트에서 선택한 언어를 메인 앱으로 승계 (한 번만 — 사용자가
+            # 메인에서 다시 바꿀 수 있음)
+            st.session_state.language = glang
             # 다음 게이트 진입 시 새 라인·새 인용 — 갱신
             st.session_state.pop("_gate_line_idx", None)
             st.session_state.pop("_gate_quote_idx", None)
@@ -3268,28 +3561,54 @@ def render_landing_map() -> None:
         valid.append(c)
 
     user_loc = st.session_state.user_geo
+    # 지도 접기/펼치기 (lazy) — 모바일이나 시연 시 빠르게 콘텐츠로 이동
+    if "landing_map_collapsed" not in st.session_state:
+        st.session_state.landing_map_collapsed = False
 
-    # 헤더 + 위치 요청 (한 줄, 명확히 노출)
+    # 헤더 + 위치 요청 (한 줄, 명확히 노출) — 우측에 접기 토글
     user_loc_status = (
         f'✅ {user_loc[0]:.4f}, {user_loc[1]:.4f}' if user_loc else '미설정'
     )
-    st.markdown(
-        '<div class="landing-map-head">'
-        '  <div>'
-        '    <h5 style="margin:0;border:none;">'
-        '      🗺 어디서 놀까요? — <span style="color:#A8554A;font-weight:700;">'
-        f'      게임 장소 {len(valid)}곳</span>'
-        '    </h5>'
-        '    <span class="landing-map-sub">'
-        '      핀을 누르면 장소 안내, 모드를 골라 시작하시면 됩니다'
-        '    </span>'
-        '  </div>'
-        '  <div class="landing-map-geo">'
-        f'    <span class="geo-status">📍 내 위치: <b>{user_loc_status}</b></span>'
-        '  </div>'
-        '</div>',
-        unsafe_allow_html=True,
-    )
+    head_col_l, head_col_r = st.columns([5, 1])
+    with head_col_l:
+        st.markdown(
+            '<div class="landing-map-head">'
+            '  <div>'
+            '    <h5 style="margin:0;border:none;">'
+            '      🗺 어디서 놀까요? — <span style="color:#A8554A;font-weight:700;">'
+            f'      게임 장소 {len(valid)}곳</span>'
+            '    </h5>'
+            '    <span class="landing-map-sub">'
+            '      핀을 누르면 장소 안내, 모드를 골라 시작하시면 됩니다'
+            '    </span>'
+            '  </div>'
+            '  <div class="landing-map-geo">'
+            f'    <span class="geo-status">📍 내 위치: <b>{user_loc_status}</b></span>'
+            '  </div>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+    with head_col_r:
+        toggle_label = (
+            "🗺 펼치기" if st.session_state.landing_map_collapsed else "🗺 접기"
+        )
+        if st.button(toggle_label, key="landing_map_toggle",
+                     use_container_width=True,
+                     help="지도를 접으면 모드 선택까지 빠르게 이동"):
+            st.session_state.landing_map_collapsed = \
+                not st.session_state.landing_map_collapsed
+            st.rerun()
+
+    if st.session_state.landing_map_collapsed:
+        # 접힘 — 얇은 안내 바만 표시 (folium 로딩 스킵 → 가벼움)
+        st.markdown(
+            '<div class="landing-map-collapsed-hint">'
+            '  🗺 지도 접힘 — 우측 "펼치기"를 누르면 다시 표시. '
+            '  바로 아래 모드 선택으로 시작하실 수 있소이다.'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+        return
     # 위치 권한 버튼 — expander 안에 숨기지 않고 헤더 옆에 노출 (한 번이면 끝)
     if not user_loc:
         try:
@@ -3380,7 +3699,10 @@ def render_landing_map() -> None:
                 fill_opacity=0.06,
             ).add_to(m)
 
-        st_folium(m, width=None, height=380, returned_objects=[])
+        # 데스크탑 340 / 모바일은 CSS 로 추가 압축 (.landing-map-folium 클래스)
+        st.markdown('<div class="landing-map-folium">', unsafe_allow_html=True)
+        st_folium(m, width=None, height=340, returned_objects=[])
+        st.markdown('</div>', unsafe_allow_html=True)
 
         # 범례 (legend)
         legend_html = '<div class="map-legend">'
