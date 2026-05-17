@@ -35,6 +35,19 @@ def char_img(name: str, width: int | None = None, css_class: str = "") -> str:
     )
 
 
+@lru_cache(maxsize=4)
+def asset_b64(filename: str) -> str | None:
+    """assets/<filename> 의 base64 데이터 URI 문자열 반환 (cached).
+
+    hero_scene 등 큰 이미지를 매 rerun 마다 재인코딩하지 않게 캐싱.
+    파일 없으면 None.
+    """
+    path = _ASSETS / filename
+    if not path.exists():
+        return None
+    return base64.b64encode(path.read_bytes()).decode("ascii")
+
+
 @lru_cache(maxsize=16)
 def course_thumb(course_id: str, width: int | None = None,
                  css_class: str = "") -> str:

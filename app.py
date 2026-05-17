@@ -57,7 +57,7 @@ from core.rag import search_corpus, SourceCard, load_corpus
 from core.badge import parse_response, render_badge_html, sanitize_streaming_text
 from core.prompts import GREETING_BY_LANG, SUGGESTED_QUESTIONS_BY_LANG, UI_TEXT
 from core.character import (
-    LOGO_SVG, LOCK_SVG, char_img, course_thumb,
+    LOGO_SVG, LOCK_SVG, char_img, course_thumb, asset_b64,
 )
 from core.quest import (
     generate_question, pick_card, QUEST_THEME_KEYWORDS,
@@ -1446,12 +1446,31 @@ st.markdown(
         color: var(--ink-soft);
         margin-bottom: 4px;
     }
+    .course-preview-intro {
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
+        font-size: 12.5px;
+        line-height: 1.55;
+        color: var(--ink);
+        background: rgba(255, 247, 218, 0.55);
+        border-left: 3px solid var(--mustard);
+        border-radius: 0 6px 6px 0;
+        padding: 6px 10px;
+        margin: 6px 0 8px 0;
+    }
     .course-preview-cards {
         font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 12.5px;
         color: var(--ink);
     }
     .course-preview-cards b { color: var(--red-deep); }
+    .area-intro {
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
+        font-size: 12.5px;
+        color: var(--ink-soft);
+        margin: 4px 0 8px 0;
+        padding-left: 4px;
+        font-style: italic;
+    }
     @media (max-width: 720px) {
         .course-preview { flex-direction: column; text-align: center; }
         .course-preview-thumb { flex: 0 0 auto; width: 70%; max-width: 220px; }
@@ -2197,14 +2216,51 @@ st.markdown(
         padding: 10px 14px;
         font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 11.5px;
-        line-height: 1.6;
-        color: rgba(58,42,31,0.7);
+        line-height: 1.7;
+        color: rgba(58,42,31,0.75);
         background: rgba(255, 244, 222, 0.55);
         border: 1px dashed rgba(58,42,31,0.18);
         border-radius: 8px;
         text-align: left;
+        /* details-style 접기 — 모바일에선 길어서 답답 */
+        display: block;
     }
     .footer-attrib::before { display: none; }
+    /* footer attribution 접기 wrapper — 모바일 부담 감소 */
+    .footer-attrib-wrap {
+        max-width: 880px;
+        margin: 6px auto 18px auto;
+        text-align: center;
+    }
+    .footer-attrib-summary {
+        cursor: pointer;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
+        font-size: 13px;
+        color: rgba(58,42,31,0.65);
+        padding: 4px 10px;
+        list-style: none;
+        outline: none;
+        display: inline-block;
+    }
+    .footer-attrib-summary::-webkit-details-marker { display: none; }
+    .footer-attrib-summary::before {
+        content: '▸ ';
+        color: var(--mustard);
+        font-weight: 700;
+        transition: transform 0.15s;
+        display: inline-block;
+    }
+    .footer-attrib-wrap[open] .footer-attrib-summary::before {
+        transform: rotate(90deg);
+    }
+    .footer-attrib-summary:hover { color: var(--ink); }
+    .footer-attrib-wrap[open] .footer-attrib {
+        animation: fade-in-attrib 0.3s ease-out;
+    }
+    @keyframes fade-in-attrib {
+        0% { opacity: 0; transform: translateY(-4px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
 
     /* ── 여백 데코 캐릭터 (좌·우) ───────────────────── */
     .deco-left, .deco-right {
@@ -4151,12 +4207,9 @@ HEADER_TEXT = {
 # hero_scene.png 있으면 wide banner mode / 없으면 char-row hero 폴백
 if st.session_state.view == "chat":
     title, subtitle = HEADER_TEXT[st.session_state.language]
-    from pathlib import Path as _PathHero
-    _hero_path = _PathHero(__file__).parent / "assets" / "hero_scene.png"
-    if _hero_path.exists():
-        # 전용 wide banner — 사관 책상 일러스트
-        import base64 as _b64hero
-        _hero_b64 = _b64hero.b64encode(_hero_path.read_bytes()).decode("ascii")
+    _hero_b64 = asset_b64("hero_scene.png")
+    if _hero_b64:
+        # 전용 wide banner — 사관 책상 일러스트 (캐싱된 base64)
         st.markdown(
             f'<div class="hero hero-scene-mode">'
             f'  <div class="hero-banner">'
@@ -5235,13 +5288,9 @@ def render_quest_page() -> None:
 
     # ── 문제 없을 때 — 랜딩 지도 + 모드/주제 선택 + 시작 ──
     if q is None:
-        # ── 퀘스트 랜딩 hero banner (이미지 있을 때만) ──
-        # 문제 풀이 중에는 안 보임 (q is not None 일 때 자동 숨김)
-        from pathlib import Path as _PathQH
-        _qh_path = _PathQH(__file__).parent / "assets" / "hero_scene.png"
-        if _qh_path.exists():
-            import base64 as _b64qh
-            _qh_b64 = _b64qh.b64encode(_qh_path.read_bytes()).decode("ascii")
+        # ── 퀘스트 랜딩 hero banner (이미지 있을 때만, 캐싱 base64) ──
+        _qh_b64 = asset_b64("hero_scene.png")
+        if _qh_b64:
             st.markdown(
                 f'<div class="quest-hero-banner">'
                 f'  <img src="data:image/png;base64,{_qh_b64}" alt="사관의 책상" />'
@@ -5464,16 +5513,35 @@ def render_quest_page() -> None:
                 st.session_state.course_idx = 0
                 st.session_state.course_score = 0
             area = COURSES.get(new_cid, {}).get("area_ko", "")
+            # ── 코스별 짧은 흐름 안내 (선택 후 기대치 셋업) ──
+            _course_one_liners = {
+                "jeongdong":         "🍂 덕수궁 대한문 → 정동길 단풍 → 손탁호텔 옛터까지. 대한제국 마지막 풍경.",
+                "jongno_palaces":    "🏯 경복궁·창덕궁·창경궁·덕수궁 4대궁 산책. 한 발짝마다 다른 왕조 향기.",
+                "bukchon_kpdh":      "🎬 케데헌·도깨비·미스터션샤인 무대 + 북촌 한옥마을 골목.",
+                "jongno_kculture":   "🎬 K-드라마·영화 5장면이 펼쳐졌던 실제 장소를 돌아봅니다.",
+                "gyeongju_5":        "🗿 첨성대·동궁과 월지·불국사·석굴암·대릉원. 신라 천년 5선.",
+                "danyang_palgyeong": "🏞 도담삼봉·사인암 등 단양 8경 중 절경 핵심.",
+                "gbg_inside":        "🏯 경복궁 광화문→근정전→경회루→건청궁. 한 궁 안 7방 미스터리.",
+                "dsg_inside":        "🏛 덕수궁 대한문→중화전→석조전→함녕전. 동서양 건축이 한 궁에.",
+                "ghm_secrets":       "🔍 광화문 600년 비사 — 현판 변천·동십자각·월대 복원·광통교 묘석…",
+            }
+            _course_intro = _course_one_liners.get(new_cid, "")
+
             # ── 코스 preview 카드 (썸네일 있으면) ─ 없으면 area-tag 폴백 ──
             _course_thumb_html = course_thumb(new_cid, width=140)
             _total_cards = course_card_count(new_cid)
             if _course_thumb_html:
+                _intro_html = (
+                    f'<div class="course-preview-intro">{_course_intro}</div>'
+                    if _course_intro else ''
+                )
                 st.markdown(
                     f'<div class="course-preview">'
                     f'  <div class="course-preview-thumb">{_course_thumb_html}</div>'
                     f'  <div class="course-preview-text">'
                     f'    <div class="course-preview-name">{picked_label}</div>'
                     f'    <div class="course-preview-meta">📍 {area or "—"}</div>'
+                    f'    {_intro_html}'
                     f'    <div class="course-preview-cards">'
                     f'      🗺 단서 <b>{_total_cards}</b>개 · 예상 <b>{_total_cards * 2}분</b>'
                     f'    </div>'
@@ -5482,10 +5550,17 @@ def render_quest_page() -> None:
                     unsafe_allow_html=True,
                 )
             elif area:
-                st.markdown(
-                    f'<div class="area-tag">📍 권역 — {area}</div>',
-                    unsafe_allow_html=True,
-                )
+                if _course_intro:
+                    st.markdown(
+                        f'<div class="area-tag">📍 권역 — {area}</div>'
+                        f'<div class="area-intro">{_course_intro}</div>',
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    st.markdown(
+                        f'<div class="area-tag">📍 권역 — {area}</div>',
+                        unsafe_allow_html=True,
+                    )
         else:
             themes = _theme_options()
             theme_keys = list(themes.keys())
@@ -5851,8 +5926,22 @@ def render_quest_page() -> None:
     if cards:
         render_evidence_cards(cards)
         render_evidence_map(cards)
+        # 수집 milestone — 10/30/50/100 사료 도달 시 다음 render 에 toast
+        _before = len(st.session_state.collection)
         for cc in cards:
             st.session_state.collection[cc.id] = cc
+        _after = len(st.session_state.collection)
+        _milestones = {
+            10:  ("📚 사료 10개 수집! 보관함이 부풀기 시작했소", "📚"),
+            30:  ("📚 사료 30개! 사관 견습 통과 — 두루마리 정리가 능숙해지오", "🌿"),
+            50:  ("🏛 사료 50개 수집! 사관 동무 칭호의 자격이오", "🏛"),
+            100: ("👑 사료 100개! 두루마리 100권의 주인이시오", "👑"),
+        }
+        for _n in (10, 30, 50, 100):
+            if _before < _n <= _after:
+                _msg, _ico = _milestones[_n]
+                st.session_state._pending_toast = (_msg, _ico)
+                break
 
     # 다음 문제 / 코스 다음 단서 / 코스 종료
     st.markdown('<div style="height:10px"></div>', unsafe_allow_html=True)
@@ -6125,15 +6214,26 @@ FOOTER_ATTRIB = {
         "地方政府乡土资料 — 遵守公共Nuri/公共数据门户许可。"
     ),
 }
+# Footer — 모바일에선 attribution 이 길어 답답하므로 <details> 로 접기
+_footer_summary_label = {
+    "ko": "📜 데이터 출처·라이선스 (펼치기)",
+    "en": "📜 Data sources & licenses (open)",
+    "ja": "📜 データ出典・ライセンス (開く)",
+    "zh": "📜 数据来源·许可证 (展开)",
+}
+_footer_summary = _footer_summary_label.get(st.session_state.language, _footer_summary_label["ko"])
 st.markdown(
     f'<div style="text-align:center;">'
     f'<div class="footer-strip">'
     f'  <div class="footer-char">{char_img("cheer", width=58)}</div>'
     f'  <div class="footer-text">{FOOTER_TAGLINE[st.session_state.language]}</div>'
     f'</div>'
-    f'<div class="footer-attrib">'
-    f'  📜 {FOOTER_ATTRIB[st.session_state.language]}'
-    f'</div>'
+    f'<details class="footer-attrib-wrap">'
+    f'  <summary class="footer-attrib-summary">{_footer_summary}</summary>'
+    f'  <div class="footer-attrib">'
+    f'    📜 {FOOTER_ATTRIB[st.session_state.language]}'
+    f'  </div>'
+    f'</details>'
     f'</div>',
     unsafe_allow_html=True,
 )
