@@ -167,7 +167,7 @@ st.markdown(
     /* 각 라디오 옵션 = 카드 */
     [data-testid="stRadio"] [role="radiogroup"] > label {
         flex: 1 1 0;
-        min-width: 150px;
+        min-width: 170px;
         display: flex !important;
         align-items: center;
         justify-content: center;
@@ -175,23 +175,36 @@ st.markdown(
         background: #FFFCF5 !important;
         border: 2.5px dashed var(--ink-soft) !important;
         border-radius: 16px !important;
-        padding: 14px 16px !important;
+        padding: 12px 14px !important;
         cursor: pointer;
         transition: transform 0.1s, box-shadow 0.1s, background 0.15s,
                     border-color 0.15s, border-style 0.15s !important;
         font-family: 'Gowun Batang', serif !important;
-        font-size: 15px !important;
+        font-size: 14.5px !important;
         font-weight: 600 !important;
         color: var(--ink) !important;
         text-align: center;
         line-height: 1.3;
         box-shadow: 0 0 0 transparent;
+        /* 한국어가 단어 중간에서 끊기지 않도록 */
+        word-break: keep-all !important;
+        overflow-wrap: normal !important;
     }
-    /* 라디오 옵션 내부 텍스트 박스도 폰트 강제 */
+    /* 라디오 옵션 내부 텍스트 박스도 폰트 + 줄바꿈 강제 */
     [data-testid="stRadio"] [role="radiogroup"] > label > div {
         font-family: 'Gowun Batang', serif !important;
-        font-size: 15px !important;
+        font-size: 14.5px !important;
         color: var(--ink) !important;
+        word-break: keep-all !important;
+        overflow-wrap: normal !important;
+    }
+    /* 좁은 컨테이너에서 한 행에 3 카드가 안 맞으면 자동 2단/1단으로 */
+    @media (max-width: 720px) {
+        [data-testid="stRadio"] [role="radiogroup"] > label {
+            min-width: 140px;
+            padding: 10px 12px !important;
+            font-size: 13.5px !important;
+        }
     }
     /* hover — 살짝 떠오름 + 노란 tint */
     [data-testid="stRadio"] [role="radiogroup"] > label:hover {
@@ -3870,12 +3883,11 @@ def render_landing_map() -> None:
         import folium
         from streamlit_folium import st_folium
 
-        # 중심: 마지막 사용자 상호작용 우선 → 사용자 위치 → 광화문
-        saved = st.session_state.get("_landing_map_state")
-        if saved and saved.get("center"):
-            center = [saved["center"]["lat"], saved["center"]["lng"]]
-            zoom = saved.get("zoom") or 11
-        elif user_loc:
+        # 중심: 사용자 위치 우선, 없으면 광화문 (초기 마운트 1회만)
+        # NOTE: 이전엔 returned_objects=[center,zoom] 으로 매 pan/zoom rerun → Map
+        # 객체가 새 location 으로 재생성되며 사용자 줌·팬을 덮어쓰는 버그가 있었다.
+        # key + returned_objects=[] 조합으로 컴포넌트 내부가 줌·팬 보존하도록 변경.
+        if user_loc:
             center = list(user_loc)
             zoom = 14
         else:
@@ -3939,19 +3951,14 @@ def render_landing_map() -> None:
             ).add_to(m)
 
         # 데스크탑 340 / 모바일은 CSS 로 추가 압축 (.landing-map-folium 클래스)
-        # key + returned_objects=center/zoom → 사용자 줌·팬을 rerun 사이에 유지
+        # key 만 사용 — 컴포넌트가 내부적으로 줌·팬 유지, rerun 미트리거
         st.markdown('<div class="landing-map-folium">', unsafe_allow_html=True)
-        _map_out = st_folium(
+        st_folium(
             m, width=None, height=340,
-            key="landing_map_v1",
-            returned_objects=["center", "zoom"],
+            key="landing_map_v2",
+            returned_objects=[],
         )
         st.markdown('</div>', unsafe_allow_html=True)
-        if _map_out and _map_out.get("center"):
-            st.session_state._landing_map_state = {
-                "center": _map_out["center"],
-                "zoom": _map_out.get("zoom"),
-            }
 
         # 범례 (legend)
         legend_html = '<div class="map-legend">'
@@ -4009,22 +4016,11 @@ def render_course_map(course_id: str, current_idx: int,
         import folium
         from streamlit_folium import st_folium
 
-        # 중심 좌표 — 사용자 마지막 줌·팬을 우선 (현재 단서가 바뀌면 갱신)
-        saved_key = f"_course_map_state_{course_id}"
-        saved = st.session_state.get(saved_key)
-        last_idx_key = f"_course_map_last_idx_{course_id}"
-        # 단서가 바뀌었으면 새 평균 중심으로 리셋
-        if st.session_state.get(last_idx_key) != current_idx:
-            saved = None
-            st.session_state[last_idx_key] = current_idx
-        if saved and saved.get("center"):
-            avg_lat = saved["center"]["lat"]
-            avg_lon = saved["center"]["lng"]
-            course_zoom = saved.get("zoom") or 17
-        else:
-            avg_lat = sum(c.place_coords[1] for _, c in cards) / len(cards)
-            avg_lon = sum(c.place_coords[0] for _, c in cards) / len(cards)
-            course_zoom = 17
+        # 중심 좌표 — 모든 단서의 평균.
+        # 단서 인덱스가 바뀌면 컴포넌트 key 도 바뀌어 자동 재중앙화.
+        avg_lat = sum(c.place_coords[1] for _, c in cards) / len(cards)
+        avg_lon = sum(c.place_coords[0] for _, c in cards) / len(cards)
+        course_zoom = 17
 
         st.markdown(
             "##### 🗺 코스 지도 — "
@@ -4088,16 +4084,13 @@ def render_course_map(course_id: str, current_idx: int,
                     color="#2E6418", weight=3, opacity=0.6, dash_array="6",
                 ).add_to(m)
 
-        _course_out = st_folium(
+        # key 에 단서 인덱스 포함 → 단서 바뀌면 자동 재중앙화, 같은 단서 안에서는
+        # 사용자 줌·팬 보존. returned_objects=[] 로 rerun 미트리거.
+        st_folium(
             m, width=None, height=360,
-            key=f"course_map_{course_id}",
-            returned_objects=["center", "zoom"],
+            key=f"course_map_v2_{course_id}_{current_idx}",
+            returned_objects=[],
         )
-        if _course_out and _course_out.get("center"):
-            st.session_state[saved_key] = {
-                "center": _course_out["center"],
-                "zoom": _course_out.get("zoom"),
-            }
         return
     except ImportError:
         pass
@@ -4686,71 +4679,70 @@ def render_quest_page() -> None:
                 st.info(T["nearby_no_perm"])
             return
 
-        # 코스 / 테마 셀렉트
-        col_a, col_b = st.columns([3, 2])
-        with col_a:
-            if st.session_state.play_mode == "course":
-                courses = _course_options()
-                course_keys = list(courses.keys())
-                course_labels = [courses[k] for k in course_keys]
-                cur_cid = st.session_state.course_id
-                cur_idx = course_keys.index(cur_cid) if cur_cid in course_keys else 0
-                picked_label = st.selectbox(
-                    T["course_label"],
-                    course_labels,
-                    index=cur_idx,
-                    key="course_select",
+        # 코스 / 테마 셀렉트 — 풀-너비 단일 행 (위), 시작 버튼은 별도 행 (아래)
+        # 이전 col_a/col_b 분할은 권역 태그가 추가되면 정렬이 어긋나 제거
+        if st.session_state.play_mode == "course":
+            courses = _course_options()
+            course_keys = list(courses.keys())
+            course_labels = [courses[k] for k in course_keys]
+            cur_cid = st.session_state.course_id
+            cur_idx = course_keys.index(cur_cid) if cur_cid in course_keys else 0
+            picked_label = st.selectbox(
+                T["course_label"],
+                course_labels,
+                index=cur_idx,
+                key="course_select",
+            )
+            new_cid = course_keys[course_labels.index(picked_label)]
+            if new_cid != st.session_state.course_id:
+                st.session_state.course_id = new_cid
+                st.session_state.course_idx = 0
+                st.session_state.course_score = 0
+            area = COURSES.get(new_cid, {}).get("area_ko", "")
+            if area:
+                st.markdown(
+                    f'<div class="area-tag">📍 권역 — {area}</div>',
+                    unsafe_allow_html=True,
                 )
-                new_cid = course_keys[course_labels.index(picked_label)]
-                if new_cid != st.session_state.course_id:
-                    st.session_state.course_id = new_cid
-                    st.session_state.course_idx = 0
-                    st.session_state.course_score = 0
-                # 권역 안내 (손글씨 톤)
-                area = COURSES.get(new_cid, {}).get("area_ko", "")
-                if area:
-                    st.markdown(
-                        f'<div class="area-tag">📍 권역 — {area}</div>',
-                        unsafe_allow_html=True,
-                    )
-            else:
-                themes = _theme_options()
-                theme_keys = list(themes.keys())
-                theme_labels = [themes[k] for k in theme_keys]
-                current_theme = st.session_state.quest_theme
-                cur_t = theme_keys.index(current_theme) if current_theme in theme_keys else 0
-                picked_label = st.selectbox(
-                    T["quest_theme_label"],
-                    theme_labels,
-                    index=cur_t,
-                    key="theme_select",
-                )
-                st.session_state.quest_theme = theme_keys[theme_labels.index(picked_label)]
+        else:
+            themes = _theme_options()
+            theme_keys = list(themes.keys())
+            theme_labels = [themes[k] for k in theme_keys]
+            current_theme = st.session_state.quest_theme
+            cur_t = theme_keys.index(current_theme) if current_theme in theme_keys else 0
+            picked_label = st.selectbox(
+                T["quest_theme_label"],
+                theme_labels,
+                index=cur_t,
+                key="theme_select",
+            )
+            st.session_state.quest_theme = theme_keys[theme_labels.index(picked_label)]
 
-        with col_b:
-            st.markdown('<div style="height:30px"></div>', unsafe_allow_html=True)
-            st.markdown('<div class="start-btn-wrap">', unsafe_allow_html=True)
-            clicked = st.button(T["quest_start_btn"], key="quest_start", use_container_width=True)
-            st.markdown('</div>', unsafe_allow_html=True)
-            if clicked:
-                if not api_key_present:
-                    st.error(T["api_key_missing_title"])
-                    return
-                if st.session_state.play_mode == "course":
-                    card = pick_course_card(
-                        st.session_state.course_id,
-                        st.session_state.course_idx,
-                    )
-                else:
-                    card = pick_card(
-                        st.session_state.quest_theme,
-                        exclude_ids=st.session_state.q_seen_ids[-10:],
-                    )
-                if card is None:
-                    st.error("코스 사료를 찾을 수 없소이다.")
-                    return
-                _generate_with_card(card)
-                st.rerun()
+        # 시작 버튼 — 풀-너비, picker 바로 아래
+        st.markdown('<div class="start-btn-wrap">', unsafe_allow_html=True)
+        clicked = st.button(
+            T["quest_start_btn"], key="quest_start", use_container_width=True
+        )
+        st.markdown('</div>', unsafe_allow_html=True)
+        if clicked:
+            if not api_key_present:
+                st.error(T["api_key_missing_title"])
+                return
+            if st.session_state.play_mode == "course":
+                card = pick_course_card(
+                    st.session_state.course_id,
+                    st.session_state.course_idx,
+                )
+            else:
+                card = pick_card(
+                    st.session_state.quest_theme,
+                    exclude_ids=st.session_state.q_seen_ids[-10:],
+                )
+            if card is None:
+                st.error("코스 사료를 찾을 수 없소이다.")
+                return
+            _generate_with_card(card)
+            st.rerun()
         return
 
     # ── 문제 표시 ──
