@@ -196,9 +196,23 @@ st.markdown(
     /* ── 전체 배경 — 캐릭터 PNG 배경과 완전 동일한 평면 베이지 ── */
     .stApp { background: #FBF7F2; }
 
+    /* Streamlit 기본 상단 헤더 (Share/star/pencil/github 툴바)
+     * → 우리 앱의 자체 톱바와 중복돼 시각적 공간 낭비. 투명화 + 높이 0.
+     * Manage app 버튼은 별개 영역이라 유지됨. */
+    [data-testid="stHeader"] {
+        background: transparent !important;
+        height: 0 !important;
+    }
+    /* Streamlit 의 stHeader 안 deploy 메뉴 (... / star / github) 는 보이게 두되,
+     * 컨테이너 자체 높이는 0 으로 잡아 본문이 위로 끌어올려짐 */
+    [data-testid="stToolbar"] {
+        right: 1rem !important; top: 0.5rem !important;
+    }
+
     .main .block-container {
         max-width: 1180px;
-        padding: 0.75rem 1.75rem 1.5rem 1.75rem;
+        /* 상단 패딩 대폭 축소 — Streamlit 기본 6rem 대비 0.4rem */
+        padding: 0.4rem 1.75rem 1.5rem 1.75rem;
         font-family: 'Noto Sans KR', sans-serif;
         color: var(--ink);
     }
