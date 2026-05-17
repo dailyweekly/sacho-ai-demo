@@ -624,6 +624,20 @@ st.markdown(
         font-size: 17px;
         color: var(--ink-soft);
     }
+    /* 모바일: 결과 패널 세로 + 캐릭터 축소 */
+    @media (max-width: 720px) {
+        .quest-result-panel {
+            flex-direction: column; align-items: center;
+            text-align: center;
+            padding: 12px 14px;
+            gap: 8px;
+        }
+        .quest-result-panel .qr-char { flex: 0 0 70px; }
+        .quest-result-panel .qr-char svg { width: 70px !important; height: 70px !important; }
+        .quest-result-panel .qr-label { font-size: 17px; }
+        .quest-result-panel .qr-taunt { font-size: 13.5px; }
+        .quest-result-panel .qr-time { font-size: 15px; }
+    }
 
     /* 답변 후 선지 회고 */
     .opt-recap {
@@ -689,6 +703,54 @@ st.markdown(
         padding: 0 14px;
         margin: -4px 0 8px 0;
     }
+    /* ── 시간 보너스 인라인 힌트 (질문 중 시간 압박감) ── */
+    .time-hint-row {
+        display: flex; flex-wrap: wrap; gap: 6px;
+        justify-content: center;
+        margin: -2px 0 10px 0;
+    }
+    .time-hint-pill {
+        display: inline-flex; align-items: center; gap: 4px;
+        font-family: 'Gowun Batang', serif;
+        font-size: 11.5px;
+        padding: 3px 10px;
+        border-radius: 999px;
+        border: 1px dashed;
+        color: var(--ink);
+        background: #FFFCEF;
+    }
+    .time-hint-pill b { font-weight: 800; }
+    .time-hint-pill.bonus   { border-color: #2E6418; color: #2E6418; background: #EAF5DF; }
+    .time-hint-pill.neutral { border-color: #6B5A40; }
+    .time-hint-pill.penalty { border-color: #C97064; color: #8C2A18; background: #FFEDE3; }
+    .time-hint-pill.bad     { border-color: #6A1F18; color: #6A1F18; background: #FFE3D6; }
+    @media (max-width: 720px) {
+        .time-hint-pill { font-size: 10.5px; padding: 2px 8px; }
+    }
+
+    /* 결과 패널 우측의 "빠른 다음" 버튼 — outline 스타일 */
+    [data-testid="stButton"] button[kind="secondary"]:has(div:contains("⏭")),
+    button[kind="secondary"]:has(div:contains("⏭")) {
+        /* :has 미지원 폴백 — Streamlit 키 기반 직접 셀렉터로 덮음 */
+    }
+    button[data-testid="baseButton-secondary"][aria-label*="quest_next_quick"],
+    [data-testid="stButton"] button[key="quest_next_quick"] {
+        background: #FFFCEF !important;
+        border: 2px dashed var(--ink-soft) !important;
+        color: var(--ink) !important;
+        font-size: 13px !important;
+        padding: 6px 10px !important;
+        min-height: 32px !important;
+        box-shadow: none !important;
+        font-family: 'Gowun Batang', serif !important;
+        font-weight: 600 !important;
+    }
+    button[data-testid="baseButton-secondary"][aria-label*="quest_next_quick"]:hover,
+    [data-testid="stButton"] button[key="quest_next_quick"]:hover {
+        background: #FFE9A6 !important;
+        border-color: var(--ink) !important;
+    }
+
     /* 랜딩 지도 접힘 안내 바 */
     .landing-map-collapsed-hint {
         background: #FFFCEF;
@@ -1076,6 +1138,22 @@ st.markdown(
     }
 
     /* ── 추천 질문 카드 그리드 (캐릭터 + 버튼 묶음) ────────── */
+    /* 모바일에서 추천 질문 column 강제 세로 스택 */
+    @media (max-width: 720px) {
+        .suggest-section ~ [data-testid="stHorizontalBlock"] {
+            flex-direction: column !important;
+            gap: 8px !important;
+        }
+        .suggest-section ~ [data-testid="stHorizontalBlock"] > div {
+            width: 100% !important;
+            flex: 1 1 100% !important;
+            min-width: 100% !important;
+        }
+        /* 모바일에선 캐릭터 작게 */
+        .suggest-section ~ [data-testid="stHorizontalBlock"] .suggest-char svg {
+            width: 60px !important; height: 60px !important;
+        }
+    }
     .suggest-section h5 {
         font-family: 'Gowun Batang', serif;
         font-size: 17px; margin: 8px 0 6px 0;
@@ -3269,18 +3347,21 @@ HEADER_TEXT = {
     "zh": ("和犯困的史官闲谈",
            "从古朝鲜到光复 — 每条答复附原典链接,学界争议则并列双方观点。"),
 }
-title, subtitle = HEADER_TEXT[st.session_state.language]
-st.markdown(
-    f'<div class="hero">'
-    f'  <div class="hero-char">{char_img("cheek", width=170)}</div>'
-    f'  <div class="hero-text">'
-    f'    <h1>📜 {title}</h1>'
-    f'    <p>{subtitle}</p>'
-    f'  </div>'
-    f'  <div class="hero-peek">{char_img("hmm", width=110)}</div>'
-    f'</div>',
-    unsafe_allow_html=True,
-)
+# Hero 헤더 — 자유 대화(chat) 뷰에서만 노출.
+# 퀘스트/보관함 뷰는 각자 헤더가 있어 중복 방지.
+if st.session_state.view == "chat":
+    title, subtitle = HEADER_TEXT[st.session_state.language]
+    st.markdown(
+        f'<div class="hero">'
+        f'  <div class="hero-char">{char_img("cheek", width=170)}</div>'
+        f'  <div class="hero-text">'
+        f'    <h1>📜 {title}</h1>'
+        f'    <p>{subtitle}</p>'
+        f'  </div>'
+        f'  <div class="hero-peek">{char_img("hmm", width=110)}</div>'
+        f'</div>',
+        unsafe_allow_html=True,
+    )
 
 
 # ─────────────────────────────────────────────────────────────
@@ -3880,24 +3961,103 @@ def render_collection_page() -> None:
         unsafe_allow_html=True,
     )
 
-    # 2-column 그리드 (좁은 화면에서는 자동 1단)
-    cols = st.columns(2)
-    for i, c in enumerate(sorted(cards, key=lambda x: x.date)):
-        with cols[i % 2]:
-            st.markdown(
-                f'<div class="evidence-card">'
-                f'<h4>📜 {T["evidence_id"]} {c.id} · {c.title}</h4>'
-                f'<div class="meta">📅 {c.date} &nbsp;|&nbsp; 📍 {c.place} '
-                f'&nbsp;|&nbsp; 📖 {c.source}</div>'
-                f'<div class="body">{c.summary}</div>'
-                f'<div class="body" style="margin-top:8px;color:#5C4A33;font-size:13.5px;">'
-                f'<b>{T["original_excerpt"]}</b>: <em>{c.original_text}</em></div>'
-                f'<div style="margin-top:10px;font-size:12.5px;">'
-                f'<a href="{c.source_url}" target="_blank">{T["view_source"]}</a>'
-                f'&nbsp;&nbsp;<span style="color:#8a7560;">📄 {c.license}</span>'
-                f'</div></div>',
-                unsafe_allow_html=True,
-            )
+    # ── 필터 + 정렬 (수집한 카드가 늘어도 잘 찾도록) ──
+    # 카테고리 = id prefix 기준 (gbg/dsg/kculture/etc.)
+    def _era_label(card: SourceCard) -> str:
+        _, _, lab = _site_category(card)
+        return lab
+
+    # 동적 era 옵션 — 실제 수집된 카드에 등장하는 것만
+    eras_present = sorted({_era_label(c) for c in cards})
+    eras_present.insert(0, "전체")
+
+    f_cols = st.columns([2, 2, 3])
+    with f_cols[0]:
+        era_pick = st.selectbox(
+            "📂 분류 필터",
+            eras_present,
+            index=0,
+            key="col_filter_era",
+        )
+    with f_cols[1]:
+        sort_options = {
+            "📅 시대순 (오래된 먼저)": "date_asc",
+            "📅 시대순 (최근 먼저)": "date_desc",
+            "🔤 제목순": "title",
+            "📍 장소순": "place",
+        }
+        sort_pick_label = st.selectbox(
+            "↕ 정렬",
+            list(sort_options.keys()),
+            index=0,
+            key="col_filter_sort",
+        )
+        sort_key = sort_options[sort_pick_label]
+    with f_cols[2]:
+        q_search = st.text_input(
+            "🔍 제목·장소·인물 키워드",
+            value="",
+            placeholder="예: 광해군 · 경복궁 · 안중근",
+            key="col_filter_q",
+            label_visibility="visible",
+        )
+
+    # 필터 적용
+    filtered = list(cards)
+    if era_pick != "전체":
+        filtered = [c for c in filtered if _era_label(c) == era_pick]
+    if q_search.strip():
+        qlow = q_search.strip().lower()
+        filtered = [
+            c for c in filtered
+            if qlow in c.title.lower()
+            or qlow in c.place.lower()
+            or any(qlow in p.lower() for p in (c.related_persons or []))
+            or any(qlow in t.lower() for t in (c.tags or []))
+        ]
+    if sort_key == "date_asc":
+        filtered.sort(key=lambda x: x.date)
+    elif sort_key == "date_desc":
+        filtered.sort(key=lambda x: x.date, reverse=True)
+    elif sort_key == "title":
+        filtered.sort(key=lambda x: x.title)
+    elif sort_key == "place":
+        filtered.sort(key=lambda x: x.place)
+
+    st.caption(
+        f"📂 {era_pick} · 정렬 {sort_pick_label} · 결과 "
+        f"<b>{len(filtered)}</b>/{n}건"
+    )
+
+    if not filtered:
+        st.info("🔎 검색 결과가 없소이다. 필터를 풀거나 다른 키워드로 시도해 보시오.")
+        if st.button("필터 초기화", key="col_clear_filter"):
+            for k in ("col_filter_era", "col_filter_sort", "col_filter_q"):
+                st.session_state.pop(k, None)
+            st.rerun()
+    else:
+        # 2-column 그리드 (좁은 화면에서는 자동 1단)
+        cols = st.columns(2)
+        for i, c in enumerate(filtered):
+            with cols[i % 2]:
+                st.markdown(
+                    f'<div class="evidence-card">'
+                    f'<h4>📜 {T["evidence_id"]} {c.id} · {c.title}</h4>'
+                    f'<div class="meta">📅 {c.date} &nbsp;|&nbsp; 📍 {c.place} '
+                    f'&nbsp;|&nbsp; 📖 {c.source}</div>'
+                    f'<div class="body">{c.summary}</div>'
+                    f'<details class="evidence-details">'
+                    f'  <summary>📖 원문 발췌 · 라이선스 보기</summary>'
+                    f'  <div class="body" style="margin-top:8px;color:#5C4A33;font-size:13px;">'
+                    f'    <b>{T["original_excerpt"]}</b>: <em>{c.original_text}</em>'
+                    f'  </div>'
+                    f'  <div class="license-tag">📄 {c.license}</div>'
+                    f'</details>'
+                    f'<div style="margin-top:8px;font-size:12.5px;">'
+                    f'<a href="{c.source_url}" target="_blank">{T["view_source"]}</a>'
+                    f'</div></div>',
+                    unsafe_allow_html=True,
+                )
 
     st.markdown("<div style='height:14px;'></div>", unsafe_allow_html=True)
     if st.button(T["back_to_chat"], key="back_chat_bottom"):
@@ -4374,6 +4534,17 @@ def render_quest_page() -> None:
 
     # ── 답변 전 — 힌트 + 4지선다 ──
     if not answered:
+        # ── 시간 보너스 인라인 힌트 (시간 압박감) ──
+        # 단순한 가이드 라인 — JS-기반 live 타이머는 Streamlit rerun과 충돌
+        st.markdown(
+            '<div class="time-hint-row">'
+            '  <span class="time-hint-pill bonus">⚡ ~15초 <b>+5 사초</b></span>'
+            '  <span class="time-hint-pill neutral">⏱ ~1분 <b>0</b></span>'
+            '  <span class="time-hint-pill penalty">🐢 ~2분 <b>-3 사초</b></span>'
+            '  <span class="time-hint-pill bad">💤 그 이상 <b>-5 사초</b></span>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
         # 힌트 행
         hint_col_l, hint_col_r = st.columns([1, 1])
         with hint_col_l:
@@ -4450,6 +4621,21 @@ def render_quest_page() -> None:
     result_label = T["quest_correct"] if is_correct else (
         f"{T['quest_wrong']} <b>{marks[correct]} {q['options'][correct]}</b>"
     )
+
+    # 동적 다음 버튼 라벨 — 결과 패널 상·하 공용으로 미리 계산
+    if st.session_state.play_mode == "course":
+        _total = course_card_count(st.session_state.course_id)
+        _next_idx = st.session_state.course_idx + 1
+        if _next_idx > _total:
+            _btn_label = f"🏁 코스 마무리 — 칭호 확인 ({_total}/{_total})"
+            _btn_quick = "🏁 코스 마무리"
+        else:
+            _btn_label = f"📜 다음 단서로 ({_next_idx}/{_total})"
+            _btn_quick = f"⏭ 다음 단서 ({_next_idx}/{_total})"
+    else:
+        _btn_label = T["quest_next_btn"]
+        _btn_quick = "⏭ 다음 문제"
+
     st.markdown(
         f'<div class="quest-result-panel {result_cls}">'
         f'  <div class="qr-char">{char_img(char_pose, width=100)}</div>'
@@ -4461,6 +4647,15 @@ def render_quest_page() -> None:
         f'</div>',
         unsafe_allow_html=True,
     )
+
+    # ── 결과 패널 바로 아래: "빠른 다음" 작은 버튼 (해설/카드 건너뛰기) ──
+    quick_l, quick_r = st.columns([3, 2])
+    with quick_r:
+        if st.button(_btn_quick, key="quest_next_quick",
+                     use_container_width=True,
+                     help="해설·사료 카드를 건너뛰고 다음 문제로 바로 이동"):
+            st.session_state._advance_next = True
+            st.rerun()
 
     # 회고 (정답=녹색, 오답=취소선)
     rows = []
@@ -4506,17 +4701,11 @@ def render_quest_page() -> None:
 
     # 다음 문제 / 코스 다음 단서 / 코스 종료
     st.markdown('<div style="height:10px"></div>', unsafe_allow_html=True)
-    # 동적 라벨 — 코스 모드에서는 진행 위치 노출
-    if st.session_state.play_mode == "course":
-        _total = course_card_count(st.session_state.course_id)
-        _next_idx = st.session_state.course_idx + 1  # 다음 단서 번호
-        if _next_idx > _total:
-            _btn_label = f"🏁 코스 마무리 — 칭호 확인 ({_total}/{_total})"
-        else:
-            _btn_label = f"📜 다음 단서로 ({_next_idx}/{_total})"
-    else:
-        _btn_label = T["quest_next_btn"]
-    if st.button(_btn_label, key="quest_next", use_container_width=True):
+    next_clicked = st.button(
+        _btn_label, key="quest_next", use_container_width=True
+    )
+    # 두 위치(상단 빠른 버튼 + 하단 버튼)에서 동일 advance 트리거 처리
+    if next_clicked or st.session_state.pop("_advance_next", False):
         if st.session_state.play_mode == "course":
             st.session_state.course_idx += 1
             if st.session_state.course_idx >= course_card_count(st.session_state.course_id):
