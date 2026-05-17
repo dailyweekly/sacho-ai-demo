@@ -1073,8 +1073,23 @@ st.markdown(
         font-family: 'Yeon Sung', serif;
         font-size: 22px; color: var(--red-deep);
     }
+    .quest-ending .ending-meta {
+        display: flex; flex-wrap: wrap; gap: 6px;
+        margin-top: 10px;
+    }
+    .quest-ending .end-pill {
+        display: inline-flex; align-items: center;
+        background: #FFF7DA;
+        border: 1.5px dashed var(--ink);
+        border-radius: 999px;
+        padding: 3px 12px;
+        font-family: 'Gowun Batang', serif;
+        font-size: 12.5px;
+        color: var(--ink);
+    }
     @media (max-width: 720px) {
         .quest-ending { flex-direction: column; text-align: center; }
+        .quest-ending .ending-meta { justify-content: center; }
     }
 
     /* ── 왜 사초 AI? 차별 가치 카드 ────────────────────────── */
@@ -1759,6 +1774,17 @@ st.markdown(
         color: var(--ink-soft);
         text-align: right;
     }
+    /* 외국어 모드: 한국어 인용 아래 영문 한 줄 부제 */
+    .gate-quote-gloss {
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: 1px dashed rgba(140,106,60,0.30);
+        font-family: 'Gowun Batang', 'Georgia', serif;
+        font-size: 13px;
+        line-height: 1.5;
+        color: var(--ink-soft);
+        font-style: italic;
+    }
 
     .gate-wrap {
         padding: 12px 4px 40px 4px;
@@ -2363,6 +2389,21 @@ st.markdown(
         margin: -4px 0 6px 0;
         position: relative; z-index: 3;
     }
+    /* 모바일: 토글이 좁아져도 깨지지 않게 — 컬럼 간격·패딩 0 */
+    @media (max-width: 720px) {
+        .gate-lang-row { margin: 0 0 8px 0; }
+        .gate-lang-row [data-testid="stHorizontalBlock"] {
+            gap: 2px !important;
+        }
+        .gate-lang-row [data-testid="stHorizontalBlock"] > div {
+            padding: 0 1px !important;
+        }
+        .gate-lang-row [data-testid="stButton"] button {
+            font-size: 14px !important;
+            padding: 2px 4px !important;
+            min-height: 28px !important;
+        }
+    }
     /* Streamlit 기본 button 위에 토글 스타일 덧입힘 (게이트 내부만) */
     [data-testid="stHorizontalBlock"] > div [data-testid="stButton"] button[kind="secondary"][data-testid*="gate_lang"],
     button[kind="secondary"]:has(> div:contains("🇰🇷")),
@@ -2925,8 +2966,8 @@ def render_password_gate(expected: str) -> None:
         unsafe_allow_html=True,
     )
 
-    # ── 언어 토글 (우측 상단 국기 4개) ──
-    _lang_col_l, _lang_col_r = st.columns([5, 2])
+    # ── 언어 토글 (우측 상단 국기 4개) — 모바일 wide 비율로 ──
+    _lang_col_l, _lang_col_r = st.columns([3, 3])
     with _lang_col_r:
         st.markdown('<div class="gate-lang-row">', unsafe_allow_html=True)
         flag_cols = st.columns(len(_GATE_LANG_OPTIONS))
@@ -3125,22 +3166,39 @@ def render_password_gate(expected: str) -> None:
         )
         st.markdown(_diff_matrix_html(_corpus_n), unsafe_allow_html=True)
 
-    # ── 오늘의 한 줄 (랜덤 명언) ──
+    # ── 오늘의 한 줄 (랜덤 명언) — 한국어 원문 + 영문 부제 ──
+    # 형식: (원문, 출처, 영문 한 줄 부제 — 외국인이 의미 파악)
     quotes = [
-        ("이 몸이 죽고 죽어 일백번 고쳐 죽어 …", "정몽주, 단심가"),
-        ("나라가 있으면 무엇이든 할 수 있다", "안중근, 1909 옥중 단상"),
-        ("역사가 살아 있으면 나라는 다시 일어난다", "박은식, 한국통사"),
-        ("오등은 자에 아 조선의 독립국임을 선언하노라", "기미독립선언서, 1919"),
-        ("光被四表 化及萬方 — 빛이 사방을 덮고 교화가 만방에 미친다", "경복궁 광화문 명문"),
-        ("人乃天 — 사람이 곧 하늘이다", "동학, 최제우"),
-        ("香遠益淸 — 향기는 멀수록 더 맑다", "경복궁 향원정 명문"),
-        ("나는 이름 없는 사관이외다…", "(소관)"),
-        ("勤政 — 부지런히 정사를 돌본다", "경복궁 근정전 명문"),
+        ("이 몸이 죽고 죽어 일백번 고쳐 죽어 …", "정몽주, 단심가",
+         "Though this body die and die a hundred times… — Jeong Mong-ju, Song of a Loyal Heart"),
+        ("나라가 있으면 무엇이든 할 수 있다", "안중근, 1909 옥중 단상",
+         "With a nation, anything is possible. — An Jung-geun, prison reflection, 1909"),
+        ("역사가 살아 있으면 나라는 다시 일어난다", "박은식, 한국통사",
+         "Where history lives, a nation rises again. — Park Eun-sik, A Painful History of Korea"),
+        ("오등은 자에 아 조선의 독립국임을 선언하노라", "기미독립선언서, 1919",
+         "We hereby declare Korea an independent nation. — Declaration of Independence, 1919"),
+        ("光被四表 化及萬方 — 빛이 사방을 덮고 교화가 만방에 미친다",
+         "경복궁 광화문 명문",
+         "Light covers the four directions, virtue reaches all lands. "
+         "— Inscription, Gwanghwamun Gate, Gyeongbokgung"),
+        ("人乃天 — 사람이 곧 하늘이다", "동학, 최제우",
+         "Humans are heaven itself. — Donghak, Choe Je-u"),
+        ("香遠益淸 — 향기는 멀수록 더 맑다", "경복궁 향원정 명문",
+         "The farther the scent, the purer it grows. "
+         "— Inscription, Hyangwonjeong Pavilion, Gyeongbokgung"),
+        ("나는 이름 없는 사관이외다…", "(소관)",
+         "I am but a nameless Sagwan… — The Lesser Recorder"),
+        ("勤政 — 부지런히 정사를 돌본다", "경복궁 근정전 명문",
+         "Diligence in governance. — Inscription, Geunjeongjeon Throne Hall, Gyeongbokgung"),
     ]
     # 동일 세션 동안 같은 인용 유지 (rerun 시 깜박임 방지)
     if "_gate_quote_idx" not in st.session_state:
         st.session_state._gate_quote_idx = _r.randrange(len(quotes))
     q = quotes[st.session_state._gate_quote_idx % len(quotes)]
+    # 영문 부제 — 한국어 모드 사용자에겐 노출 안 함 (이미 원문 이해 가능)
+    subtitle_html = (
+        f'<div class="gate-quote-gloss">{q[2]}</div>' if glang != "ko" else ''
+    )
     st.markdown(
         f'<div class="gate-scroll-wrap">'
         f'  <div class="scroll-rod scroll-rod-top"></div>'
@@ -3148,6 +3206,7 @@ def render_password_gate(expected: str) -> None:
         f'    <div class="gate-quote-seal">史草</div>'
         f'    <div class="gate-quote-mark">❝</div>'
         f'    <div class="gate-quote-text">{q[0]}</div>'
+        f'    {subtitle_html}'
         f'    <div class="gate-quote-who">— {q[1]}</div>'
         f'  </div>'
         f'  <div class="scroll-rod scroll-rod-bottom"></div>'
@@ -3716,8 +3775,12 @@ def render_landing_map() -> None:
         import folium
         from streamlit_folium import st_folium
 
-        # 중심: 사용자 위치 우선, 없으면 광화문
-        if user_loc:
+        # 중심: 마지막 사용자 상호작용 우선 → 사용자 위치 → 광화문
+        saved = st.session_state.get("_landing_map_state")
+        if saved and saved.get("center"):
+            center = [saved["center"]["lat"], saved["center"]["lng"]]
+            zoom = saved.get("zoom") or 11
+        elif user_loc:
             center = list(user_loc)
             zoom = 14
         else:
@@ -3781,9 +3844,19 @@ def render_landing_map() -> None:
             ).add_to(m)
 
         # 데스크탑 340 / 모바일은 CSS 로 추가 압축 (.landing-map-folium 클래스)
+        # key + returned_objects=center/zoom → 사용자 줌·팬을 rerun 사이에 유지
         st.markdown('<div class="landing-map-folium">', unsafe_allow_html=True)
-        st_folium(m, width=None, height=340, returned_objects=[])
+        _map_out = st_folium(
+            m, width=None, height=340,
+            key="landing_map_v1",
+            returned_objects=["center", "zoom"],
+        )
         st.markdown('</div>', unsafe_allow_html=True)
+        if _map_out and _map_out.get("center"):
+            st.session_state._landing_map_state = {
+                "center": _map_out["center"],
+                "zoom": _map_out.get("zoom"),
+            }
 
         # 범례 (legend)
         legend_html = '<div class="map-legend">'
@@ -3841,9 +3914,22 @@ def render_course_map(course_id: str, current_idx: int,
         import folium
         from streamlit_folium import st_folium
 
-        # 중심 좌표 — 모든 단서의 평균
-        avg_lat = sum(c.place_coords[1] for _, c in cards) / len(cards)
-        avg_lon = sum(c.place_coords[0] for _, c in cards) / len(cards)
+        # 중심 좌표 — 사용자 마지막 줌·팬을 우선 (현재 단서가 바뀌면 갱신)
+        saved_key = f"_course_map_state_{course_id}"
+        saved = st.session_state.get(saved_key)
+        last_idx_key = f"_course_map_last_idx_{course_id}"
+        # 단서가 바뀌었으면 새 평균 중심으로 리셋
+        if st.session_state.get(last_idx_key) != current_idx:
+            saved = None
+            st.session_state[last_idx_key] = current_idx
+        if saved and saved.get("center"):
+            avg_lat = saved["center"]["lat"]
+            avg_lon = saved["center"]["lng"]
+            course_zoom = saved.get("zoom") or 17
+        else:
+            avg_lat = sum(c.place_coords[1] for _, c in cards) / len(cards)
+            avg_lon = sum(c.place_coords[0] for _, c in cards) / len(cards)
+            course_zoom = 17
 
         st.markdown(
             "##### 🗺 코스 지도 — "
@@ -3855,7 +3941,7 @@ def render_course_map(course_id: str, current_idx: int,
         )
 
         m = folium.Map(
-            location=[avg_lat, avg_lon], zoom_start=17,
+            location=[avg_lat, avg_lon], zoom_start=course_zoom,
             tiles="OpenStreetMap",
         )
 
@@ -3907,7 +3993,16 @@ def render_course_map(course_id: str, current_idx: int,
                     color="#2E6418", weight=3, opacity=0.6, dash_array="6",
                 ).add_to(m)
 
-        st_folium(m, width=None, height=360, returned_objects=[])
+        _course_out = st_folium(
+            m, width=None, height=360,
+            key=f"course_map_{course_id}",
+            returned_objects=["center", "zoom"],
+        )
+        if _course_out and _course_out.get("center"):
+            st.session_state[saved_key] = {
+                "center": _course_out["center"],
+                "zoom": _course_out.get("zoom"),
+            }
         return
     except ImportError:
         pass
@@ -4210,6 +4305,8 @@ def render_quest_page() -> None:
             "novice":     "facedown",
         }.get(tier, "careful_write")
 
+        course_name = _course_options().get(cid, cid)
+        accuracy_pct = int(round(score / max(total, 1) * 100))
         st.markdown(
             f'<div class="quest-ending">'
             f'  <div class="ending-char">{char_img(char_pose, width=130)}</div>'
@@ -4218,17 +4315,75 @@ def render_quest_page() -> None:
             f'    <p class="ending-score">'
             f'{T["ending_score_line"].format(score=score, total=total)}</p>'
             f'    <p class="ending-tier">{tier_msg}</p>'
+            f'    <div class="ending-meta">'
+            f'      <span class="end-pill">🗺 {course_name}</span>'
+            f'      <span class="end-pill">🎯 정답률 {accuracy_pct}%</span>'
+            f'      <span class="end-pill">📜 모은 사초 {st.session_state.credits}</span>'
+            f'      <span class="end-pill">🔥 최고 연승 {st.session_state.best_streak}</span>'
+            f'    </div>'
             f'  </div>'
             f'</div>',
             unsafe_allow_html=True,
         )
-        if st.button(T["ending_restart_btn"], key="ending_restart",
-                     use_container_width=True):
-            st.session_state.course_finished = False
-            st.session_state.course_idx = 0
-            st.session_state.course_score = 0
-            _reset_question_state()
-            st.rerun()
+        # 공유 카드 — 텍스트 다운로드/복사용 (SNS 자랑·캡처 대용)
+        tier_emoji = {
+            "master": "🏆",
+            "companion": "🌿",
+            "apprentice": "📚",
+            "novice": "🌱",
+        }.get(tier, "📜")
+        share_text = (
+            f"{tier_emoji} 사초(史草) AI — {course_name}\n"
+            f"{tier_msg}\n"
+            f"🎯 {score}/{total} ({accuracy_pct}%) · "
+            f"📜 사초 {st.session_state.credits} · "
+            f"🔥 최고 연승 {st.session_state.best_streak}\n"
+            f"https://sacho-ai.streamlit.app\n"
+            f"#사초AI #한국사 #문체부AI공모전"
+        )
+        with st.expander("📤 결과 공유 / 캡처용 텍스트", expanded=False):
+            st.code(share_text, language=None)
+            st.download_button(
+                "📄 결과 텍스트 저장 (.txt)",
+                data=share_text,
+                file_name=f"sacho_ai_result_{cid}.txt",
+                mime="text/plain",
+                use_container_width=True,
+            )
+
+        # 3개 옵션 — 같은 코스 재도전 / 다른 코스 / 지도(랜딩)
+        end_l, end_m, end_r = st.columns(3)
+        with end_l:
+            if st.button("🔁 " + T["ending_restart_btn"],
+                         key="ending_restart",
+                         use_container_width=True):
+                st.session_state.course_finished = False
+                st.session_state.course_idx = 0
+                st.session_state.course_score = 0
+                _reset_question_state()
+                st.rerun()
+        with end_m:
+            if st.button("🗺 다른 코스 고르기",
+                         key="ending_pick_other",
+                         use_container_width=True,
+                         help="놀이 방식 선택 화면으로 — 코스/테마/근처 모두 가능"):
+                st.session_state.course_finished = False
+                st.session_state.course_idx = 0
+                st.session_state.course_score = 0
+                _reset_question_state()
+                st.rerun()
+        with end_r:
+            if st.button("🏠 지도로 돌아가기",
+                         key="ending_back_landing",
+                         use_container_width=True,
+                         help="랜딩 지도로 — 아무 모드나 다시 선택"):
+                st.session_state.course_finished = False
+                st.session_state.course_idx = 0
+                st.session_state.course_score = 0
+                _reset_question_state()
+                # 랜딩 지도 강제 펼침 (사용자가 다음 액션 보기 쉽게)
+                st.session_state.landing_map_collapsed = False
+                st.rerun()
         return
 
     _credit_bar()
@@ -4766,6 +4921,17 @@ if st.session_state.view == "quest":
 # 빈 화면: 인사 + 추천 카드
 # ─────────────────────────────────────────────────────────────
 if not st.session_state.messages:
+    # API 키 누락 시 빈 인사 위에 미리 경고 (입력 후에야 에러 받는 일 방지)
+    if not api_key_present:
+        st.markdown(
+            '<div class="api-key-warn">'
+            '  ⚠ <b>사관이 잠들어 있소이다.</b> '
+            '관리자에게 API 키 설정을 요청해 주오. '
+            '<small>(ANTHROPIC_API_KEY 환경변수)</small>'
+            '</div>',
+            unsafe_allow_html=True,
+        )
+
     greeting = GREETING_BY_LANG[st.session_state.language]
     st.markdown(
         f'<div class="greeting-card">'
