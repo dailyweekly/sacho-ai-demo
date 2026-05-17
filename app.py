@@ -470,6 +470,62 @@ st.markdown(
         font-family: 'Nanum Pen Script', cursive;
         font-size: 20px; line-height: 1.45; color: var(--ink-soft);
     }
+    /* ── Hero scene mode (사용자 제공 wide banner 일러스트) ── */
+    .hero.hero-scene-mode {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 14px;
+        gap: 14px;
+        background: linear-gradient(180deg, #FBF7F2 0%, #FFF1D6 100%);
+    }
+    .hero.hero-scene-mode::after {
+        inset: 6px;
+        border-radius: 22px;
+    }
+    .hero-banner {
+        width: 100%;
+        max-height: 280px;
+        overflow: hidden;
+        border-radius: 18px;
+        border: 2px solid var(--ink);
+        box-shadow: 3px 3px 0 var(--ink);
+        position: relative;
+        animation: hero-banner-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .hero-banner img {
+        display: block;
+        width: 100%; height: auto;
+    }
+    @keyframes hero-banner-in {
+        0% { opacity: 0; transform: translateY(-8px) scale(0.99); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .hero.hero-scene-mode .hero-text {
+        text-align: center;
+        padding: 4px 14px 8px 14px;
+    }
+    .hero.hero-scene-mode .hero-text h1 {
+        font-family: 'Yeon Sung', 'Black Han Sans', serif;
+        font-size: 28px;
+        color: var(--ink);
+        letter-spacing: 0.5px;
+    }
+    .hero.hero-scene-mode .hero-text p {
+        max-width: 720px;
+        margin: 8px auto 0 auto;
+    }
+    /* scene mode 에선 hero-peek 사용 안 함 */
+    .hero.hero-scene-mode .hero-peek { display: none; }
+    @media (max-width: 720px) {
+        .hero.hero-scene-mode { padding: 10px; gap: 10px; }
+        .hero-banner { max-height: 180px; border-radius: 14px; }
+        .hero.hero-scene-mode .hero-text h1 { font-size: 22px; }
+        .hero.hero-scene-mode .hero-text p { font-size: 17px; }
+    }
+    @media (max-width: 420px) {
+        .hero-banner { max-height: 140px; }
+    }
+
     /* hero 우측 빼꼼 캐릭터 */
     .hero-peek {
         position: absolute; right: -10px; bottom: -2px;
@@ -3928,20 +3984,41 @@ HEADER_TEXT = {
            "从古朝鲜到光复 — 每条答复附原典链接,学界争议则并列双方观点。"),
 }
 # Hero 헤더 — 자유 대화(chat) 뷰에서만 노출.
-# 퀘스트/보관함 뷰는 각자 헤더가 있어 중복 방지.
+# hero_scene.png 있으면 wide banner mode / 없으면 char-row hero 폴백
 if st.session_state.view == "chat":
     title, subtitle = HEADER_TEXT[st.session_state.language]
-    st.markdown(
-        f'<div class="hero">'
-        f'  <div class="hero-char">{char_img("cheek", width=170)}</div>'
-        f'  <div class="hero-text">'
-        f'    <h1>📜 {title}</h1>'
-        f'    <p>{subtitle}</p>'
-        f'  </div>'
-        f'  <div class="hero-peek">{char_img("hmm", width=110)}</div>'
-        f'</div>',
-        unsafe_allow_html=True,
-    )
+    from pathlib import Path as _PathHero
+    _hero_path = _PathHero(__file__).parent / "assets" / "hero_scene.png"
+    if _hero_path.exists():
+        # 전용 wide banner — 사관 책상 일러스트
+        import base64 as _b64hero
+        _hero_b64 = _b64hero.b64encode(_hero_path.read_bytes()).decode("ascii")
+        st.markdown(
+            f'<div class="hero hero-scene-mode">'
+            f'  <div class="hero-banner">'
+            f'    <img src="data:image/png;base64,{_hero_b64}" '
+            f'         alt="사관의 책상" />'
+            f'  </div>'
+            f'  <div class="hero-text">'
+            f'    <h1>📜 {title}</h1>'
+            f'    <p>{subtitle}</p>'
+            f'  </div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
+    else:
+        # Fallback — 기존 캐릭터-row hero
+        st.markdown(
+            f'<div class="hero">'
+            f'  <div class="hero-char">{char_img("cheek", width=170)}</div>'
+            f'  <div class="hero-text">'
+            f'    <h1>📜 {title}</h1>'
+            f'    <p>{subtitle}</p>'
+            f'  </div>'
+            f'  <div class="hero-peek">{char_img("hmm", width=110)}</div>'
+            f'</div>',
+            unsafe_allow_html=True,
+        )
 
 
 # ─────────────────────────────────────────────────────────────
