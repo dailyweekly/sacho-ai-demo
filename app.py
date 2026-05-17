@@ -538,10 +538,13 @@ st.markdown(
         font-family: 'Nanum Pen Script', cursive;
         font-size: 20px; line-height: 1.45; color: var(--ink-soft);
     }
-    /* ── 퀘스트 랜딩 hero banner (문제 시작 전만) ── */
+    /* ── 퀘스트 랜딩 hero banner (문제 시작 전만)
+     * 이미지가 wide ratio (~3:1) 라 max-height 제한 시 잘림.
+     * 너비 100% 기반으로만 스케일 → 자연 비율로 풀 노출.
+     * 모바일에선 max-width 로 살짝 조여 너무 커지지 않게.
+     */
     .quest-hero-banner {
         width: 100%;
-        max-height: 240px;
         overflow: hidden;
         border-radius: 16px;
         border: 2px solid var(--ink);
@@ -554,10 +557,7 @@ st.markdown(
         width: 100%; height: auto;
     }
     @media (max-width: 720px) {
-        .quest-hero-banner { max-height: 160px; border-radius: 12px; }
-    }
-    @media (max-width: 420px) {
-        .quest-hero-banner { max-height: 120px; }
+        .quest-hero-banner { border-radius: 12px; }
     }
 
     /* ── Hero scene mode (사용자 제공 wide banner 일러스트) ── */
@@ -572,9 +572,9 @@ st.markdown(
         inset: 6px;
         border-radius: 22px;
     }
+    /* wide hero banner — max-height 제한 시 잘림. 너비 기반 자연 비율 */
     .hero-banner {
         width: 100%;
-        max-height: 280px;
         overflow: hidden;
         border-radius: 18px;
         border: 2px solid var(--ink);
@@ -608,12 +608,9 @@ st.markdown(
     .hero.hero-scene-mode .hero-peek { display: none; }
     @media (max-width: 720px) {
         .hero.hero-scene-mode { padding: 10px; gap: 10px; }
-        .hero-banner { max-height: 180px; border-radius: 14px; }
+        .hero-banner { border-radius: 14px; }
         .hero.hero-scene-mode .hero-text h1 { font-size: 22px; }
         .hero.hero-scene-mode .hero-text p { font-size: 17px; }
-    }
-    @media (max-width: 420px) {
-        .hero-banner { max-height: 140px; }
     }
 
     /* hero 우측 빼꼼 캐릭터 */
