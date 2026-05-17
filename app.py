@@ -146,10 +146,40 @@ st.markdown(
 # ─────────────────────────────────────────────────────────────
 # 스타일 — 모던 큐트 / 요시타케 풍
 # ─────────────────────────────────────────────────────────────
+# 폰트 preconnect — Google Fonts 로딩 단축 (모바일에서 FOIT 감소)
+st.markdown(
+    """
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    """,
+    unsafe_allow_html=True,
+)
 st.markdown(
     """
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Gowun+Dodum&family=Gowun+Batang:wght@400;700&family=Nanum+Pen+Script&family=Yeon+Sung&family=Black+Han+Sans&family=Noto+Sans+KR:wght@400;500;700&display=swap');
+
+    /* ── 한국어 fallback 체인 (정의 — 모든 font-family 끝에 추가됨) ──
+     * Google Fonts 미로딩 시 모바일 (iOS/Android/Windows) 별 한국어 시스템 폰트로
+     * graceful fallback. serif/sans-serif 만 두면 한글 glyph 없는 영문 폰트로
+     * 렌더되어 '글자 깨짐' 발생.
+     */
+    :root {
+        --ko-sans: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+                   "맑은 고딕", "Nanum Gothic", sans-serif;
+        --ko-serif: "Apple SD Gothic Neo", "Malgun Gothic", "맑은 고딕",
+                    serif;
+    }
+    /* ── 전역 fallback 보장 — body/main 어디서든 한국어 렌더 안전 ── */
+    html, body, .stApp, [data-testid="stAppViewContainer"] {
+        font-family: "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic",
+                     "맑은 고딕", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+        word-break: keep-all;       /* 한국어 단어 중간 절단 방지 (전역) */
+        overflow-wrap: break-word;  /* 영문 긴 단어만 break */
+    }
 
     :root {
         --beige:     #FBF7F2;       /* 캐릭터 배경과 동일한 베이스 베이지 */
@@ -196,6 +226,30 @@ st.markdown(
     /* ── 전체 배경 — 캐릭터 PNG 배경과 완전 동일한 평면 베이지 ── */
     .stApp { background: #FBF7F2; }
 
+    /* Streamlit 기본 위젯 (selectbox·dropdown·input·toast·alert) 의
+     * 폰트 스택을 Korean-safe 로. 우리 커스텀 컴포넌트 (.evidence-card,
+     * .gate-bubble 등) 는 이미 자체 font-family + Korean fallback 명시.
+     * 위 범용 위젯 selector 만 좁게 잡아 커스텀 우선순위 보호. */
+    [data-baseweb="select"] *,
+    [data-baseweb="menu"] *,
+    [data-baseweb="popover"] *,
+    [data-testid="stTextInput"] input,
+    [data-testid="stTextArea"] textarea,
+    [data-testid="stToast"] *,
+    [data-testid="stTooltip"] *,
+    [data-testid="stAlert"] *,
+    [data-testid="stChatInput"] *,
+    [data-testid="stSpinner"] * {
+        font-family: 'Noto Sans KR', 'Apple SD Gothic Neo',
+                     'Malgun Gothic', '맑은 고딕', sans-serif !important;
+    }
+    /* Streamlit button label 기본 폰트 (커스텀 stamp/hint 룰이 더 specific
+     * 으로 override 함 — 답안 stamp / 힌트 버튼 / 시작 버튼 등은 안전) */
+    [data-testid="stButton"] button:not(.has-custom-font) {
+        font-family: 'Noto Sans KR', 'Apple SD Gothic Neo',
+                     'Malgun Gothic', sans-serif;
+    }
+
     /* Streamlit 기본 상단 헤더 (Share/star/pencil/github 툴바)
      * → 우리 앱의 자체 톱바와 중복돼 시각적 공간 낭비.
      * 투명·높이 0·overlay 위치로 본문이 페이지 최상단부터 시작하게 */
@@ -227,7 +281,7 @@ st.markdown(
     }
     /* 세련된 섹션 구분선 */
     h5 {
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-size: 15px !important;
         color: var(--ink-soft) !important;
         letter-spacing: 0.3px;
@@ -242,7 +296,7 @@ st.markdown(
     [data-testid="stRadio"] > label,
     [data-testid="stSelectbox"] > label,
     [data-testid="stTextInput"] > label {
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-size: 13.5px !important;
         color: var(--ink-soft) !important;
         font-weight: 600 !important;
@@ -270,7 +324,7 @@ st.markdown(
         cursor: pointer;
         transition: transform 0.1s, box-shadow 0.1s, background 0.15s,
                     border-color 0.15s, border-style 0.15s !important;
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-size: 14.5px !important;
         font-weight: 600 !important;
         color: var(--ink) !important;
@@ -283,7 +337,7 @@ st.markdown(
     }
     /* 라디오 옵션 내부 텍스트 박스도 폰트 + 줄바꿈 강제 */
     [data-testid="stRadio"] [role="radiogroup"] > label > div {
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-size: 14.5px !important;
         color: var(--ink) !important;
         word-break: keep-all !important;
@@ -344,7 +398,7 @@ st.markdown(
         border: 2px solid var(--ink) !important;
         border-radius: 12px !important;
         box-shadow: 2px 2px 0 var(--ink) !important;
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-size: 14.5px !important;
         color: var(--ink) !important;
         min-height: 40px !important;
@@ -357,7 +411,7 @@ st.markdown(
     }
     /* 셀렉트 드롭다운 메뉴 옵션 */
     [data-baseweb="popover"] [role="listbox"] li {
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-size: 14px !important;
     }
     [data-baseweb="popover"] [role="listbox"] li:hover {
@@ -374,7 +428,7 @@ st.markdown(
     }
     [data-testid="stExpander"] summary,
     [data-testid="stExpander"] details > summary {
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-size: 14px !important;
         color: var(--ink) !important;
         font-weight: 600 !important;
@@ -384,7 +438,7 @@ st.markdown(
         background: rgba(219,184,113,0.10) !important;
     }
     [data-testid="stExpander"] [data-testid="stMarkdownContainer"] {
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-size: 13.5px !important;
     }
 
@@ -392,7 +446,7 @@ st.markdown(
     [data-testid="stCaptionContainer"],
     .stCaption,
     [data-testid="stMarkdownContainer"] small {
-        font-family: 'Nanum Pen Script', cursive !important;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive !important;
         font-size: 16px !important;
         color: var(--ink-soft) !important;
         opacity: 0.9 !important;
@@ -405,11 +459,11 @@ st.markdown(
     }
     /* 모든 버튼에 적용된 기본 — 만약 새 문제 버튼이 식별 안 되면 일반적으로 강조 */
     .stButton > button p {
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-weight: 700 !important;
     }
     h1, h2, h3, h4 {
-        font-family: 'Gowun Batang', 'Gowun Dodum', serif;
+        font-family: 'Gowun Batang', 'Gowun Dodum', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         color: var(--ink);
         letter-spacing: -0.3px;
     }
@@ -483,7 +537,7 @@ st.markdown(
     }
     @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
     .topbar-logo .brand {
-        font-family: 'Yeon Sung', 'Black Han Sans', 'Gowun Batang', serif;
+        font-family: 'Yeon Sung', 'Black Han Sans', 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-weight: 400;
         font-size: 30px;
         line-height: 1.05;
@@ -491,7 +545,7 @@ st.markdown(
         letter-spacing: 1px;
     }
     .topbar-logo .brand-sub {
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 15px;
         color: var(--ink-soft) !important;
         opacity: 0.8;
@@ -505,7 +559,7 @@ st.markdown(
         background: var(--cream) !important;
         box-shadow: 2px 2px 0 var(--ink);
         min-height: 38px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
     }
     .topbar-tools [data-testid="stPopover"] button,
     .topbar-tools .stButton button,
@@ -514,7 +568,7 @@ st.markdown(
         border: 2px solid var(--ink) !important;
         background: var(--cream) !important;
         color: var(--ink) !important;
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         box-shadow: 2px 2px 0 var(--ink) !important;
         height: 38px !important;
         min-height: 38px !important;
@@ -558,7 +612,7 @@ st.markdown(
     }
     .hero-text p {
         margin: 8px 0 0 0;
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 20px; line-height: 1.45; color: var(--ink-soft);
     }
     /* ── 퀘스트 랜딩 hero banner (문제 시작 전만)
@@ -618,7 +672,7 @@ st.markdown(
         padding: 4px 14px 8px 14px;
     }
     .hero.hero-scene-mode .hero-text h1 {
-        font-family: 'Yeon Sung', 'Black Han Sans', serif;
+        font-family: 'Yeon Sung', 'Black Han Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 28px;
         color: var(--ink);
         letter-spacing: 0.5px;
@@ -669,7 +723,7 @@ st.markdown(
         border: 2px solid var(--ink);
         border-radius: 18px;
         padding: 14px 18px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 16px; line-height: 1.7;
         flex: 1; position: relative;
     }
@@ -699,12 +753,12 @@ st.markdown(
         border-radius: 14px;
         padding: 10px 18px;
         margin-bottom: 16px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 14.5px;
     }
     .credit-bar b { color: var(--red-deep); font-weight: 700; }
     .credit-bar .credit-num {
-        font-family: 'Yeon Sung', serif;
+        font-family: 'Yeon Sung', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 18px;
         color: var(--ink);
         margin-left: 4px;
@@ -718,7 +772,7 @@ st.markdown(
         100% { transform: scale(1); color: var(--ink); }
     }
     .credit-bar .credit-best {
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         color: var(--ink-soft); font-size: 14px;
     }
 
@@ -734,10 +788,10 @@ st.markdown(
     }
     .quest-intro-char { flex: 0 0 110px; animation: float-y 5s ease-in-out infinite; }
     .quest-intro-text h3 {
-        margin: 0; font-family: 'Yeon Sung', serif; font-size: 22px;
+        margin: 0; font-family: 'Yeon Sung', 'Apple SD Gothic Neo', 'Malgun Gothic', serif; font-size: 22px;
     }
     .quest-intro-text p {
-        margin: 4px 0 0 0; font-family: 'Gowun Batang', serif;
+        margin: 4px 0 0 0; font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 14.5px; color: var(--ink); line-height: 1.6;
     }
 
@@ -762,7 +816,7 @@ st.markdown(
         background: var(--mustard);
         border: 2px solid var(--ink);
         border-radius: 10px;
-        font-family: 'Yeon Sung', serif;
+        font-family: 'Yeon Sung', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 22px;
         box-shadow: 2px 2px 0 var(--ink);
         /* Q. 태그 — 새 문제 시 살짝 흔들리며 시선 끌기 */
@@ -775,7 +829,7 @@ st.markdown(
     }
     .quest-q-body {
         flex: 1;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 17px;
         line-height: 1.7;
         color: var(--ink);
@@ -785,7 +839,7 @@ st.markdown(
     .quest-result {
         padding: 12px 16px;
         border-radius: 12px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-weight: 700;
         font-size: 15.5px;
         margin: 12px 0;
@@ -831,21 +885,21 @@ st.markdown(
     }
     .quest-result-panel .qr-body { flex: 1; }
     .quest-result-panel .qr-label {
-        font-family: 'Yeon Sung', 'Black Han Sans', serif;
+        font-family: 'Yeon Sung', 'Black Han Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 19px;
         margin-bottom: 6px;
     }
     .quest-result-panel.correct .qr-label { color: #1E4D0F; }
     .quest-result-panel.wrong   .qr-label { color: #7A1F0F; }
     .quest-result-panel .qr-taunt {
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 14.5px;
         font-style: italic;
         color: var(--ink);
         margin-bottom: 6px;
     }
     .quest-result-panel .qr-time {
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 17px;
         color: var(--ink-soft);
     }
@@ -918,7 +972,7 @@ st.markdown(
         border-radius: 12px;
         padding: 10px 14px;
         margin-bottom: 14px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
     }
     .opt-recap .opt-row {
         padding: 4px 6px;
@@ -948,7 +1002,7 @@ st.markdown(
         border-bottom: 1px solid rgba(58,42,31,0.10);
     }
     .landing-map-sub {
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 15px;
         color: var(--ink-soft);
         opacity: 0.85;
@@ -959,14 +1013,14 @@ st.markdown(
         border: 1.5px dashed #C97064;
         border-radius: 999px;
         padding: 4px 12px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 12px;
         color: var(--ink);
     }
     .landing-map-geo .geo-status b { color: #2E6418; }
     .geo-hint {
         display: flex; align-items: center; height: 36px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 13px;
         color: var(--ink-soft);
         background: #FFFCEF;
@@ -979,7 +1033,7 @@ st.markdown(
     .kbd-hint-row {
         text-align: center;
         margin: 4px 0 10px 0;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 11.5px;
         color: var(--ink-soft);
         opacity: 0.85;
@@ -993,7 +1047,7 @@ st.markdown(
         border: 1.5px solid var(--ink-soft);
         border-bottom-width: 2.5px;
         border-radius: 5px;
-        font-family: 'Yeon Sung', monospace;
+        font-family: 'Yeon Sung', 'Apple SD Gothic Neo', 'Malgun Gothic', monospace;
         font-size: 11.5px;
         font-weight: 700;
         color: var(--ink);
@@ -1029,7 +1083,7 @@ st.markdown(
     }
     .kculture-intro .kculture-intro-text {
         flex: 1;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 13.5px;
         line-height: 1.6;
         color: var(--ink);
@@ -1040,7 +1094,7 @@ st.markdown(
         color: #FFF;
         padding: 2px 10px;
         border-radius: 999px;
-        font-family: 'Yeon Sung', serif;
+        font-family: 'Yeon Sung', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 12px;
         letter-spacing: 1px;
         margin-bottom: 4px;
@@ -1073,7 +1127,7 @@ st.markdown(
     }
     .time-hint-pill {
         display: inline-flex; align-items: center; gap: 4px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 11.5px;
         padding: 3px 10px;
         border-radius: 999px;
@@ -1104,7 +1158,7 @@ st.markdown(
         padding: 6px 10px !important;
         min-height: 32px !important;
         box-shadow: none !important;
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-weight: 600 !important;
     }
     button[data-testid="baseButton-secondary"][aria-label*="quest_next_quick"]:hover,
@@ -1120,7 +1174,7 @@ st.markdown(
         border-radius: 10px;
         padding: 10px 16px;
         margin: 4px 0 10px 0;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 13px;
         color: var(--ink-soft);
         text-align: center;
@@ -1148,7 +1202,7 @@ st.markdown(
         border-radius: 12px;
         padding: 10px 16px;
         margin: 0 0 12px 0;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 13.5px;
         color: #6A1F18;
         box-shadow: 2px 2px 0 rgba(58,42,31,0.15);
@@ -1174,14 +1228,14 @@ st.markdown(
         border: 2px solid var(--ink);
         border-radius: 999px;
         padding: 2px 10px;
-        font-family: 'Yeon Sung', serif;
+        font-family: 'Yeon Sung', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 13px;
         letter-spacing: 1px;
         box-shadow: 1.5px 1.5px 0 var(--ink);
     }
     .onboarding-card .onb-head h4 {
         margin: 0; border: none;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 16px; color: var(--ink);
     }
     .onboarding-card .onb-grid {
@@ -1193,7 +1247,7 @@ st.markdown(
         border: 1.5px dashed rgba(58,42,31,0.30);
         border-radius: 10px;
         padding: 10px 12px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
     }
     .onboarding-card .onb-cell .onb-icon { font-size: 22px; margin-bottom: 2px; }
     .onboarding-card .onb-cell b { font-size: 14px; color: var(--red-deep); }
@@ -1207,7 +1261,7 @@ st.markdown(
         border-left: 4px solid var(--mustard);
         border-radius: 4px 10px 10px 4px;
         padding: 8px 14px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 13px;
         color: var(--ink);
     }
@@ -1222,7 +1276,7 @@ st.markdown(
         border-radius: 10px;
         padding: 8px 14px;
         margin: 8px 0 14px 0;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 13px;
         color: var(--ink);
     }
@@ -1238,7 +1292,7 @@ st.markdown(
         background: #FFF7DA;
         border: 1.5px dashed var(--mustard);
         border-radius: 999px;
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 16.5px;
         color: var(--ink-soft);
     }
@@ -1251,7 +1305,7 @@ st.markdown(
         font-size: 16px !important;
         padding: 14px 18px !important;
         min-height: 64px !important;
-        font-family: 'Yeon Sung', 'Gowun Batang', serif !important;
+        font-family: 'Yeon Sung', 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         letter-spacing: 0.5px;
     }
     .start-btn-wrap button:hover {
@@ -1271,7 +1325,7 @@ st.markdown(
         border-radius: 12px;
         padding: 10px 14px;
         margin: 8px 0 12px 0;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 13.5px;
         color: var(--ink);
     }
@@ -1283,7 +1337,7 @@ st.markdown(
         border-radius: 10px;
         padding: 12px 16px;
         margin: 10px 0;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 14.5px;
         color: var(--ink);
         box-shadow: 2px 2px 0 var(--ink);
@@ -1292,12 +1346,12 @@ st.markdown(
     /* 직접 골라서 — 리스트 헤더 */
     .nearby-list-head {
         margin: 14px 0 8px 0;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 14px; font-weight: 600;
         color: var(--ink);
     }
     .nearby-list-head small {
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 14px;
         color: var(--ink-soft);
     }
@@ -1308,7 +1362,7 @@ st.markdown(
         border-radius: 12px;
         padding: 10px 14px;
         margin: 6px 0;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         transition: transform 0.1s, border-color 0.1s;
     }
     .nearby-row:hover {
@@ -1340,7 +1394,7 @@ st.markdown(
         border: 1.5px dashed var(--ink);
         border-radius: 12px;
         padding: 10px 14px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 13.5px;
         color: var(--ink);
         margin-bottom: 12px;
@@ -1380,20 +1434,20 @@ st.markdown(
     .course-preview-thumb img { display: block; width: 100%; height: auto; }
     .course-preview-text { flex: 1; min-width: 0; }
     .course-preview-name {
-        font-family: 'Yeon Sung', serif;
+        font-family: 'Yeon Sung', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 15px;
         color: var(--red-deep);
         margin-bottom: 4px;
         line-height: 1.3;
     }
     .course-preview-meta {
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 15px;
         color: var(--ink-soft);
         margin-bottom: 4px;
     }
     .course-preview-cards {
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 12.5px;
         color: var(--ink);
     }
@@ -1434,7 +1488,7 @@ st.markdown(
     .course-progress-meter {
         display: inline-flex; gap: 6px; align-items: baseline;
         margin-left: 6px;
-        font-family: 'Yeon Sung', serif;
+        font-family: 'Yeon Sung', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 15px;
         color: var(--red-deep);
     }
@@ -1450,7 +1504,7 @@ st.markdown(
         padding: 11px 16px !important;
         margin: 4px 0 8px 0 !important;
         color: #6A1F18 !important;
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-size: 13.5px !important;
         font-weight: 700 !important;
         box-shadow: 2px 2px 0 #C97064 !important;
@@ -1499,7 +1553,7 @@ st.markdown(
         border-radius: 14px !important;
         box-shadow: 3px 3px 0 var(--ink) !important;
         color: var(--ink) !important;
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-size: 15.5px !important;
         font-weight: 500 !important;
         line-height: 1.55 !important;
@@ -1577,7 +1631,7 @@ st.markdown(
 
     /* 힌트 영역 — 태그(사용함/잠금) */
     .hint-tag {
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 13.5px;
         padding: 11px 16px;
         border-radius: 14px;
@@ -1608,7 +1662,7 @@ st.markdown(
         border: 2px dashed #BFBAB1;
         background: #F4F2EE;
         color: #9A958C;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 14px;
         text-decoration: line-through;
     }
@@ -1626,7 +1680,7 @@ st.markdown(
         border-radius: 14px;
         padding: 12px 14px;
         margin-bottom: 14px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
     }
     .opt-note-row {
         display: flex; gap: 10px; align-items: flex-start;
@@ -1673,17 +1727,17 @@ st.markdown(
     .quest-ending .ending-text { flex: 1; }
     .quest-ending .ending-text h3 {
         margin: 0;
-        font-family: 'Yeon Sung', serif;
+        font-family: 'Yeon Sung', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 24px; color: var(--ink);
     }
     .quest-ending .ending-score {
         margin: 8px 0 4px 0;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 16px; color: var(--ink);
     }
     .quest-ending .ending-tier {
         margin: 6px 0 0 0;
-        font-family: 'Yeon Sung', serif;
+        font-family: 'Yeon Sung', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 22px; color: var(--red-deep);
     }
     .quest-ending .ending-meta {
@@ -1696,7 +1750,7 @@ st.markdown(
         border: 1.5px dashed var(--ink);
         border-radius: 999px;
         padding: 3px 12px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 12.5px;
         color: var(--ink);
     }
@@ -1721,11 +1775,11 @@ st.markdown(
         padding-bottom: 10px;
     }
     .why-card .why-title {
-        font-family: 'Yeon Sung', 'Black Han Sans', serif;
+        font-family: 'Yeon Sung', 'Black Han Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 24px; color: var(--ink); letter-spacing: 0.5px;
     }
     .why-card .why-sub {
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 17px; color: var(--ink-soft);
     }
     .why-card .why-grid {
@@ -1746,12 +1800,12 @@ st.markdown(
         background: var(--mustard);
         border: 2px solid var(--ink);
         border-radius: 50%;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-weight: 700;
         box-shadow: 1.5px 1.5px 0 var(--ink);
     }
     .why-card .why-cell b {
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 14.5px;
         color: var(--red-deep);
     }
@@ -1783,7 +1837,7 @@ st.markdown(
         }
     }
     .suggest-section h5 {
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 17px; margin: 8px 0 6px 0;
     }
     .suggest-char {
@@ -1809,7 +1863,7 @@ st.markdown(
         border: 2.5px solid var(--ink) !important;
         background: var(--cream) !important;
         color: var(--ink) !important;
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-weight: 600 !important;
         font-size: 14.5px !important;
         box-shadow: 3px 3px 0 var(--ink) !important;
@@ -1840,7 +1894,7 @@ st.markdown(
         box-shadow: 3px 3px 0 var(--ink);
         padding: 14px 18px !important;
         margin: 0 0 18px 0 !important;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 15.5px; line-height: 1.75;
     }
     /* 사용자 메시지 — 살짝 따뜻한 톤 */
@@ -1861,7 +1915,7 @@ st.markdown(
         padding: 4px 12px 4px 6px;
         border: 2px solid var(--ink);
         border-radius: 999px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-weight: 700; font-size: 13.5px;
         box-shadow: 2px 2px 0 var(--ink);
         margin: 2px 0 8px 0;
@@ -1895,7 +1949,7 @@ st.markdown(
         margin: 12px 0;
         box-shadow: 3px 3px 0 var(--mustard);
         position: relative;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         /* 등장 시 부드럽게 fade + 살짝 위에서 떨어짐 */
         animation: card-drop-in 0.5s ease-out backwards;
         transition: transform 0.18s ease-out, box-shadow 0.18s ease-out;
@@ -1955,7 +2009,7 @@ st.markdown(
         border: 2px solid var(--ink);
         border-radius: 10px;
         box-shadow: 2px 2px 0 var(--ink);
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-weight: 700;
         font-size: 13.5px;
         text-decoration: none !important;
@@ -1988,7 +2042,7 @@ st.markdown(
         color: var(--ink) !important;
         border: 1.5px solid var(--ink-soft);
         border-radius: 999px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 12.5px;
         font-weight: 600;
         text-decoration: none !important;
@@ -2029,7 +2083,7 @@ st.markdown(
         border: 1px dashed rgba(58,42,31,0.20);
         border-radius: 8px;
         padding: 4px 12px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
     }
     .evidence-card .evidence-details summary {
         cursor: pointer;
@@ -2066,7 +2120,7 @@ st.markdown(
     .evidence-card .dataset-chip {
         display: inline-block;
         padding: 3px 10px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 11.5px;
         font-weight: 700;
         color: #5C3A1F;
@@ -2085,7 +2139,7 @@ st.markdown(
     /* ── 응답 메타 (품삯 띠) ──────────────────────────── */
     .meta-row {
         display: inline-flex; gap: 14px; flex-wrap: wrap;
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 16px; color: var(--ink);
         background: #FFF7DA;
         border: 1.5px dashed var(--ink);
@@ -2097,7 +2151,7 @@ st.markdown(
     /* ── thinking ─────────────────────────────────── */
     .thinking {
         display: inline-flex; align-items: center; gap: 10px;
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 19px; color: var(--ink); opacity: 0.85;
         margin: 4px 0;
     }
@@ -2126,7 +2180,7 @@ st.markdown(
         background: transparent;
         padding: 18px 6px 6px 6px;
         margin: 28px auto 0 auto;
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
     }
     .footer-strip .footer-char {
         flex: 0 0 44px;
@@ -2141,7 +2195,7 @@ st.markdown(
         max-width: 880px;
         margin: 6px auto 18px auto;
         padding: 10px 14px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 11.5px;
         line-height: 1.6;
         color: rgba(58,42,31,0.7);
@@ -2194,7 +2248,7 @@ st.markdown(
         border: none !important;
         outline: none !important;
         box-shadow: none !important;
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-size: 16px !important;
         color: var(--ink) !important;
         padding: 16px 20px !important;
@@ -2249,11 +2303,11 @@ st.markdown(
     .collection-head-text { flex: 1; }
     .collection-head-text h3 {
         margin: 0; font-size: 22px; font-weight: 700;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
     }
     .collection-head-text p {
         margin: 4px 0 0 0;
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 19px; color: var(--ink-soft);
     }
     .collection-head-text b { color: var(--red-deep); font-weight: 700; }
@@ -2273,12 +2327,12 @@ st.markdown(
     }
     .collection-empty-text { flex: 1; }
     .collection-empty-text h3 {
-        margin: 0; font-family: 'Gowun Batang', serif;
+        margin: 0; font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 19px; color: var(--ink);
     }
     .collection-empty-text p {
         margin: 6px 0 0 0;
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 18px; color: var(--ink-soft);
     }
 
@@ -2305,7 +2359,7 @@ st.markdown(
     }
     .gate-brand-text h1 {
         margin: 0;
-        font-family: 'Yeon Sung', 'Black Han Sans', serif;
+        font-family: 'Yeon Sung', 'Black Han Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 32px;
         color: var(--ink);
         letter-spacing: 1px;
@@ -2313,7 +2367,7 @@ st.markdown(
     }
     .gate-brand-text p {
         margin: 4px 0 0 0;
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 17px;
         color: var(--ink-soft);
         opacity: 0.85;
@@ -2371,13 +2425,13 @@ st.markdown(
     }
     .gate-why-cell .why-body { flex: 1; }
     .gate-why-cell .why-body b {
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 14.5px;
         color: var(--red-deep) !important;
     }
     .gate-why-cell .why-body p {
         margin: 4px 0 0 0;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 12.5px;
         line-height: 1.55;
         color: var(--ink);
@@ -2397,14 +2451,14 @@ st.markdown(
     .gate-quote-mark {
         position: absolute;
         top: -10px; left: 14px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 42px;
         color: var(--mustard);
         line-height: 1;
         text-shadow: 0 1px 0 #FFF, 0 2px 0 var(--ink);
     }
     .gate-quote-text {
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 16px;
         line-height: 1.6;
         color: var(--ink);
@@ -2412,7 +2466,7 @@ st.markdown(
     }
     .gate-quote-who {
         margin-top: 8px;
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 16px;
         color: var(--ink-soft);
         text-align: right;
@@ -2422,7 +2476,7 @@ st.markdown(
         margin-top: 6px;
         padding-top: 6px;
         border-top: 1px dashed rgba(140,106,60,0.30);
-        font-family: 'Gowun Batang', 'Georgia', serif;
+        font-family: 'Gowun Batang', 'Georgia', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 13px;
         line-height: 1.5;
         color: var(--ink-soft);
@@ -2492,14 +2546,14 @@ st.markdown(
     }
     .door-card .door-title {
         text-align: center;
-        font-family: 'Yeon Sung', serif;
+        font-family: 'Yeon Sung', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 22px; color: #FFF8E5;
         text-shadow: 1.5px 1.5px 0 var(--ink);
         margin-bottom: 4px;
     }
     .door-card .door-sub {
         text-align: center;
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 16px; color: #FFE9DD;
         margin-bottom: 14px;
     }
@@ -2510,7 +2564,7 @@ st.markdown(
         border-radius: 10px;
         padding: 8px 12px;
         text-align: center;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 13px;
         color: #8C2A18;
     }
@@ -2520,7 +2574,7 @@ st.markdown(
         border: 2px solid var(--ink) !important;
         border-radius: 10px !important;
         text-align: center !important;
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         letter-spacing: 3px;
         font-size: 16px !important;
         padding: 11px 14px !important;
@@ -2535,7 +2589,7 @@ st.markdown(
         border: 2px solid var(--ink) !important;
         border-radius: 10px !important;
         box-shadow: 2px 2px 0 var(--ink) !important;
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-weight: 700 !important;
     }
     .door-card [data-testid="stFormSubmitButton"] button:hover {
@@ -2569,7 +2623,7 @@ st.markdown(
         border: 2.5px solid var(--ink);
         border-radius: 18px;
         padding: 14px 18px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 15.5px; line-height: 1.7;
         text-align: center; color: var(--ink);
         margin: 4px 4px 14px 4px;
@@ -2596,7 +2650,7 @@ st.markdown(
     }
     .gate-bubble small {
         display: block; margin-top: 6px;
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 16px; color: var(--ink-soft); opacity: 0.85;
     }
     /* 입력칸 — 동글동글 */
@@ -2604,7 +2658,7 @@ st.markdown(
         border-radius: 14px !important;
         border: 2.5px solid var(--ink) !important;
         background: #FFFDF6 !important;
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-size: 16px !important;
         padding: 12px 16px !important;
         box-shadow: 2px 2px 0 var(--ink) !important;
@@ -2623,7 +2677,7 @@ st.markdown(
         border: 2.5px solid var(--ink) !important;
         background: #FFE7A0 !important;
         color: var(--ink) !important;
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-weight: 700 !important;
         font-size: 16px !important;
         box-shadow: 3px 3px 0 var(--ink) !important;
@@ -2663,7 +2717,7 @@ st.markdown(
         background: #FFF7DA;
         border: 1.5px dashed rgba(58,42,31,0.35);
         border-radius: 999px;
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 14.5px;
         color: var(--ink);
         opacity: 0.85;
@@ -2829,7 +2883,7 @@ st.markdown(
     .door-card .door-err-stamp {
         background: #B0322A; color: #FFF;
         padding: 1px 8px;
-        font-family: 'Yeon Sung', serif;
+        font-family: 'Yeon Sung', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 12px;
         border-radius: 4px;
         letter-spacing: 1px;
@@ -2839,7 +2893,7 @@ st.markdown(
     .door-card .door-err-tag {
         background: #FFF7DA; color: #8C2A18;
         padding: 1px 8px;
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 13px;
         border: 1px dashed #B0322A;
         border-radius: 4px;
@@ -2902,7 +2956,7 @@ st.markdown(
         border: 2.5px solid #6A1F18;
         border-radius: 6px;
         color: #FFE9A6;
-        font-family: 'Yeon Sung', 'Black Han Sans', serif;
+        font-family: 'Yeon Sung', 'Black Han Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 13px;
         display: flex; align-items: center; justify-content: center;
         transform: rotate(-9deg);
@@ -2925,7 +2979,7 @@ st.markdown(
         background: #B0322A;
         color: #FFE9A6;
         padding: 3px 12px;
-        font-family: 'Yeon Sung', 'Black Han Sans', serif;
+        font-family: 'Yeon Sung', 'Black Han Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 13px;
         letter-spacing: 3px;
         border-radius: 4px;
@@ -2943,7 +2997,7 @@ st.markdown(
         padding: 3px 10px;
     }
     .gate-foot .foot-tag {
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 14px;
         color: var(--ink-soft);
     }
@@ -2958,7 +3012,7 @@ st.markdown(
         border: 2px dashed #C97064;
         border-radius: 14px;
         padding: 10px 14px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         text-align: center;
         margin-top: 10px;
         color: #7A3A2A;
@@ -2966,7 +3020,7 @@ st.markdown(
     }
     .gate-foot {
         margin-top: 14px; text-align: center;
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 16px; color: var(--ink-soft); opacity: 0.7;
     }
     /* 게이트 안쪽 Why + How-to-play */
@@ -2980,11 +3034,11 @@ st.markdown(
         margin-bottom: 12px; flex-wrap: wrap;
     }
     .gate-why-title {
-        font-family: 'Yeon Sung', 'Black Han Sans', serif;
+        font-family: 'Yeon Sung', 'Black Han Sans', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 22px; color: var(--ink); letter-spacing: 0.4px;
     }
     .gate-why-sub {
-        font-family: 'Nanum Pen Script', cursive;
+        font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 17px; color: var(--ink-soft);
     }
     .gate-why-grid {
@@ -2998,7 +3052,7 @@ st.markdown(
         border: 1.5px dashed rgba(58,42,31,0.22);
         border-radius: 12px;
         padding: 10px 12px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
     }
     .gate-why-cell b {
         font-size: 13.5px; color: var(--red-deep);
@@ -3012,7 +3066,7 @@ st.markdown(
         border: 1.5px solid var(--ink);
         border-radius: 12px;
         padding: 12px 16px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
     }
     .gate-howto b {
         display: block; margin-bottom: 6px;
@@ -3083,7 +3137,7 @@ st.markdown(
     }
     [data-testid="stSpinner"] > div {
         display: inline-flex !important; align-items: center; gap: 12px;
-        font-family: 'Gowun Batang', serif !important;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-size: 14.5px !important;
         color: var(--ink) !important;
     }
@@ -3110,7 +3164,7 @@ st.markdown(
         border: 1.5px dashed var(--ink-soft);
         border-radius: 999px;
         padding: 4px 12px;
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 12.5px;
         color: var(--ink);
         white-space: nowrap;
@@ -3119,14 +3173,14 @@ st.markdown(
     .gate-section-h {
         margin: 4px 0 8px 0 !important;
         border: none !important;
-        font-family: 'Yeon Sung', 'Gowun Batang', serif !important;
+        font-family: 'Yeon Sung', 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif !important;
         font-size: 16px !important;
         color: var(--red-deep) !important;
     }
 
     /* ── 데이터 출처 · 차별성 매트릭스 (게이트/popover 공용) ── */
     .data-sources {
-        font-family: 'Gowun Batang', serif;
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         color: var(--ink);
     }
     .sources-tbl {
@@ -3146,7 +3200,7 @@ st.markdown(
         text-align: left;
         padding: 8px 10px;
         border-bottom: 1.5px solid var(--ink);
-        font-family: 'Gaegu', 'Gowun Batang', serif;
+        font-family: 'Gaegu', 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 13px;
     }
     .sources-tbl td {
@@ -4538,7 +4592,7 @@ def render_landing_map() -> None:
         for c in valid:
             icon, color, label = _site_category(c)
             popup_html = (
-                f'<div style="font-family:serif;font-size:13px;width:240px;">'
+                f'<div style="font-family:\'Apple SD Gothic Neo\',\'Malgun Gothic\',serif;font-size:13px;width:240px;">'
                 f'<div style="font-weight:700;color:{color};margin-bottom:4px;">'
                 f'{icon} {c.title}</div>'
                 f'<div style="color:#666;font-size:11.5px;margin-bottom:3px;">'
@@ -4698,7 +4752,7 @@ def render_course_map(course_id: str, current_idx: int,
                 icon_html = '<div style="font-size:22px;opacity:0.5;">📜</div>'
                 color = "#9A958C"
             popup_html = (
-                f'<div style="font-family:serif;font-size:13px;width:200px;">'
+                f'<div style="font-family:\'Apple SD Gothic Neo\',\'Malgun Gothic\',serif;font-size:13px;width:200px;">'
                 f'<b>{i+1}. {card.title}</b><br>'
                 f'<span style="color:#666;font-size:11.5px;">📍 {card.place}</span>'
                 f'</div>'
