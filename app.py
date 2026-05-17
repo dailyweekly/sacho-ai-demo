@@ -655,8 +655,8 @@ st.markdown(
 
     /* 랜딩 지도 헤더 + 범례 */
     .landing-map-head {
-        display: flex; align-items: baseline; gap: 12px;
-        flex-wrap: wrap;
+        display: flex; align-items: center; justify-content: space-between;
+        gap: 12px; flex-wrap: wrap;
         margin: 0 0 8px 0;
         padding-bottom: 6px;
         border-bottom: 1px solid rgba(58,42,31,0.10);
@@ -666,6 +666,102 @@ st.markdown(
         font-size: 15px;
         color: var(--ink-soft);
         opacity: 0.85;
+    }
+    .landing-map-geo {
+        display: inline-flex; align-items: center;
+        background: #FFF7DA;
+        border: 1.5px dashed #C97064;
+        border-radius: 999px;
+        padding: 4px 12px;
+        font-family: 'Gowun Batang', serif;
+        font-size: 12px;
+        color: var(--ink);
+    }
+    .landing-map-geo .geo-status b { color: #2E6418; }
+    .geo-hint {
+        display: flex; align-items: center; height: 36px;
+        font-family: 'Gowun Batang', serif;
+        font-size: 13px;
+        color: var(--ink-soft);
+        background: #FFFCEF;
+        border: 1.5px dashed rgba(58,42,31,0.20);
+        border-radius: 10px;
+        padding: 0 14px;
+        margin: -4px 0 8px 0;
+    }
+    /* ── API 키 누락 경고 (랜딩 최상단) ── */
+    .api-key-warn {
+        background: linear-gradient(135deg, #FFE3D6, #FFD0BB);
+        border: 2px solid #C97064;
+        border-radius: 12px;
+        padding: 10px 16px;
+        margin: 0 0 12px 0;
+        font-family: 'Gowun Batang', serif;
+        font-size: 13.5px;
+        color: #6A1F18;
+        box-shadow: 2px 2px 0 rgba(58,42,31,0.15);
+    }
+    .api-key-warn small { opacity: 0.7; }
+
+    /* ── 처음 사용자 onboarding 카드 ── */
+    .onboarding-card {
+        background: linear-gradient(135deg, #FFFCF0 0%, #FFF6D6 100%);
+        border: 2.5px solid var(--ink);
+        border-radius: 16px;
+        padding: 14px 18px 12px 18px;
+        margin: 0 0 14px 0;
+        box-shadow: 3px 3px 0 var(--ink);
+    }
+    .onboarding-card .onb-head {
+        display: flex; align-items: center; gap: 10px;
+        margin-bottom: 10px;
+    }
+    .onboarding-card .onb-badge {
+        background: var(--mustard);
+        color: var(--ink);
+        border: 2px solid var(--ink);
+        border-radius: 999px;
+        padding: 2px 10px;
+        font-family: 'Yeon Sung', serif;
+        font-size: 13px;
+        letter-spacing: 1px;
+        box-shadow: 1.5px 1.5px 0 var(--ink);
+    }
+    .onboarding-card .onb-head h4 {
+        margin: 0; border: none;
+        font-family: 'Gowun Batang', serif;
+        font-size: 16px; color: var(--ink);
+    }
+    .onboarding-card .onb-grid {
+        display: grid; grid-template-columns: repeat(3, 1fr);
+        gap: 10px; margin-bottom: 10px;
+    }
+    .onboarding-card .onb-cell {
+        background: #FFFDF6;
+        border: 1.5px dashed rgba(58,42,31,0.30);
+        border-radius: 10px;
+        padding: 10px 12px;
+        font-family: 'Gowun Batang', serif;
+    }
+    .onboarding-card .onb-cell .onb-icon { font-size: 22px; margin-bottom: 2px; }
+    .onboarding-card .onb-cell b { font-size: 14px; color: var(--red-deep); }
+    .onboarding-card .onb-cell p {
+        margin: 4px 0 0 0;
+        font-size: 12px; line-height: 1.5;
+        color: var(--ink);
+    }
+    .onboarding-card .onb-rec {
+        background: #FFF7DA;
+        border-left: 4px solid var(--mustard);
+        border-radius: 4px 10px 10px 4px;
+        padding: 8px 14px;
+        font-family: 'Gowun Batang', serif;
+        font-size: 13px;
+        color: var(--ink);
+    }
+    @media (max-width: 720px) {
+        .onboarding-card .onb-grid { grid-template-columns: 1fr; }
+        .landing-map-head { flex-direction: column; align-items: flex-start; }
     }
     .map-legend {
         display: flex; flex-wrap: wrap; gap: 10px 18px;
@@ -1173,6 +1269,42 @@ st.markdown(
         font-size: 11.5px;
         color: #8a7560;
         font-family: 'Noto Sans KR', sans-serif;
+    }
+    /* 원문·라이선스 접기 — 정보 과부하 감소 */
+    .evidence-card .evidence-details {
+        margin: 8px 0 4px 0;
+        background: #FBF7EC;
+        border: 1px dashed rgba(58,42,31,0.20);
+        border-radius: 8px;
+        padding: 4px 12px;
+        font-family: 'Gowun Batang', serif;
+    }
+    .evidence-card .evidence-details summary {
+        cursor: pointer;
+        font-size: 12.5px;
+        color: var(--ink-soft);
+        padding: 4px 0;
+        outline: none;
+        list-style: none;
+    }
+    .evidence-card .evidence-details summary::-webkit-details-marker {
+        display: none;
+    }
+    .evidence-card .evidence-details summary::before {
+        content: '▸ ';
+        display: inline-block;
+        transition: transform 0.15s;
+        color: var(--mustard);
+        font-weight: 700;
+    }
+    .evidence-card .evidence-details[open] summary::before {
+        transform: rotate(90deg);
+    }
+    .evidence-card .evidence-details summary:hover {
+        color: var(--ink);
+    }
+    .evidence-card .evidence-details[open] {
+        padding-bottom: 10px;
     }
     /* 공모전 특별제공 데이터셋 칩 (한복·국악·문양) */
     .evidence-card .dataset-chips {
@@ -2182,6 +2314,20 @@ st.markdown(
         .greeting-card { flex-direction: column; align-items: stretch; }
         .greeting-bubble::before, .greeting-bubble::after { display: none; }
         .topbar { flex-wrap: wrap; gap: 8px; }
+        /* 톱바 7컬럼 모바일 잘림 방지 — 폰트·패딩 축소 */
+        .topbar-tools .topbar-logo .brand { font-size: 20px !important; }
+        .topbar-tools .topbar-logo .brand-sub { display: none; }
+        .topbar-tools .topbar-logo .logo-svg svg { width: 36px !important; height: 36px !important; }
+        .topbar-tools [data-baseweb="select"] > div { min-height: 32px !important; font-size: 12.5px !important; }
+        .topbar-tools button { padding: 6px 8px !important; font-size: 13px !important; min-height: 32px !important; }
+        /* 컬럼 간격 좁힘 */
+        .topbar-tools [data-testid="stHorizontalBlock"] { gap: 4px !important; }
+        .topbar-tools [data-testid="stHorizontalBlock"] > div { padding: 0 2px !important; }
+    }
+    /* 더 좁은 폰 (≤420px) — 브랜드 텍스트만 숨김, 로고는 유지 */
+    @media (max-width: 420px) {
+        .topbar-tools .topbar-logo .brand { font-size: 16px !important; letter-spacing: 0 !important; }
+        .topbar-tools [data-baseweb="select"] > div { min-height: 28px !important; font-size: 11.5px !important; padding: 0 6px !important; }
     }
     </style>
     """,
@@ -2725,8 +2871,8 @@ with bar_cols[2]:
         key="lang_select",
     )
     if lang_options[lang_label] != st.session_state.language:
+        # 언어만 바뀌었을 뿐, 대화·퀘스트 진행은 보존 (어차피 다음 답변부터 새 언어 적용)
         st.session_state.language = lang_options[lang_label]
-        st.session_state.messages = []
         st.rerun()
 
 with bar_cols[3]:
@@ -3019,6 +3165,8 @@ def render_evidence_cards(cards: list[SourceCard]) -> None:
         special_html = (
             f'<div class="dataset-chips">{chip_html}</div>' if chip_html else ''
         )
+        # 원문 발췌 + 라이선스는 기본 접힘 (정보 과부하 감소).
+        # HTML <details> 사용 — Streamlit rerun 없이 클라이언트 토글.
         st.markdown(
             f'<div class="evidence-card">'
             f'<h4>📜 {T["evidence_id"]} <code>{c.id}</code> · {c.title}</h4>'
@@ -3026,15 +3174,19 @@ def render_evidence_cards(cards: list[SourceCard]) -> None:
             f'&nbsp;|&nbsp; 📖 {c.source}</div>'
             f'{special_html}'
             f'<div class="body">{c.summary}</div>'
-            f'<div class="body" style="margin-top:8px;color:#5C4A33;font-size:13.5px;">'
-            f'<b>{T["original_excerpt"]}</b>: <em>{c.original_text}</em></div>'
+            f'<details class="evidence-details">'
+            f'  <summary>📖 원문 발췌 · 라이선스 보기</summary>'
+            f'  <div class="body" style="margin-top:8px;color:#5C4A33;font-size:13px;">'
+            f'    <b>{T["original_excerpt"]}</b>: <em>{c.original_text}</em>'
+            f'  </div>'
+            f'  <div class="license-tag">📄 {c.license}</div>'
+            f'</details>'
             f'<div class="place-row">{_place_links(c)}</div>'
             f'<div class="verify-row">'
             f'<a class="verify-btn" href="{c.source_url}" target="_blank" '
             f'rel="noopener">🔍 {T["view_source"]}</a>'
             f'<span class="source-authority">{authority}</span>'
             f'</div>'
-            f'<div class="license-tag">📄 {c.license}</div>'
             f'</div>',
             unsafe_allow_html=True,
         )
@@ -3117,19 +3269,48 @@ def render_landing_map() -> None:
 
     user_loc = st.session_state.user_geo
 
-    # 헤더 + 위치 요청 안내
+    # 헤더 + 위치 요청 (한 줄, 명확히 노출)
+    user_loc_status = (
+        f'✅ {user_loc[0]:.4f}, {user_loc[1]:.4f}' if user_loc else '미설정'
+    )
     st.markdown(
         '<div class="landing-map-head">'
-        '  <h5 style="margin:0;border:none;">'
-        '    🗺 어디서 놀까요? — <span style="color:#A8554A;font-weight:700;">'
-        f'    게임 장소 {len(valid)}곳</span>'
-        '  </h5>'
-        '  <span class="landing-map-sub">'
-        '    핀을 누르면 장소 안내, 모드를 골라 시작하시면 됩니다'
-        '  </span>'
+        '  <div>'
+        '    <h5 style="margin:0;border:none;">'
+        '      🗺 어디서 놀까요? — <span style="color:#A8554A;font-weight:700;">'
+        f'      게임 장소 {len(valid)}곳</span>'
+        '    </h5>'
+        '    <span class="landing-map-sub">'
+        '      핀을 누르면 장소 안내, 모드를 골라 시작하시면 됩니다'
+        '    </span>'
+        '  </div>'
+        '  <div class="landing-map-geo">'
+        f'    <span class="geo-status">📍 내 위치: <b>{user_loc_status}</b></span>'
+        '  </div>'
         '</div>',
         unsafe_allow_html=True,
     )
+    # 위치 권한 버튼 — expander 안에 숨기지 않고 헤더 옆에 노출 (한 번이면 끝)
+    if not user_loc:
+        try:
+            from streamlit_geolocation import streamlit_geolocation
+            geo_l, geo_r = st.columns([1, 5])
+            with geo_l:
+                _loc = streamlit_geolocation()
+            with geo_r:
+                st.markdown(
+                    '<div class="geo-hint">← 좌측 버튼을 누르면 '
+                    '<b>내 위치를 지도에 표시</b>하고, 가까운 사적부터 '
+                    '문제를 받을 수 있소이다 (브라우저 권한 허용).</div>',
+                    unsafe_allow_html=True,
+                )
+            if _loc and _loc.get("latitude") is not None:
+                st.session_state.user_geo = (
+                    float(_loc["latitude"]), float(_loc["longitude"])
+                )
+                st.rerun()
+        except ImportError:
+            st.info("위치 라이브러리 미설치 — requirements 재배포 필요.")
 
     try:
         import folium
@@ -3208,21 +3389,7 @@ def render_landing_map() -> None:
         legend_html += '</div>'
         st.markdown(legend_html, unsafe_allow_html=True)
 
-        # 위치 받기 버튼 (아직 못 받았으면)
-        if not user_loc:
-            with st.expander("📍 내 위치를 지도에 표시 (브라우저 위치 권한 허용)",
-                              expanded=False):
-                try:
-                    from streamlit_geolocation import streamlit_geolocation
-                    loc = streamlit_geolocation()
-                    if loc and loc.get("latitude") is not None:
-                        st.session_state.user_geo = (
-                            float(loc["latitude"]),
-                            float(loc["longitude"]),
-                        )
-                        st.rerun()
-                except ImportError:
-                    st.info("위치 라이브러리 미설치 — requirements 재배포 필요.")
+        # (위치 권한 버튼은 헤더로 승격됨 — 중복 노출 제거)
         return
     except ImportError:
         # 폴백: st.map (아이콘은 안 됨, 색상으로만)
@@ -3588,9 +3755,58 @@ def render_quest_page() -> None:
 
     # ── 문제 없을 때 — 랜딩 지도 + 모드/주제 선택 + 시작 ──
     if q is None:
+        # API 키 누락 시 가장 위에 노출 — 클릭 후 알게 되는 일 방지
+        if not api_key_present:
+            st.markdown(
+                '<div class="api-key-warn">'
+                '  ⚠ <b>사관이 잠들어 있소이다.</b> '
+                '관리자에게 API 키 설정을 요청해 주오. '
+                '<small>(ANTHROPIC_API_KEY 환경변수)</small>'
+                '</div>',
+                unsafe_allow_html=True,
+            )
+
         # 첫 화면: 지도 (사용자 위치 + 모든 게임 장소 카테고리 아이콘)
         render_landing_map()
         st.markdown('<div style="height:14px"></div>', unsafe_allow_html=True)
+
+        # ── 처음이라면 onboarding 카드 (사초·연승·정답률 의미 + 추천 시작) ──
+        is_first_time = (
+            st.session_state.total_attempts == 0
+            and not st.session_state.q_seen_ids
+        )
+        if is_first_time:
+            st.markdown(
+                f'<div class="onboarding-card">'
+                f'  <div class="onb-head">'
+                f'    <span class="onb-badge">처음이오?</span>'
+                f'    <h4>3가지만 알면 끝나오 ⤵</h4>'
+                f'  </div>'
+                f'  <div class="onb-grid">'
+                f'    <div class="onb-cell">'
+                f'      <div class="onb-icon">📜</div>'
+                f'      <b>사초</b>'
+                f'      <p>정답마다 <b>+15</b>, 오답 <b>0</b>, 힌트 <b>-3</b>. '
+                f'      모으면 칭호 획득.</p>'
+                f'    </div>'
+                f'    <div class="onb-cell">'
+                f'      <div class="onb-icon">🔥</div>'
+                f'      <b>연승</b>'
+                f'      <p>연속 정답. 끊기면 0부터.</p>'
+                f'    </div>'
+                f'    <div class="onb-cell">'
+                f'      <div class="onb-icon">🎯</div>'
+                f'      <b>정답률</b>'
+                f'      <p>맞춘 횟수 / 푼 횟수.</p>'
+                f'    </div>'
+                f'  </div>'
+                f'  <div class="onb-rec">'
+                f'    💡 <b>처음이라면 추천 →</b> "🗺 큐레이션 코스" → '
+                f'    "정동·덕수궁 한 바퀴" (5문항, 10분).'
+                f'  </div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
 
         st.markdown(
             f'<div class="quest-intro">'
@@ -3968,7 +4184,17 @@ def render_quest_page() -> None:
 
     # 다음 문제 / 코스 다음 단서 / 코스 종료
     st.markdown('<div style="height:10px"></div>', unsafe_allow_html=True)
-    if st.button(T["quest_next_btn"], key="quest_next", use_container_width=True):
+    # 동적 라벨 — 코스 모드에서는 진행 위치 노출
+    if st.session_state.play_mode == "course":
+        _total = course_card_count(st.session_state.course_id)
+        _next_idx = st.session_state.course_idx + 1  # 다음 단서 번호
+        if _next_idx > _total:
+            _btn_label = f"🏁 코스 마무리 — 칭호 확인 ({_total}/{_total})"
+        else:
+            _btn_label = f"📜 다음 단서로 ({_next_idx}/{_total})"
+    else:
+        _btn_label = T["quest_next_btn"]
+    if st.button(_btn_label, key="quest_next", use_container_width=True):
         if st.session_state.play_mode == "course":
             st.session_state.course_idx += 1
             if st.session_state.course_idx >= course_card_count(st.session_state.course_id):
