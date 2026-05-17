@@ -197,16 +197,25 @@ st.markdown(
     .stApp { background: #FBF7F2; }
 
     /* Streamlit 기본 상단 헤더 (Share/star/pencil/github 툴바)
-     * → 우리 앱의 자체 톱바와 중복돼 시각적 공간 낭비. 투명화 + 높이 0.
-     * Manage app 버튼은 별개 영역이라 유지됨. */
+     * → 우리 앱의 자체 톱바와 중복돼 시각적 공간 낭비.
+     * 투명·높이 0·overlay 위치로 본문이 페이지 최상단부터 시작하게 */
     [data-testid="stHeader"] {
         background: transparent !important;
         height: 0 !important;
+        min-height: 0 !important;
+        padding: 0 !important;
+        position: absolute !important;  /* 본문 flow 에서 빠짐 */
+        top: 0; right: 0; left: 0;
+        z-index: 999;
+        pointer-events: none;  /* 빈 영역 클릭 비활성 */
     }
-    /* Streamlit 의 stHeader 안 deploy 메뉴 (... / star / github) 는 보이게 두되,
-     * 컨테이너 자체 높이는 0 으로 잡아 본문이 위로 끌어올려짐 */
     [data-testid="stToolbar"] {
         right: 1rem !important; top: 0.5rem !important;
+        pointer-events: auto;  /* 툴바 버튼만 클릭 가능 */
+    }
+    /* Streamlit 기본 main wrapper 의 top padding 도 함께 제거 */
+    [data-testid="stAppViewContainer"] > .main {
+        padding-top: 0 !important;
     }
 
     .main .block-container {
@@ -3611,7 +3620,7 @@ def render_password_gate(expected: str) -> None:
         '  background-size: 26px 26px !important;'
         '}'
         '.stApp::before, .stApp::after { display: none; }'
-        '.main .block-container { padding-top: 0.5rem !important; max-width: 980px !important; }'
+        '.main .block-container { padding-top: 0.2rem !important; max-width: 980px !important; }'
         '</style>',
         unsafe_allow_html=True,
     )
