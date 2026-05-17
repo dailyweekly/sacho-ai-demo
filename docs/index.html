@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사초(史草) AI — 한국사 사료 검증형 퀴즈 게임</title>
+<meta name="description" content="한국사 1차 사료 + AI 무한 출제 · 한·영·일·중 동시 지원 · 문체부 AI 공모전">
+
+<!-- Open Graph (Facebook · KakaoTalk · LinkedIn 표준)
+     KakaoTalk 은 JavaScript 미실행 크롤러라 정적 메타 태그가 필요.
+     이 페이지는 그 용도 + 1초 뒤 Streamlit 본 앱으로 자동 이동. -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="사초 AI">
+<meta property="og:title" content="사초(史草) AI — 한국사 사료 검증형 퀴즈 게임">
+<meta property="og:description" content="한국사 1차 사료 + AI 무한 출제 · 한·영·일·중 동시 지원">
+<meta property="og:image" content="https://raw.githubusercontent.com/dailyweekly/sacho-ai-demo/main/assets/og_share.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:url" content="https://dailyweekly.github.io/sacho-ai-demo/">
+<meta property="og:locale" content="ko_KR">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="사초(史草) AI — 한국사 사료 검증형 퀴즈 게임">
+<meta name="twitter:description" content="한국사 1차 사료 + AI 무한 출제 · 한·영·일·중 동시 지원">
+<meta name="twitter:image" content="https://raw.githubusercontent.com/dailyweekly/sacho-ai-demo/main/assets/og_share.png">
+
+<!-- 1.2초 뒤 본 앱으로 자동 이동 (사용자가 미리보기 보고 클릭하지 않는 경우 대비) -->
+<meta http-equiv="refresh" content="1.2; url=https://sacho-ai.streamlit.app">
+
+<!-- iOS PWA -->
+<link rel="apple-touch-icon" href="https://raw.githubusercontent.com/dailyweekly/sacho-ai-demo/main/assets/icon_apple_180.png">
+<meta name="theme-color" content="#C97064">
+
+<style>
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont,
+                 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+    background: #FBF7F2;
+    color: #3A2A1F;
+  }
+  body {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 2rem 1.5rem;
+    background:
+      radial-gradient(rgba(58,42,31,0.04) 1px, transparent 1px),
+      #FBF7F2;
+    background-size: 26px 26px;
+  }
+  .card {
+    max-width: 480px;
+    padding: 28px 24px 24px 24px;
+    background: #FFFCEF;
+    border: 2.5px solid #3A2A1F;
+    border-radius: 22px;
+    box-shadow: 5px 5px 0 #3A2A1F;
+  }
+  .icon {
+    width: 120px; height: 120px;
+    border-radius: 18px;
+    border: 2px solid #3A2A1F;
+    box-shadow: 3px 3px 0 #3A2A1F;
+    margin-bottom: 18px;
+    display: block; margin-left: auto; margin-right: auto;
+  }
+  h1 {
+    font-size: 26px;
+    margin: 0 0 8px 0;
+    color: #3A2A1F;
+    letter-spacing: 0.5px;
+  }
+  .sub {
+    color: #6B5A40;
+    font-size: 14px;
+    margin: 0 0 4px 0;
+    line-height: 1.5;
+  }
+  .small {
+    color: #8a7560;
+    font-size: 12.5px;
+    margin: 14px 0 18px 0;
+  }
+  a.cta {
+    display: inline-block;
+    padding: 12px 28px;
+    background: linear-gradient(135deg, #FFE9A6, #FFD55A);
+    color: #3A2A1F;
+    text-decoration: none;
+    border: 2.5px solid #3A2A1F;
+    border-radius: 14px;
+    box-shadow: 3px 3px 0 #3A2A1F;
+    font-weight: 700;
+    font-size: 15px;
+    transition: transform 0.12s, box-shadow 0.12s;
+  }
+  a.cta:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: 4px 4px 0 #3A2A1F;
+  }
+  .lang {
+    margin-top: 14px;
+    color: #8a7560;
+    font-size: 11.5px;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <img class="icon" src="https://raw.githubusercontent.com/dailyweekly/sacho-ai-demo/main/assets/icon_apple_180.png" alt="사초 AI 아이콘"
+         onerror="this.style.display='none'">
+    <h1>📜 사초(史草) AI</h1>
+    <p class="sub"><b>한국사 사료 검증형 퀴즈 게임</b></p>
+    <p class="sub">고조선~광복 · 사료 132건 · 도보 코스 9종</p>
+    <p class="small">곧 사관실 대문으로 이동합니다…</p>
+    <a class="cta" href="https://sacho-ai.streamlit.app">🗝 바로 입장</a>
+    <p class="lang">한 · ENG · 日本語 · 中文 동시 지원</p>
+  </div>
+
+  <noscript>
+    <p style="margin-top:20px;">
+      <a href="https://sacho-ai.streamlit.app">사초 AI 바로가기</a>
+    </p>
+  </noscript>
+</body>
+</html>
