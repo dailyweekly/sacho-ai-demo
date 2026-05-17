@@ -1125,12 +1125,14 @@ st.markdown(
     }
 
     /* ── 4지선다 답안 — Streamlit 기본 버튼을 도장(스탬프) 카드로 ──
-     * Streamlit 은 st.markdown 의 빈 div 와 st.button 을 SIBLING 으로 렌더하므로
-     * descendant selector 는 작동하지 않는다 (.quest-opts [data-testid] X).
-     * 해결: `~` 형제 결합자로 quest-opts-zone 마커 이후 stButton 들을 모두 잡고,
-     * quest-opts-end 마커 이후 stButton 은 reset 처리해 영향 범위를 닫는다.
+     * Streamlit DOM:
+     *   stVerticalBlock > stMarkdown(quest-opts-zone 안) > div > div.quest-opts-zone
+     *   stVerticalBlock > stButton  ← SIBLING of stMarkdown, NOT quest-opts-zone
+     * 따라서 .quest-opts-zone ~ [stButton] 은 형제 매칭 실패. 대신 `:has()` 로
+     * quest-opts-zone 을 가진 stMarkdown 자체를 잡고, 그 형제 stButton 들을 타깃.
+     * (Chrome 105+/Safari 15.4+/Firefox 121+ 지원)
      */
-    .quest-opts-zone ~ [data-testid="stButton"] button {
+    [data-testid="stMarkdown"]:has(.quest-opts-zone) ~ [data-testid="stButton"] button {
         width: 100% !important;
         text-align: left !important;
         padding: 14px 18px !important;
@@ -1148,8 +1150,9 @@ st.markdown(
         white-space: normal !important;
         min-height: 50px;
         word-break: keep-all !important;
+        animation: opt-fade-up 0.4s ease-out backwards;
     }
-    .quest-opts-zone ~ [data-testid="stButton"] button:hover {
+    [data-testid="stMarkdown"]:has(.quest-opts-zone) ~ [data-testid="stButton"] button:hover {
         transform: translate(-2px, -2px) rotate(-0.4deg);
         box-shadow: 5px 5px 0 var(--ink) !important;
         background: linear-gradient(135deg, #FFF7DA 0%, #FFE9A6 100%) !important;
@@ -1161,34 +1164,18 @@ st.markdown(
         25% { transform: translate(-3px, -2px) rotate(0.6deg); }
         75% { transform: translate(-1px, -3px) rotate(-0.8deg); }
     }
-    .quest-opts-zone ~ [data-testid="stButton"] button:active {
+    [data-testid="stMarkdown"]:has(.quest-opts-zone) ~ [data-testid="stButton"] button:active {
         transform: translate(3px, 3px) !important;
         box-shadow: 0 0 0 var(--ink) !important;
         background: linear-gradient(135deg, #FFE7A0 0%, #FFD55A 100%) !important;
         transition: all 0.05s ease-out !important;
     }
-    /* 버튼 등장 stagger — 4개가 차례로 fade-up */
-    .quest-opts-zone ~ [data-testid="stButton"] button {
-        animation: opt-fade-up 0.45s ease-out backwards;
-    }
-    .quest-opts-zone ~ [data-testid="stButton"]:nth-of-type(1) button {
-        animation-delay: 0.05s;
-    }
-    .quest-opts-zone ~ [data-testid="stButton"]:nth-of-type(2) button {
-        animation-delay: 0.15s;
-    }
-    .quest-opts-zone ~ [data-testid="stButton"]:nth-of-type(3) button {
-        animation-delay: 0.25s;
-    }
-    .quest-opts-zone ~ [data-testid="stButton"]:nth-of-type(4) button {
-        animation-delay: 0.35s;
-    }
     @keyframes opt-fade-up {
         0% { opacity: 0; transform: translateY(8px); }
         100% { opacity: 1; transform: translateY(0); }
     }
-    /* zone-end 이후 stButton 은 stamp 스타일을 reset (다음 섹션 버튼 보호) */
-    .quest-opts-end ~ [data-testid="stButton"] button {
+    /* zone-end 마커가 있는 stMarkdown 형제 이후 stButton 은 stamp 리셋 */
+    [data-testid="stMarkdown"]:has(.quest-opts-end) ~ [data-testid="stButton"] button {
         text-align: center !important;
         padding: revert !important;
         background: revert !important;
@@ -1198,6 +1185,7 @@ st.markdown(
         font-size: revert !important;
         font-weight: revert !important;
         min-height: revert !important;
+        animation: none !important;
     }
 
     /* ── 정답 시 컨페티 (master/companion 칭호 화면용) ── */
@@ -2703,6 +2691,32 @@ st.markdown(
         border-color: var(--mustard) !important;
     }
 
+    /* ── Streamlit 기본 스피너 — 사관 스타일로 ── */
+    [data-testid="stSpinner"] {
+        text-align: center;
+        padding: 10px 14px;
+        background: linear-gradient(135deg, #FFFCEF 0%, #FFF7DA 100%);
+        border: 2px dashed var(--ink);
+        border-radius: 14px;
+        margin: 12px 0;
+        box-shadow: 2px 2px 0 rgba(58,42,31,0.15);
+    }
+    [data-testid="stSpinner"] > div {
+        display: inline-flex !important; align-items: center; gap: 12px;
+        font-family: 'Gowun Batang', serif !important;
+        font-size: 14.5px !important;
+        color: var(--ink) !important;
+    }
+    /* 스피너 회전 아이콘 — 두루마리 느낌 */
+    [data-testid="stSpinner"] svg, [data-testid="stSpinner"] i {
+        color: var(--red-deep) !important;
+        animation: scroll-spin 1.4s linear infinite;
+    }
+    @keyframes scroll-spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+
     /* ── 게이트 1줄 티저 (접힘 상태에서도 가치 노출) ── */
     .gate-teaser {
         display: flex; flex-wrap: wrap; gap: 6px;
@@ -3752,14 +3766,16 @@ def _place_links(c: SourceCard) -> str:
             f'rel="noopener" title="카카오맵에서 위치 확인">'
             f'{T["kakao_map"]}</a>'
         )
-        # 2) 카카오 로드뷰 — 전경(거리뷰) 직접 진입
-        # ?roadview&urlX=lng&urlY=lat 형식 — Kakao Map 이 자동 로드뷰 모드로
-        kakao_rv = (
-            f"https://map.kakao.com/?roadview&urlX={lon}&urlY={lat}"
+        # 2) 거리뷰(로드뷰) — 네이버 파노라마 (Kakao 의 urlX/urlY 는 KATEC
+        # 좌표계라 WGS84 위경도가 자동 변환되지 않음. 네이버는 c={lng},{lat}
+        # 에 ,dh suffix 로 거리뷰 패널을 안정적으로 띄움)
+        naver_pano = (
+            f"https://map.naver.com/v5/?c={lon},{lat},17,0,0,0,dh"
         )
         bits.append(
-            f'<a class="place-link roadview-link" href="{kakao_rv}" target="_blank" '
-            f'rel="noopener" title="카카오 로드뷰로 현장 전경 보기">'
+            f'<a class="place-link roadview-link" href="{naver_pano}" target="_blank" '
+            f'rel="noopener" '
+            f'title="네이버 거리뷰로 현장 360° 파노라마 진입 — 카카오맵 화면에서도 「로드뷰」 버튼으로 가능">'
             f'{T["kakao_roadview"]}</a>'
         )
 

@@ -208,7 +208,7 @@ UI_TEXT = {
         "tour_info":          "🧭 관광공사 안내",
         "audio_guide":        "🎧 오디오가이드",
         "kakao_map":          "🗺 카카오맵",
-        "kakao_roadview":     "🛣 로드뷰 (전경)",
+        "kakao_roadview":     "🛣 거리뷰 (전경)",
         # 테마 (UI 표시명)
         "theme_all":          "전체 무작위",
         "theme_palaces":      "서울 5대 궁궐",
