@@ -1417,8 +1417,13 @@ st.markdown(
         box-shadow: 5px 5px 0 var(--ink);
     }
     .quest-ending .ending-char {
-        flex: 0 0 130px;
+        flex: 0 0 150px;
         animation: float-y 4s ease-in-out infinite;
+    }
+    /* tier 전용 일러스트는 부드러운 그림자로 강조 */
+    .quest-ending .ending-char img {
+        max-width: 100%; height: auto;
+        filter: drop-shadow(0 4px 6px rgba(58, 42, 31, 0.15));
     }
     .quest-ending .ending-text { flex: 1; }
     .quest-ending .ending-text h3 {
@@ -4794,12 +4799,23 @@ def render_quest_page() -> None:
         score = st.session_state.course_score
         tier = ending_tier(score, total)
         tier_msg = T.get(f"ending_{tier}", T["ending_apprentice"])
-        char_pose = {
+        # 칭호별 전용 일러스트 우선 — 파일 있으면 c_tier_<tier>.png 사용
+        # 없으면 기존 포즈로 graceful fallback (asset 없어도 앱 작동)
+        _tier_fallback = {
             "master":     "celebrate",
             "companion":  "happy",
             "apprentice": "careful_write",
             "novice":     "facedown",
-        }.get(tier, "careful_write")
+        }
+        from pathlib import Path as _PathTier
+        _tier_png = (_PathTier(__file__).parent / "assets"
+                     / f"c_tier_{tier}.png")
+        if _tier_png.exists():
+            char_pose = f"tier_{tier}"     # c_tier_master.png → char_img("tier_master")
+            char_width = 150               # tier 일러스트는 살짝 크게
+        else:
+            char_pose = _tier_fallback.get(tier, "careful_write")
+            char_width = 130
 
         course_name = _course_options().get(cid, cid)
         accuracy_pct = int(round(score / max(total, 1) * 100))
@@ -4809,7 +4825,7 @@ def render_quest_page() -> None:
             ending_cls += " celebration"
         st.markdown(
             f'<div class="{ending_cls}">'
-            f'  <div class="ending-char">{char_img(char_pose, width=130)}</div>'
+            f'  <div class="ending-char">{char_img(char_pose, width=char_width)}</div>'
             f'  <div class="ending-text">'
             f'    <h3>{T["ending_title"]}</h3>'
             f'    <p class="ending-score">'
