@@ -959,18 +959,113 @@ st.markdown(
         margin-left: 4px;
     }
 
-    /* 코스 진행 표시 */
+    /* 코스 진행 표시 — 텍스트 + 시각 진행 바 */
     .course-progress {
         background: #FFF7DA;
         border: 1.5px dashed var(--ink);
         border-radius: 12px;
-        padding: 8px 14px;
+        padding: 10px 14px;
         font-family: 'Gowun Batang', serif;
         font-size: 13.5px;
         color: var(--ink);
         margin-bottom: 12px;
     }
     .course-progress b { color: var(--red-deep); }
+    /* 진행 단계 점(dot) 시리즈 — ●●●○○○○ 식 시각화 */
+    .course-progress-bar {
+        display: flex; gap: 6px; align-items: center;
+        margin-top: 8px;
+        flex-wrap: wrap;
+    }
+    .course-progress-step {
+        flex: 1 1 12px; min-width: 12px;
+        height: 10px;
+        border-radius: 6px;
+        border: 1.5px solid var(--ink);
+        background: #FFFCEF;
+        transition: all 0.2s;
+    }
+    .course-progress-step.done {
+        background: #2E6418;
+        box-shadow: inset 0 0 0 1.5px rgba(255,255,255,0.25);
+    }
+    .course-progress-step.current {
+        background: var(--mustard);
+        animation: step-pulse 1.4s ease-in-out infinite;
+        box-shadow: 0 0 0 2px rgba(219, 184, 113, 0.35);
+    }
+    @keyframes step-pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.15); }
+    }
+    .course-progress-meter {
+        display: inline-flex; gap: 6px; align-items: baseline;
+        margin-left: 6px;
+        font-family: 'Yeon Sung', serif;
+        font-size: 15px;
+        color: var(--red-deep);
+    }
+
+    /* ── 4지선다 답안 — Streamlit 기본 버튼을 도장(스탬프) 카드로 ── */
+    /* 키 prefix "quest_opt_" 인 버튼만 타깃 (다른 버튼 영향 없도록 클래스 래핑) */
+    .quest-opts [data-testid="stButton"] button {
+        width: 100% !important;
+        text-align: left !important;
+        padding: 14px 18px !important;
+        margin-bottom: 8px !important;
+        background: linear-gradient(135deg, #FFFDF6 0%, #FFF7E2 100%) !important;
+        border: 2.5px solid var(--ink) !important;
+        border-radius: 14px !important;
+        box-shadow: 3px 3px 0 var(--ink) !important;
+        color: var(--ink) !important;
+        font-family: 'Gowun Batang', serif !important;
+        font-size: 15.5px !important;
+        font-weight: 500 !important;
+        line-height: 1.55 !important;
+        transition: transform 0.12s, box-shadow 0.12s, background 0.12s !important;
+        white-space: normal !important;
+        min-height: 50px;
+    }
+    .quest-opts [data-testid="stButton"] button:hover {
+        transform: translate(-1px, -1px);
+        box-shadow: 4px 4px 0 var(--ink) !important;
+        background: linear-gradient(135deg, #FFF7DA 0%, #FFE9A6 100%) !important;
+        border-color: var(--red-deep) !important;
+    }
+    .quest-opts [data-testid="stButton"] button:active {
+        transform: translate(2px, 2px);
+        box-shadow: 1px 1px 0 var(--ink) !important;
+    }
+
+    /* ── 정답 시 컨페티 (master/companion 칭호 화면용) ── */
+    .quest-ending.celebration {
+        position: relative;
+        overflow: visible;
+    }
+    .quest-ending.celebration::before,
+    .quest-ending.celebration::after {
+        content: '🎉 ✨ 🎊 🌟 ✦ 🎉 ✨ 🎊 🌟 ✦';
+        position: absolute;
+        left: 0; right: 0;
+        text-align: center;
+        font-size: 22px;
+        letter-spacing: 18px;
+        animation: confetti-drift 4s ease-in-out infinite;
+        pointer-events: none;
+    }
+    .quest-ending.celebration::before {
+        top: -28px;
+        animation-delay: 0s;
+    }
+    .quest-ending.celebration::after {
+        bottom: -28px;
+        animation-delay: 1.5s;
+        font-size: 18px;
+    }
+    @keyframes confetti-drift {
+        0%, 100% { opacity: 0.5; transform: translateY(0); }
+        50% { opacity: 0.9; transform: translateY(-4px); }
+    }
 
     /* 힌트 영역 */
     .hint-tag {
@@ -4307,8 +4402,12 @@ def render_quest_page() -> None:
 
         course_name = _course_options().get(cid, cid)
         accuracy_pct = int(round(score / max(total, 1) * 100))
+        # 상위 칭호일 때 컨페티 애니메이션 추가
+        ending_cls = "quest-ending"
+        if tier in ("master", "companion"):
+            ending_cls += " celebration"
         st.markdown(
-            f'<div class="quest-ending">'
+            f'<div class="{ending_cls}">'
             f'  <div class="ending-char">{char_img(char_pose, width=130)}</div>'
             f'  <div class="ending-text">'
             f'    <h3>{T["ending_title"]}</h3>'
@@ -4661,11 +4760,28 @@ def render_quest_page() -> None:
         total = course_card_count(cid)
         idx_show = st.session_state.course_idx + 1
         course_name = _course_options()[cid]
+        # 진행 dot 시리즈 — 지나온/현재/남은 단서 시각화
+        dots_html = ''
+        for _i in range(total):
+            if _i < st.session_state.course_idx:
+                _cls = 'done'
+            elif _i == st.session_state.course_idx:
+                _cls = 'current'
+            else:
+                _cls = ''
+            dots_html += f'<div class="course-progress-step {_cls}"></div>'
         st.markdown(
             f'<div class="course-progress">'
-            f'<b>🗺 {course_name}</b> · '
-            f'{T["course_progress"].format(n=idx_show, total=total)} · '
-            f'{T["course_score"]}: <b>{st.session_state.course_score}/{idx_show - 1 if not st.session_state.q_answered else idx_show}</b>'
+            f'  <div>'
+            f'    <b>🗺 {course_name}</b>'
+            f'    <span class="course-progress-meter">'
+            f'      {idx_show}<small style="color:var(--ink-soft);font-size:13px;">/{total}</small>'
+            f'    </span>'
+            f'    · {T["course_score"]}: <b>'
+            f'{st.session_state.course_score}/{idx_show - 1 if not st.session_state.q_answered else idx_show}'
+            f'</b>'
+            f'  </div>'
+            f'  <div class="course-progress-bar">{dots_html}</div>'
             f'</div>',
             unsafe_allow_html=True,
         )
@@ -4722,7 +4838,8 @@ def render_quest_page() -> None:
                     unsafe_allow_html=True,
                 )
 
-        # 4지선다 버튼 (힌트로 제외된 것은 비활성)
+        # 4지선다 버튼 (힌트로 제외된 것은 비활성) — quest-opts 클래스로 스탬프 스타일
+        st.markdown('<div class="quest-opts">', unsafe_allow_html=True)
         for i, opt in enumerate(q["options"]):
             if i in eliminated:
                 st.markdown(
@@ -4763,6 +4880,7 @@ def render_quest_page() -> None:
                 if st.session_state.play_mode == "course" and is_correct:
                     st.session_state.course_score += 1
                 st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True)  # close .quest-opts
         return
 
     # ── 답변 후 — 결과 + 캐릭터 멘트 + 시간 + 선지 회고 ──

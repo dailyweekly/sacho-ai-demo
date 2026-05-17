@@ -3622,5 +3622,365 @@
         "image": "http://tong.visitkorea.or.kr/cms/resource/91/3384991_image2_1.JPG"
       }
     ]
+  },
+  "ghm-001": {
+    "radius_m": 500,
+    "spots": [
+      {
+        "title": "낮이 좋아? 밤이 좋아? 서울의 주경, 야경 여행코스",
+        "addr1": "",
+        "contentid": "2022929",
+        "contenttypeid": 25,
+        "dist_m": 10,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/72/1782972_image2_1.jpg"
+      },
+      {
+        "title": "사라진 성곽길을 따라 걷기",
+        "addr1": "",
+        "contentid": "1951271",
+        "contenttypeid": 25,
+        "dist_m": 14,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/11/1945811_image2_1.jpg"
+      },
+      {
+        "title": "광화문",
+        "addr1": "서울특별시 종로구 사직로 161",
+        "contentid": "126512",
+        "contenttypeid": 12,
+        "dist_m": 19,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/72/3069472_image2_1.JPG"
+      },
+      {
+        "title": "경복궁 북쪽마을 북촌 즐기기",
+        "addr1": "",
+        "contentid": "1952962",
+        "contenttypeid": 25,
+        "dist_m": 19,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/81/1075281_image2_1.jpg"
+      },
+      {
+        "title": "경복궁",
+        "addr1": "서울특별시 종로구 사직로 161 (세종로)",
+        "contentid": "126508",
+        "contenttypeid": 12,
+        "dist_m": 21,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/98/3487598_image2_1.jpg"
+      }
+    ]
+  },
+  "ghm-002": {
+    "radius_m": 500,
+    "spots": [
+      {
+        "title": "사라진 성곽길을 따라 걷기",
+        "addr1": "",
+        "contentid": "1951271",
+        "contenttypeid": 25,
+        "dist_m": 190,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/11/1945811_image2_1.jpg"
+      },
+      {
+        "title": "광화문",
+        "addr1": "서울특별시 종로구 사직로 161",
+        "contentid": "126512",
+        "contenttypeid": 12,
+        "dist_m": 192,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/72/3069472_image2_1.JPG"
+      },
+      {
+        "title": "경복궁 북쪽마을 북촌 즐기기",
+        "addr1": "",
+        "contentid": "1952962",
+        "contenttypeid": 25,
+        "dist_m": 192,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/81/1075281_image2_1.jpg"
+      },
+      {
+        "title": "낮이 좋아? 밤이 좋아? 서울의 주경, 야경 여행코스",
+        "addr1": "",
+        "contentid": "2022929",
+        "contenttypeid": 25,
+        "dist_m": 192,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/72/1782972_image2_1.jpg"
+      },
+      {
+        "title": "경복궁",
+        "addr1": "서울특별시 종로구 사직로 161 (세종로)",
+        "contentid": "126508",
+        "contenttypeid": 12,
+        "dist_m": 197,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/98/3487598_image2_1.jpg"
+      }
+    ]
+  },
+  "ghm-003": {
+    "radius_m": 500,
+    "spots": [
+      {
+        "title": "청와대 앞 코스 돌아보기",
+        "addr1": "",
+        "contentid": "1952971",
+        "contenttypeid": 25,
+        "dist_m": 82,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/55/1568155_image2_1.jpg"
+      },
+      {
+        "title": "대한민국역사박물관",
+        "addr1": "서울특별시 종로구 세종대로 198 (세종로)",
+        "contentid": "1849416",
+        "contenttypeid": 14,
+        "dist_m": 99,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/89/3082989_image2_1.JPG"
+      },
+      {
+        "title": "K-컬처 스크린(대한민국역사박물관)",
+        "addr1": "서울특별시 종로구 세종대로 198 (세종로)",
+        "contentid": "2992823",
+        "contenttypeid": 12,
+        "dist_m": 99,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/06/2987806_image2_1.jpg"
+      },
+      {
+        "title": "낮이 좋아? 밤이 좋아? 서울의 주경, 야경 여행코스",
+        "addr1": "",
+        "contentid": "2022929",
+        "contenttypeid": 25,
+        "dist_m": 122,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/72/1782972_image2_1.jpg"
+      },
+      {
+        "title": "사라진 성곽길을 따라 걷기",
+        "addr1": "",
+        "contentid": "1951271",
+        "contenttypeid": 25,
+        "dist_m": 125,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/11/1945811_image2_1.jpg"
+      }
+    ]
+  },
+  "ghm-004": {
+    "radius_m": 500,
+    "spots": [
+      {
+        "title": "청계천을 돌아 경복궁에서 인사동까지",
+        "addr1": "",
+        "contentid": "1914505",
+        "contenttypeid": 25,
+        "dist_m": 33,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/40/1570340_image2_1.jpg"
+      },
+      {
+        "title": "서울시티투어 버스를 이용하면 서울여행이 쉬워진다",
+        "addr1": "",
+        "contentid": "2381373",
+        "contenttypeid": 25,
+        "dist_m": 34,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/36/1567936_image2_1.jpg"
+      },
+      {
+        "title": "경북 WOW(와)보이소",
+        "addr1": "서울특별시 중구 태평로1가",
+        "contentid": "3495363",
+        "contenttypeid": 15,
+        "dist_m": 58,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/48/3495348_image2_1.jpg"
+      },
+      {
+        "title": "서울거리예술축제",
+        "addr1": "서울특별시 중구 태평로1가",
+        "contentid": "706180",
+        "contenttypeid": 15,
+        "dist_m": 74,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/90/3544790_image2_1.png"
+      },
+      {
+        "title": "겨울, 청계천의 빛",
+        "addr1": "서울특별시 중구 태평로1가 1",
+        "contentid": "2785797",
+        "contenttypeid": 15,
+        "dist_m": 75,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/36/3567636_image2_1.jpg"
+      }
+    ]
+  },
+  "ghm-005": {
+    "radius_m": 500,
+    "spots": [
+      {
+        "title": "보신각터",
+        "addr1": "서울특별시 종로구 종로 54",
+        "contentid": "126516",
+        "contenttypeid": 12,
+        "dist_m": 54,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/23/3568323_image2_1.jpg"
+      },
+      {
+        "title": "공평도시유적전시관",
+        "addr1": "서울특별시 종로구 우정국로 26",
+        "contentid": "2606224",
+        "contenttypeid": 14,
+        "dist_m": 147,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/18/3514018_image2_1.jpg"
+      },
+      {
+        "title": "민영환 자결터",
+        "addr1": "서울특별시 종로구 인사동5길 41 (공평동)",
+        "contentid": "605961",
+        "contenttypeid": 12,
+        "dist_m": 183,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/62/3050162_image2_1.JPG"
+      },
+      {
+        "title": "조형갤러리",
+        "addr1": "서울특별시 종로구 인사동5길 29 (인사동)",
+        "contentid": "129907",
+        "contenttypeid": 14,
+        "dist_m": 218,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/33/3540833_image2_1.jpg"
+      },
+      {
+        "title": "승동교회",
+        "addr1": "서울특별시 종로구 인사동길 7-1",
+        "contentid": "605445",
+        "contenttypeid": 12,
+        "dist_m": 255,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/62/3518362_image2_1.jpg"
+      }
+    ]
+  },
+  "ghm-006": {
+    "radius_m": 500,
+    "spots": [
+      {
+        "title": "광화문광장",
+        "addr1": "서울특별시 종로구 세종대로 172",
+        "contentid": "775394",
+        "contenttypeid": 12,
+        "dist_m": 11,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/84/3589184_image2_1.jpg"
+      },
+      {
+        "title": "세종대왕 동상",
+        "addr1": "서울특별시 종로구 세종로",
+        "contentid": "1364932",
+        "contenttypeid": 12,
+        "dist_m": 18,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/38/3590038_image2_1.jpg"
+      },
+      {
+        "title": "세종이야기 충무공이야기",
+        "addr1": "서울특별시 종로구 세종대로 지하175 (세종로)",
+        "contentid": "815197",
+        "contenttypeid": 14,
+        "dist_m": 64,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/52/3550552_image2_1.jpg"
+      },
+      {
+        "title": "세종문화회관",
+        "addr1": "서울특별시 종로구 세종대로 175 (세종로)",
+        "contentid": "129735",
+        "contenttypeid": 14,
+        "dist_m": 101,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/87/3082687_image2_1.png"
+      },
+      {
+        "title": "2024 부활절 퍼레이드",
+        "addr1": "서울특별시 종로구 세종대로 175",
+        "contentid": "2953314",
+        "contenttypeid": 15,
+        "dist_m": 101,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/71/3109971_image2_1.png"
+      }
+    ]
+  },
+  "ghm-007": {
+    "radius_m": 500,
+    "spots": [
+      {
+        "title": "종로K축제",
+        "addr1": "서울특별시 종로구 세종대로 지하172 (세종로)",
+        "contentid": "2405329",
+        "contenttypeid": 15,
+        "dist_m": 31,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/64/3563664_image2_1.jpg"
+      },
+      {
+        "title": "광화문 마켓",
+        "addr1": "서울특별시 종로구 세종대로 지하172 (세종로)",
+        "contentid": "3035607",
+        "contenttypeid": 15,
+        "dist_m": 31,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/03/3573403_image2_1.png"
+      },
+      {
+        "title": "서울라이트 광화문",
+        "addr1": "서울특별시 종로구 세종로 1-68 5호선 광화문역",
+        "contentid": "3073454",
+        "contenttypeid": 15,
+        "dist_m": 31,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/04/3581704_image2_1.jpg"
+      },
+      {
+        "title": "광복 80년 기념 빛 축제",
+        "addr1": "서울특별시 종로구 세종대로 지하172 (세종로)",
+        "contentid": "3520789",
+        "contenttypeid": 15,
+        "dist_m": 31,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/88/3520788_image2_1.png"
+      },
+      {
+        "title": "세종이야기 충무공이야기",
+        "addr1": "서울특별시 종로구 세종대로 지하175 (세종로)",
+        "contentid": "815197",
+        "contenttypeid": 14,
+        "dist_m": 39,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/52/3550552_image2_1.jpg"
+      }
+    ]
+  },
+  "ghm-008": {
+    "radius_m": 500,
+    "spots": [
+      {
+        "title": "낮이 좋아? 밤이 좋아? 서울의 주경, 야경 여행코스",
+        "addr1": "",
+        "contentid": "2022929",
+        "contenttypeid": 25,
+        "dist_m": 10,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/72/1782972_image2_1.jpg"
+      },
+      {
+        "title": "사라진 성곽길을 따라 걷기",
+        "addr1": "",
+        "contentid": "1951271",
+        "contenttypeid": 25,
+        "dist_m": 14,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/11/1945811_image2_1.jpg"
+      },
+      {
+        "title": "광화문",
+        "addr1": "서울특별시 종로구 사직로 161",
+        "contentid": "126512",
+        "contenttypeid": 12,
+        "dist_m": 19,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/72/3069472_image2_1.JPG"
+      },
+      {
+        "title": "경복궁 북쪽마을 북촌 즐기기",
+        "addr1": "",
+        "contentid": "1952962",
+        "contenttypeid": 25,
+        "dist_m": 19,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/81/1075281_image2_1.jpg"
+      },
+      {
+        "title": "경복궁",
+        "addr1": "서울특별시 종로구 사직로 161 (세종로)",
+        "contentid": "126508",
+        "contenttypeid": 12,
+        "dist_m": 21,
+        "image": "http://tong.visitkorea.or.kr/cms/resource/98/3487598_image2_1.jpg"
+      }
+    ]
   }
 }
