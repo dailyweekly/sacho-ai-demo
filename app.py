@@ -362,8 +362,34 @@ st.markdown(
     .topbar-logo {
         display: flex; align-items: center; gap: 12px;
         flex: 1; min-width: 0;
+        position: relative;
     }
     .topbar-logo .logo-svg { animation: bob 4s ease-in-out infinite; }
+    /* 텍스트 wrapper — peek 캐릭터 절대 위치 기준 */
+    .topbar-logo .topbar-text-wrap {
+        display: flex; flex-direction: column;
+        flex: 1; min-width: 0;
+    }
+    /* 빼꼼 캐릭터 — 로고 우측에서 살짝 고개 내미는 듯 */
+    .topbar-logo .topbar-peek {
+        flex: 0 0 42px;
+        animation: peek-wobble 6s ease-in-out infinite;
+        margin-left: 4px;
+        opacity: 0.92;
+        pointer-events: none;
+    }
+    .topbar-logo .topbar-peek img,
+    .topbar-logo .topbar-peek svg {
+        width: 42px !important; height: 42px !important;
+        display: block;
+    }
+    @keyframes peek-wobble {
+        0%, 92%, 100% { transform: translateY(2px) rotate(-3deg); }
+        93%, 96% { transform: translateY(-2px) rotate(8deg); }  /* 잠시 깨꼼 */
+    }
+    @media (max-width: 720px) {
+        .topbar-logo .topbar-peek { display: none; }
+    }
     @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
     .topbar-logo .brand {
         font-family: 'Yeon Sung', 'Black Han Sans', 'Gowun Batang', serif;
@@ -516,6 +542,14 @@ st.markdown(
         font-size: 18px;
         color: var(--ink);
         margin-left: 4px;
+        display: inline-block;
+        /* 매 render 마다 살짝 pop — 변경된 값임을 시각적으로 확인 */
+        animation: credit-pop 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes credit-pop {
+        0% { transform: scale(1.5); color: var(--mustard); }
+        60% { transform: scale(0.95); }
+        100% { transform: scale(1); color: var(--ink); }
     }
     .credit-bar .credit-best {
         font-family: 'Nanum Pen Script', cursive;
@@ -541,7 +575,7 @@ st.markdown(
         font-size: 14.5px; color: var(--ink); line-height: 1.6;
     }
 
-    /* 문제 카드 */
+    /* 문제 카드 — 등장 시 slide-down 애니메이션 */
     .quest-q {
         display: flex; gap: 14px; align-items: flex-start;
         background: #FFFCF0;
@@ -550,6 +584,11 @@ st.markdown(
         padding: 18px 20px;
         margin-bottom: 14px;
         box-shadow: 4px 4px 0 var(--ink);
+        animation: quest-slide-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes quest-slide-in {
+        0% { opacity: 0; transform: translateY(-12px) scale(0.98); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
     }
     .quest-q-tag {
         flex: 0 0 38px; height: 38px; line-height: 36px;
@@ -560,6 +599,13 @@ st.markdown(
         font-family: 'Yeon Sung', serif;
         font-size: 22px;
         box-shadow: 2px 2px 0 var(--ink);
+        /* Q. 태그 — 새 문제 시 살짝 흔들리며 시선 끌기 */
+        animation: q-tag-pop 0.7s ease-out;
+    }
+    @keyframes q-tag-pop {
+        0% { transform: scale(0) rotate(-180deg); }
+        60% { transform: scale(1.2) rotate(10deg); }
+        100% { transform: scale(1) rotate(0deg); }
     }
     .quest-q-body {
         flex: 1;
@@ -636,6 +682,53 @@ st.markdown(
         font-family: 'Nanum Pen Script', cursive;
         font-size: 17px;
         color: var(--ink-soft);
+    }
+    /* 정답 시 결과 패널 주변에 ✨ 파티클 폭발 (귀여움 + 장난) */
+    .quest-result-panel.correct {
+        position: relative;
+    }
+    .quest-result-panel.correct::before,
+    .quest-result-panel.correct::after {
+        content: '✨ ✦ ✨ ✦ ✨ ✦ ✨';
+        position: absolute;
+        left: 0; right: 0;
+        text-align: center;
+        font-size: 18px;
+        letter-spacing: 14px;
+        color: #DBB871;
+        pointer-events: none;
+        animation: sparkle-burst 1.8s ease-out;
+    }
+    .quest-result-panel.correct::before {
+        top: -22px;
+        animation-delay: 0s;
+    }
+    .quest-result-panel.correct::after {
+        bottom: -22px;
+        animation-delay: 0.3s;
+        font-size: 14px;
+        color: #C97064;
+    }
+    @keyframes sparkle-burst {
+        0% { opacity: 0; transform: scale(0.4); letter-spacing: 4px; }
+        50% { opacity: 1; transform: scale(1.1); letter-spacing: 16px; }
+        100% { opacity: 0.5; transform: scale(1); letter-spacing: 14px; }
+    }
+    /* 오답도 살짝 — 비 내리듯 ☔ 작게 */
+    .quest-result-panel.wrong::before {
+        content: '☔ · ☔ · ☔';
+        position: absolute;
+        top: -18px; left: 0; right: 0;
+        text-align: center;
+        font-size: 13px;
+        letter-spacing: 24px;
+        color: rgba(122, 31, 15, 0.4);
+        pointer-events: none;
+        animation: drizzle 1.5s ease-out;
+    }
+    @keyframes drizzle {
+        0% { opacity: 0; transform: translateY(-6px); }
+        100% { opacity: 0.6; transform: translateY(0); }
     }
     /* 모바일: 결과 패널 세로 + 캐릭터 축소 */
     @media (max-width: 720px) {
@@ -1057,14 +1150,42 @@ st.markdown(
         word-break: keep-all !important;
     }
     .quest-opts-zone ~ [data-testid="stButton"] button:hover {
-        transform: translate(-1px, -1px);
-        box-shadow: 4px 4px 0 var(--ink) !important;
+        transform: translate(-2px, -2px) rotate(-0.4deg);
+        box-shadow: 5px 5px 0 var(--ink) !important;
         background: linear-gradient(135deg, #FFF7DA 0%, #FFE9A6 100%) !important;
         border-color: var(--red-deep) !important;
+        animation: opt-wiggle 0.5s ease-in-out;
+    }
+    @keyframes opt-wiggle {
+        0%, 100% { transform: translate(-2px, -2px) rotate(-0.4deg); }
+        25% { transform: translate(-3px, -2px) rotate(0.6deg); }
+        75% { transform: translate(-1px, -3px) rotate(-0.8deg); }
     }
     .quest-opts-zone ~ [data-testid="stButton"] button:active {
-        transform: translate(2px, 2px);
-        box-shadow: 1px 1px 0 var(--ink) !important;
+        transform: translate(3px, 3px) !important;
+        box-shadow: 0 0 0 var(--ink) !important;
+        background: linear-gradient(135deg, #FFE7A0 0%, #FFD55A 100%) !important;
+        transition: all 0.05s ease-out !important;
+    }
+    /* 버튼 등장 stagger — 4개가 차례로 fade-up */
+    .quest-opts-zone ~ [data-testid="stButton"] button {
+        animation: opt-fade-up 0.45s ease-out backwards;
+    }
+    .quest-opts-zone ~ [data-testid="stButton"]:nth-of-type(1) button {
+        animation-delay: 0.05s;
+    }
+    .quest-opts-zone ~ [data-testid="stButton"]:nth-of-type(2) button {
+        animation-delay: 0.15s;
+    }
+    .quest-opts-zone ~ [data-testid="stButton"]:nth-of-type(3) button {
+        animation-delay: 0.25s;
+    }
+    .quest-opts-zone ~ [data-testid="stButton"]:nth-of-type(4) button {
+        animation-delay: 0.35s;
+    }
+    @keyframes opt-fade-up {
+        0% { opacity: 0; transform: translateY(8px); }
+        100% { opacity: 1; transform: translateY(0); }
     }
     /* zone-end 이후 stButton 은 stamp 스타일을 reset (다음 섹션 버튼 보호) */
     .quest-opts-end ~ [data-testid="stButton"] button {
@@ -3412,13 +3533,17 @@ st.markdown('<div class="topbar-tools">', unsafe_allow_html=True)
 bar_cols = st.columns([2.0, 1.2, 1.0, 1.0, 1.0, 0.7, 0.7])
 
 with bar_cols[0]:
+    # 빼꼼 캐릭터 — 로고 우상단에서 살짝 보임 (장난스러움 + 귀여움)
     st.markdown(
         f'<a href="?home=1" target="_self" class="topbar-logo-link" '
         f'title="첫 화면으로 돌아가기">'
         f'<div class="topbar-logo">'
         f'<div class="logo-svg">{LOGO_SVG}</div>'
-        f'<div><div class="brand">사초(史草) AI</div>'
-        f'<div class="brand-sub">— 졸린 사관과 함께 —</div></div>'
+        f'<div class="topbar-text-wrap">'
+        f'  <div class="brand">사초(史草) AI</div>'
+        f'  <div class="brand-sub">— 졸린 사관과 함께 —</div>'
+        f'</div>'
+        f'<div class="topbar-peek">{char_img("peeking", width=42)}</div>'
         f'</div>'
         f'</a>',
         unsafe_allow_html=True,
@@ -4482,6 +4607,16 @@ def _time_bonus(elapsed: float) -> tuple[int, str]:
 
 
 def render_quest_page() -> None:
+    # ── 연승 milestone toast (직전 답변에서 set 된 메시지) ──
+    _toast = st.session_state.pop("_pending_toast", None)
+    if _toast:
+        _msg, _icon = _toast
+        try:
+            st.toast(_msg, icon=_icon)
+        except Exception:
+            # 구버전 Streamlit fallback
+            pass
+
     # ── 코스 종료 화면 ──
     if st.session_state.course_finished:
         cid = st.session_state.course_id
@@ -4973,10 +5108,28 @@ def render_quest_page() -> None:
                     st.session_state.total_correct += 1
                     if st.session_state.streak > st.session_state.best_streak:
                         st.session_state.best_streak = st.session_state.streak
+                    # 연승 milestone — 다음 render 시 toast 표시 (장난스러움)
+                    _s = st.session_state.streak
+                    _milestone_msgs = {
+                        3:  ("🔥 3연승! 사관이 놀라기 시작했소이다", "🔥"),
+                        5:  ("🔥🔥 5연승! 두루마리에 이름 적히는 중", "✨"),
+                        10: ("🏆 10연승! 사관의 으뜸 후보이시오", "🏆"),
+                        15: ("👑 15연승! 사초의 전설로 기록 중", "👑"),
+                        20: ("🎊 20연승! 사관이 절을 올리오", "🎊"),
+                    }
+                    if _s in _milestone_msgs:
+                        msg, icon = _milestone_msgs[_s]
+                        st.session_state._pending_toast = (msg, icon)
                 else:
                     # 오답이면 시간 페널티만 적용 (보너스 없음)
                     if bonus < 0:
                         st.session_state.credits = max(0, st.session_state.credits + bonus)
+                    # 연승이 끊긴 순간이라면 그 사실도 토스트 (3 이상에서만)
+                    if st.session_state.streak >= 3:
+                        st.session_state._pending_toast = (
+                            f"💔 {st.session_state.streak}연승이 끊겼소이다… 다시 한 번",
+                            "💔",
+                        )
                     st.session_state.streak = 0
                 # 코스 점수
                 if st.session_state.play_mode == "course" and is_correct:
