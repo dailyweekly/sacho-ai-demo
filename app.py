@@ -852,6 +852,15 @@ st.markdown(
         flex: 0 0 72px;
         animation: float-y 4s ease-in-out infinite;
     }
+    /* 전용 일러스트 모드 — hmm 폴백보다 큼 (120px) + 입체 그림자 */
+    .kculture-intro .kculture-intro-char.kc-illust {
+        flex: 0 0 120px;
+    }
+    .kculture-intro .kculture-intro-char.kc-illust img {
+        max-width: 100%; height: auto;
+        border-radius: 12px;
+        filter: drop-shadow(0 2px 4px rgba(58, 42, 31, 0.12));
+    }
     .kculture-intro .kculture-intro-text {
         flex: 1;
         font-family: 'Gowun Batang', serif;
@@ -874,8 +883,19 @@ st.markdown(
     .kculture-intro small { color: var(--ink-soft); opacity: 0.85; }
     @media (max-width: 720px) {
         .kculture-intro { flex-direction: column; text-align: center; }
-        .kculture-intro .kculture-intro-char svg, .kculture-intro .kculture-intro-char img {
+        /* hmm 폴백 — 작게 */
+        .kculture-intro .kculture-intro-char svg,
+        .kculture-intro .kculture-intro-char:not(.kc-illust) img {
             width: 56px !important; height: 56px !important;
+        }
+        /* kc-illust 전용 일러스트 — hero 처럼 풀너비 60% */
+        .kculture-intro .kculture-intro-char.kc-illust {
+            flex: 0 0 auto;
+            width: 60%; max-width: 200px;
+            align-self: center;
+        }
+        .kculture-intro .kculture-intro-char.kc-illust img {
+            width: 100% !important; height: auto !important;
         }
     }
 
@@ -5224,15 +5244,24 @@ def render_quest_page() -> None:
                 key="theme_select",
             )
             st.session_state.quest_theme = theme_keys[theme_labels.index(picked_label)]
-            # K-콘텐츠 테마 선택 시 — "1905→2025 떨어진 사관" 페르소나 인트로
-            # LLM 프롬프트엔 이미 페르소나가 있으나 UI 안내가 없어 사용자가 당황
+            # K-콘텐츠 테마 선택 시 — "1905→2026 떨어진 사관" 페르소나 인트로
+            # 전용 일러스트 (c_kculture_intro.png) 있으면 120px, 없으면 hmm 72px 폴백
             if st.session_state.quest_theme == "kculture":
+                from pathlib import Path as _PathKC
+                _kc_png = (_PathKC(__file__).parent / "assets"
+                           / "c_kculture_intro.png")
+                if _kc_png.exists():
+                    _kc_char = char_img("kculture_intro", width=120)
+                    _kc_char_cls = "kculture-intro-char kc-illust"
+                else:
+                    _kc_char = char_img("hmm", width=72)
+                    _kc_char_cls = "kculture-intro-char"
                 st.markdown(
                     f'<div class="kculture-intro">'
-                    f'  <div class="kculture-intro-char">{char_img("hmm", width=72)}</div>'
+                    f'  <div class="{_kc_char_cls}">{_kc_char}</div>'
                     f'  <div class="kculture-intro-text">'
                     f'    <div class="kc-tag">🎬 K-콘텐츠 모드</div>'
-                    f'    <b>1905년 정동에서 갑자기 2025년으로 떨어진 사관이외다.</b><br>'
+                    f'    <b>1905년 정동에서 갑자기 2026년으로 떨어진 사관이외다.</b><br>'
                     f'    드라마·영화·예능 속 한국을 골라드리니, '
                     f'    <b>실제 사적</b>과 <b>가상 각색</b>을 가려내 보시구려. '
                     f'    <small>(케데헌·낭만닥터·정년이·도깨비·미스터션샤인 등 다수)</small>'
