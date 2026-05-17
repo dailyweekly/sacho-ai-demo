@@ -1124,6 +1124,48 @@ st.markdown(
         color: var(--red-deep);
     }
 
+    /* ── 힌트 버튼 — 답안 stamp 보다 BEFORE 정의 (cascade 순서 중요)
+     * answer-stamp 가 hint-reset 보다 뒤(아래)에 와야 답안 버튼이 stamp 유지
+     */
+    [data-testid="stMarkdown"]:has(.quest-hint-zone) ~ [data-testid="stButton"] button {
+        width: 100% !important;
+        background: linear-gradient(135deg, #FFFBE6 0%, #FFF1B0 100%) !important;
+        border: 2px dashed #C97064 !important;
+        border-radius: 14px !important;
+        padding: 11px 16px !important;
+        margin: 4px 0 8px 0 !important;
+        color: #6A1F18 !important;
+        font-family: 'Gowun Batang', serif !important;
+        font-size: 13.5px !important;
+        font-weight: 700 !important;
+        box-shadow: 2px 2px 0 #C97064 !important;
+        transition: all 0.12s ease-out !important;
+        white-space: normal !important;
+        min-height: 44px !important;
+    }
+    [data-testid="stMarkdown"]:has(.quest-hint-zone) ~ [data-testid="stButton"] button:hover {
+        background: linear-gradient(135deg, #FFE9A6 0%, #FFD55A 100%) !important;
+        border-style: solid !important;
+        transform: translate(-1px, -1px) !important;
+        box-shadow: 3px 3px 0 #6A1F18 !important;
+    }
+    [data-testid="stMarkdown"]:has(.quest-hint-zone) ~ [data-testid="stButton"] button:active {
+        transform: translate(2px, 2px) !important;
+        box-shadow: 0 0 0 #C97064 !important;
+    }
+    /* hint-end 이후 stButton: hint 스타일 reset (답안 stamp 가 곧 덮어쓸 것) */
+    [data-testid="stMarkdown"]:has(.quest-hint-end) ~ [data-testid="stButton"] button {
+        background: revert !important;
+        border: revert !important;
+        border-radius: revert !important;
+        padding: revert !important;
+        color: revert !important;
+        font-size: revert !important;
+        font-weight: revert !important;
+        box-shadow: revert !important;
+        min-height: revert !important;
+    }
+
     /* ── 4지선다 답안 — Streamlit 기본 버튼을 도장(스탬프) 카드로 ──
      * Streamlit DOM:
      *   stVerticalBlock > stMarkdown(quest-opts-zone 안) > div > div.quest-opts-zone
@@ -1218,25 +1260,30 @@ st.markdown(
         50% { opacity: 0.9; transform: translateY(-4px); }
     }
 
-    /* 힌트 영역 */
+    /* 힌트 영역 — 태그(사용함/잠금) */
     .hint-tag {
         font-family: 'Gowun Batang', serif;
-        font-size: 13px;
-        padding: 9px 14px;
-        border-radius: 12px;
-        border: 1.5px dashed var(--ink-soft);
+        font-size: 13.5px;
+        padding: 11px 16px;
+        border-radius: 14px;
+        border: 2px dashed var(--ink-soft);
         text-align: center;
-        margin: 0;
+        margin: 4px 0 8px 0;
+        font-weight: 600;
     }
     .hint-used-tag {
         background: #DDF0CB;
         color: #2E6418;
         border-color: #2E6418;
+        border-style: solid;
     }
     .hint-locked-tag {
         background: #F0EDE6;
         color: var(--ink-soft);
+        opacity: 0.85;
     }
+    /* (힌트 버튼 :has() 스타일은 cascade 순서상 답안 stamp 보다 위에 정의 —
+     * 본 파일에서는 .quest-opts-zone 답안 stamp 규칙 BEFORE 에 위치) */
 
     /* 힌트로 제외된 선지 */
     .opt-eliminated {
@@ -5069,27 +5116,33 @@ def render_quest_page() -> None:
             '</div>',
             unsafe_allow_html=True,
         )
-        # 힌트 행
-        hint_col_l, hint_col_r = st.columns([1, 1])
-        with hint_col_l:
-            if eliminated:
-                st.markdown(
-                    f'<div class="hint-tag hint-used-tag">{T["hint_used"]}</div>',
-                    unsafe_allow_html=True,
-                )
-            elif st.session_state.credits >= 3:
-                if st.button(T["hint_btn"], key="quest_hint",
-                             use_container_width=True):
-                    wrong = [i for i in range(4) if i != q["correct_idx"]]
-                    _random.shuffle(wrong)
-                    st.session_state.eliminated_options = wrong[:2]
-                    st.session_state.credits -= 3
-                    st.rerun()
-            else:
-                st.markdown(
-                    f'<div class="hint-tag hint-locked-tag">{T["hint_locked"]}</div>',
-                    unsafe_allow_html=True,
-                )
+        # ── 힌트 행 (이전 col 분할은 우측이 비어 어색했음 — 단일 행으로) ──
+        # quest-hint-zone 마커 → :has() 로 hint 버튼 전용 스타일 매칭
+        st.markdown(
+            '<div class="quest-hint-zone"></div>', unsafe_allow_html=True,
+        )
+        if eliminated:
+            st.markdown(
+                f'<div class="hint-tag hint-used-tag">{T["hint_used"]}</div>',
+                unsafe_allow_html=True,
+            )
+        elif st.session_state.credits >= 3:
+            if st.button(T["hint_btn"], key="quest_hint",
+                         use_container_width=True):
+                wrong = [i for i in range(4) if i != q["correct_idx"]]
+                _random.shuffle(wrong)
+                st.session_state.eliminated_options = wrong[:2]
+                st.session_state.credits -= 3
+                st.rerun()
+        else:
+            st.markdown(
+                f'<div class="hint-tag hint-locked-tag">{T["hint_locked"]}</div>',
+                unsafe_allow_html=True,
+            )
+        # zone-end 마커 — :has() reset 으로 hint 스타일 영향 종료
+        st.markdown(
+            '<div class="quest-hint-end"></div>', unsafe_allow_html=True,
+        )
 
         # 4지선다 버튼 — 마커 div 로 zone 정의 (CSS ~ 형제 선택자가 stamp 스타일 적용)
         st.markdown('<div class="quest-opts-zone"></div>', unsafe_allow_html=True)
