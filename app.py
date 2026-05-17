@@ -76,6 +76,74 @@ st.set_page_config(
 
 
 # ─────────────────────────────────────────────────────────────
+# OG 메타 + PWA Apple touch <head> 주입 — JS 런타임 인젝션
+# Streamlit Cloud 의 <head> 직접 편집 불가 → JS 가 head 에 meta/link 삽입
+# 이미지는 GitHub raw 직접 호스팅 (static serving 불필요)
+# 대상: Twitter/Discord/Slack/LinkedIn (JS 실행 크롤러) + iOS Safari (홈 화면)
+# 한계: KakaoTalk 등 JS 미실행 크롤러는 미적용
+# ─────────────────────────────────────────────────────────────
+_OG_TITLE = "사초(史草) AI — 한국사 사료 검증형 퀴즈 게임"
+_OG_DESC = "한국사 1차 사료 + AI 무한 출제 · 한·영·일·중 동시 지원 · 문체부 AI 공모전"
+_OG_URL = "https://sacho-ai.streamlit.app"
+_GH_RAW = "https://raw.githubusercontent.com/dailyweekly/sacho-ai-demo/main"
+_OG_IMAGE = f"{_GH_RAW}/assets/og_share.png"
+_APPLE_TOUCH = f"{_GH_RAW}/assets/icon_apple_180.png"
+_THEME_COLOR = "#C97064"
+
+st.markdown(
+    f"""
+    <script>
+    (function() {{
+        if (window._sacho_head_v2) return;
+        window._sacho_head_v2 = true;
+        const head = document.head;
+        function setMeta(attr, name, content) {{
+            let m = head.querySelector(`meta[${{attr}}="${{name}}"]`);
+            if (!m) {{
+                m = document.createElement('meta');
+                m.setAttribute(attr, name);
+                head.appendChild(m);
+            }}
+            m.setAttribute('content', content);
+        }}
+        function setLink(rel, href) {{
+            let l = head.querySelector(`link[rel="${{rel}}"]`);
+            if (!l) {{
+                l = document.createElement('link');
+                l.setAttribute('rel', rel);
+                head.appendChild(l);
+            }}
+            l.setAttribute('href', href);
+        }}
+        // Open Graph
+        setMeta('property', 'og:type', 'website');
+        setMeta('property', 'og:title', '{_OG_TITLE}');
+        setMeta('property', 'og:description', '{_OG_DESC}');
+        setMeta('property', 'og:image', '{_OG_IMAGE}');
+        setMeta('property', 'og:url', '{_OG_URL}');
+        setMeta('property', 'og:locale', 'ko_KR');
+        setMeta('property', 'og:site_name', '사초 AI');
+        // Twitter card
+        setMeta('name', 'twitter:card', 'summary_large_image');
+        setMeta('name', 'twitter:title', '{_OG_TITLE}');
+        setMeta('name', 'twitter:description', '{_OG_DESC}');
+        setMeta('name', 'twitter:image', '{_OG_IMAGE}');
+        // 검색엔진
+        setMeta('name', 'description', '{_OG_DESC}');
+        // iOS Add-to-Home-Screen
+        setLink('apple-touch-icon', '{_APPLE_TOUCH}');
+        setMeta('name', 'theme-color', '{_THEME_COLOR}');
+        setMeta('name', 'apple-mobile-web-app-capable', 'yes');
+        setMeta('name', 'apple-mobile-web-app-status-bar-style', 'default');
+        setMeta('name', 'apple-mobile-web-app-title', '사초 AI');
+    }})();
+    </script>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+# ─────────────────────────────────────────────────────────────
 # 스타일 — 모던 큐트 / 요시타케 풍
 # ─────────────────────────────────────────────────────────────
 st.markdown(
@@ -470,6 +538,28 @@ st.markdown(
         font-family: 'Nanum Pen Script', cursive;
         font-size: 20px; line-height: 1.45; color: var(--ink-soft);
     }
+    /* ── 퀘스트 랜딩 hero banner (문제 시작 전만) ── */
+    .quest-hero-banner {
+        width: 100%;
+        max-height: 240px;
+        overflow: hidden;
+        border-radius: 16px;
+        border: 2px solid var(--ink);
+        box-shadow: 3px 3px 0 var(--ink);
+        margin: 0 0 14px 0;
+        animation: hero-banner-in 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .quest-hero-banner img {
+        display: block;
+        width: 100%; height: auto;
+    }
+    @media (max-width: 720px) {
+        .quest-hero-banner { max-height: 160px; border-radius: 12px; }
+    }
+    @media (max-width: 420px) {
+        .quest-hero-banner { max-height: 120px; }
+    }
+
     /* ── Hero scene mode (사용자 제공 wide banner 일러스트) ── */
     .hero.hero-scene-mode {
         flex-direction: column;
@@ -5071,6 +5161,20 @@ def render_quest_page() -> None:
 
     # ── 문제 없을 때 — 랜딩 지도 + 모드/주제 선택 + 시작 ──
     if q is None:
+        # ── 퀘스트 랜딩 hero banner (이미지 있을 때만) ──
+        # 문제 풀이 중에는 안 보임 (q is not None 일 때 자동 숨김)
+        from pathlib import Path as _PathQH
+        _qh_path = _PathQH(__file__).parent / "assets" / "hero_scene.png"
+        if _qh_path.exists():
+            import base64 as _b64qh
+            _qh_b64 = _b64qh.b64encode(_qh_path.read_bytes()).decode("ascii")
+            st.markdown(
+                f'<div class="quest-hero-banner">'
+                f'  <img src="data:image/png;base64,{_qh_b64}" alt="사관의 책상" />'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+
         # API 키 누락 시 가장 위에 노출 — 클릭 후 알게 되는 일 방지
         if not api_key_present:
             st.markdown(
