@@ -272,6 +272,7 @@ COURSES: dict[str, dict[str, Any]] = {
         "name_ja": "🚶 貞洞・徳寿宮 7手がかり (徒歩1.8km)",
         "name_zh": "🚶 贞洞·德寿宫 7线索 (步行1.8km)",
         "area_ko": "서울 중구 정동길 일대",
+        "difficulty": 2, "est_minutes": 35, "distance_km": 1.8,
         "card_ids": [
             "sillok-009",   # 정동제일교회 (출발)
             "sillok-001",   # 아관파천 (구 러시아공사관 터)
@@ -288,6 +289,7 @@ COURSES: dict[str, dict[str, Any]] = {
         "name_ja": "🚶 鍾路 王宮散歩 5手がかり",
         "name_zh": "🚶 钟路宫阙漫步5线索",
         "area_ko": "서울 종로구 (경복궁~창덕궁~창경궁~종묘)",
+        "difficulty": 2, "est_minutes": 30, "distance_km": 2.0,
         "card_ids": [
             "place-001",    # 경복궁
             "hist-011",     # 훈민정음 반포 (경복궁)
@@ -302,6 +304,7 @@ COURSES: dict[str, dict[str, Any]] = {
         "name_ja": "🎬 KPDH × 北村 5手がかり",
         "name_zh": "🎬 KPDH × 北村5线索",
         "area_ko": "서울 종로구 북촌·가회동·삼청동",
+        "difficulty": 1, "est_minutes": 25, "distance_km": 1.5,
         "card_ids": [
             "kculture-017",  # KPDH 배경 ↔ 북촌 한옥마을
             "kculture-015",  # KPDH 헌트릭스 ↔ 무녀 전통
@@ -316,6 +319,7 @@ COURSES: dict[str, dict[str, Any]] = {
         "name_ja": "🎬 Kコンテンツ × 鍾路 5場面",
         "name_zh": "🎬 K内容 × 钟路·中区5场景",
         "area_ko": "서울 종로·중구 (정동~창덕궁~창경궁~낙선재)",
+        "difficulty": 2, "est_minutes": 25, "distance_km": 2.5,
         "card_ids": [
             "kculture-001",  # 미스터 션샤인 ↔ 손탁호텔 (정동)
             "kculture-004",  # 광해 ↔ 창덕궁
@@ -330,6 +334,7 @@ COURSES: dict[str, dict[str, Any]] = {
         "name_ja": "🚶 慶州(新羅) 5手がかり (市内)",
         "name_zh": "🚶 庆州(新罗)5线索 (市内)",
         "area_ko": "경상북도 경주 시내",
+        "difficulty": 1, "est_minutes": 30, "distance_km": 3.0,
         "card_ids": [
             "place-006",    # 첨성대
             "place-007",    # 안압지(월지)
@@ -344,6 +349,7 @@ COURSES: dict[str, dict[str, Any]] = {
         "name_ja": "🚶 丹陽 八景 2手がかり",
         "name_zh": "🚶 丹阳八景2线索",
         "area_ko": "충북 단양군",
+        "difficulty": 1, "est_minutes": 15, "distance_km": 0.8,
         "card_ids": [
             "place-008",    # 도담삼봉
             "place-009",    # 사인암
@@ -355,6 +361,7 @@ COURSES: dict[str, dict[str, Any]] = {
         "name_ja": "🏯 景福宮の内側 7手がかり",
         "name_zh": "🏯 景福宫内7线索",
         "area_ko": "경복궁 정문~건청궁 (도보 300m 반경)",
+        "difficulty": 2, "est_minutes": 40, "distance_km": 0.6,
         "card_ids": [
             "gbg-001",   # 광화문 (출발)
             "gbg-002",   # 근정전
@@ -371,6 +378,7 @@ COURSES: dict[str, dict[str, Any]] = {
         "name_ja": "🏛 徳寿宮の内側 5手がかり",
         "name_zh": "🏛 德寿宫内5线索",
         "area_ko": "덕수궁 대한문~함녕전 (도보 250m 반경)",
+        "difficulty": 2, "est_minutes": 30, "distance_km": 0.5,
         "card_ids": [
             "dsg-001",   # 대한문 (출발)
             "dsg-002",   # 중화전
@@ -388,6 +396,7 @@ COURSES: dict[str, dict[str, Any]] = {
         "name_ja": "🔍 光化門600年秘史 — 8手がかり",
         "name_zh": "🔍 光化門600年秘史 — 8线索",
         "area_ko": "광화문 정문~보신각 (도보 1.2km · 흥미진진 비사 위주)",
+        "difficulty": 3, "est_minutes": 50, "distance_km": 1.2,
         "card_ids": [
             "ghm-001",   # 광화문 현판 (출발 — 글씨 6번 변천)
             "ghm-008",   # 월대 (100년 만에 돌아온 단)
@@ -404,6 +413,116 @@ COURSES: dict[str, dict[str, Any]] = {
 
 def course_card_count(course_id: str) -> int:
     return len(COURSES.get(course_id, {}).get("card_ids", []))
+
+
+def course_meta(course_id: str) -> dict[str, Any]:
+    """코스 메타 — 난이도(★/★★/★★★), 소요시간, 거리, 단서 수.
+    UI badge 렌더링 helper. 누락된 키는 합리적 기본값으로 채움."""
+    c = COURSES.get(course_id, {})
+    diff_n = int(c.get("difficulty", 2))
+    diff_n = max(1, min(3, diff_n))
+    return {
+        "difficulty": diff_n,
+        "difficulty_stars": "★" * diff_n + "☆" * (3 - diff_n),
+        "est_minutes": int(c.get("est_minutes", 30)),
+        "distance_km": float(c.get("distance_km", 1.5)),
+        "card_count": len(c.get("card_ids", [])),
+    }
+
+
+# 난이도 라벨 — 다국어 (P1-2 badge)
+DIFFICULTY_LABELS = {
+    "ko": {1: "쉬움", 2: "보통", 3: "도전"},
+    "en": {1: "Easy", 2: "Normal", 3: "Challenge"},
+    "ja": {1: "やさしい", 2: "ふつう", 3: "挑戦"},
+    "zh": {1: "简单", 2: "普通", 3: "挑战"},
+}
+
+
+def difficulty_label(course_id: str, lang: str = "ko") -> str:
+    """난이도 텍스트 라벨 (쉬움/보통/도전)."""
+    n = course_meta(course_id)["difficulty"]
+    return DIFFICULTY_LABELS.get(lang, DIFFICULTY_LABELS["ko"])[n]
+
+
+# ─────────────────────────────────────────────────────────────
+# 다음 추천 코스 — 완주 화면 engagement loop (P1-3)
+# ─────────────────────────────────────────────────────────────
+# 큐레이션 narrative — 권역 zoom-in/zoom-out + 난이도 점진 상승
+NEXT_COURSE_CHAIN: dict[str, str] = {
+    "jeongdong":         "dsg_inside",        # 정동 → 덕수궁 안쪽 (zoom-in)
+    "dsg_inside":        "ghm_secrets",       # 덕수궁 → 광화문 비사 (난이도 ↑)
+    "ghm_secrets":       "gbg_inside",        # 광화문 → 경복궁 내부
+    "gbg_inside":        "jongno_palaces",    # 경복궁 → 4대궁 산책
+    "jongno_palaces":    "bukchon_kpdh",      # 4대궁 → 북촌 케데헌
+    "bukchon_kpdh":      "jongno_kculture",   # 북촌 → 종로 K-콘텐츠
+    "jongno_kculture":   "gyeongju_5",        # 서울 → 경주 (지방 확장)
+    "gyeongju_5":        "danyang_palgyeong", # 경주 → 단양 자연
+    "danyang_palgyeong": "jeongdong",         # 단양 → 다시 정동 (loop)
+}
+
+
+def next_course_for(current_id: str, tier: str = "apprentice") -> str | None:
+    """완주 후 다음 추천 코스. 칭호별 살짝 분기.
+
+    - master/companion(고득점): 큐레이션 체인 그대로 (다음 도전 자연 유도)
+    - apprentice/novice(저득점): 같은/낮은 난이도 우선 — 좌절 완화
+    """
+    if current_id not in COURSES:
+        return None
+    chain_next = NEXT_COURSE_CHAIN.get(current_id)
+    cur_diff = course_meta(current_id)["difficulty"]
+
+    if tier in ("apprentice", "novice"):
+        # 다음이 더 어려우면 — 같은/낮은 난이도 코스로 우회 추천
+        if chain_next and course_meta(chain_next)["difficulty"] > cur_diff:
+            easier = [
+                cid for cid, c in COURSES.items()
+                if cid != current_id
+                and course_meta(cid)["difficulty"] <= cur_diff
+            ]
+            if easier:
+                # 결정성 — 코스 키 알파벳 순으로 첫 항목
+                return sorted(easier)[0]
+        return chain_next
+    # master/companion — 체인 그대로
+    return chain_next
+
+
+# 다음 코스 hook 멘트 (칭호별 살짝 톤 조절) — 다국어
+NEXT_COURSE_HOOK = {
+    "ko": {
+        "master":     "🏆 한 코스 정복하셨소이다. 다음 도전은…",
+        "companion":  "🌿 좋은 흐름이오. 이 권역도 같이 보겠소?",
+        "apprentice": "📚 같이 한 권역 더 펼쳐 보겠소?",
+        "novice":     "🌱 처음은 누구나 그러하오. 가볍게 한 권역만 더?",
+    },
+    "en": {
+        "master":     "🏆 You've conquered one. Next challenge…",
+        "companion":  "🌿 Nice rhythm. Care to explore this area too?",
+        "apprentice": "📚 Shall we open one more area together?",
+        "novice":     "🌱 Beginnings are tough. One more, lighter walk?",
+    },
+    "ja": {
+        "master":     "🏆 一コース制覇。次の挑戦は…",
+        "companion":  "🌿 よい流れ。次の地域もご一緒に。",
+        "apprentice": "📚 もう一つ、開いてみますか?",
+        "novice":     "🌱 最初は皆そう。気軽にもう一つ。",
+    },
+    "zh": {
+        "master":     "🏆 已征服一程。下一挑战…",
+        "companion":  "🌿 节奏正好。再走一地域吗?",
+        "apprentice": "📚 再开一处吗?",
+        "novice":     "🌱 初学皆如此,再走一段轻松的路?",
+    },
+}
+
+
+def next_course_hook(tier: str, lang: str = "ko") -> str:
+    """추천 hook 멘트 — 칭호 + 언어별."""
+    return NEXT_COURSE_HOOK.get(
+        lang, NEXT_COURSE_HOOK["ko"]
+    ).get(tier, NEXT_COURSE_HOOK["ko"]["apprentice"])
 
 
 def pick_course_card(course_id: str, idx: int) -> SourceCard | None:
@@ -523,6 +642,8 @@ def ending_tier(score: int, total: int) -> str:
 __all__ = [
     "generate_question", "pick_card", "QUEST_THEME_KEYWORDS",
     "COURSES", "course_card_count", "pick_course_card", "ending_tier",
+    "course_meta", "difficulty_label", "DIFFICULTY_LABELS",
+    "next_course_for", "next_course_hook", "NEXT_COURSE_CHAIN",
     "QUESTION_TYPES",
     "pick_nearest_card", "pick_nearby_cards", "pick_random_nearby",
 ]

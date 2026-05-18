@@ -62,6 +62,8 @@ from core.character import (
 from core.quest import (
     generate_question, pick_card, QUEST_THEME_KEYWORDS,
     COURSES, course_card_count, pick_course_card, ending_tier,
+    course_meta, difficulty_label,
+    next_course_for, next_course_hook,
     pick_nearest_card, pick_nearby_cards, pick_random_nearby,
 )
 import random as _random
@@ -208,6 +210,38 @@ st.markdown(
     /* 기본 헤더/푸터 숨김 */
     header[data-testid="stHeader"] { background: transparent; height: 0; }
     #MainMenu, footer { visibility: hidden; }
+
+    /* ── Streamlit 기본 브랜딩 완전 정리 ──────────────────────
+     * 시연용 앱 — Streamlit Cloud 의 모든 자체 브랜딩 요소 숨김.
+     * Deploy 버튼·상태 위젯·상단 색띠·"Hosted with Streamlit" 배지·
+     * 우측 햄버거 메뉴 안의 redundant 항목 등 모두 제거. */
+    [data-testid="stDeployButton"] { display: none !important; }
+    [data-testid="stAppDeployButton"] { display: none !important; }
+    [data-testid="stStatusWidget"] { display: none !important; }
+    [data-testid="stDecoration"] { display: none !important; }
+    [data-testid="stAppViewBlockContainer"] [data-testid="stStatusWidget"] {
+        display: none !important;
+    }
+    /* "Hosted with Streamlit" 배지 (viewerBadge_container__*) */
+    .viewerBadge_container__1QSob,
+    .viewerBadge_link__qRIco,
+    .styles_viewerBadge__CvC9N,
+    [class*="viewerBadge"],
+    a[href*="streamlit.io/cloud"] {
+        display: none !important;
+    }
+    /* footer 의 "Made with Streamlit" 마크 — visibility 만으로는 공간이 남아
+     * display:none 까지 추가 */
+    footer { display: none !important; }
+    /* 우측 상단 햄버거 메뉴 — 기본 항목 그대로 노출되나 시연 시 불필요.
+     * "About Streamlit" / "Get help" 등은 시연 흐름에 방해돼 메뉴 자체 숨김 */
+    button[kind="header"],
+    button[data-testid="baseButton-header"] {
+        display: none !important;
+    }
+    /* 단, stToolbar 안의 fork/share 등 사용자 actions 는 위에서 별도 처리.
+     * 햄버거(=stMainMenu) 만 콕 집어 숨김 */
+    [data-testid="stMainMenu"] { display: none !important; }
 
     /* ── 모든 캐릭터 SVG의 기본 표시 보장 ─────────────────── */
     .hero-char svg, .hero-peek svg,
@@ -1463,6 +1497,36 @@ st.markdown(
         color: var(--ink);
     }
     .course-preview-cards b { color: var(--red-deep); }
+    /* ── 코스 메타 배지 row (난이도·시간·거리·단서) — P1-2 ── */
+    .course-badges {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin: 6px 0 4px 0;
+        font-family: 'Noto Sans KR', 'Apple SD Gothic Neo',
+                     'Malgun Gothic', sans-serif;
+    }
+    .course-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 9px;
+        font-size: 11.5px;
+        font-weight: 600;
+        color: var(--ink);
+        background: #FFF8E5;
+        border: 1.5px solid var(--ink);
+        border-radius: 999px;
+        box-shadow: 1.5px 1.5px 0 var(--ink);
+        white-space: nowrap;
+        line-height: 1.3;
+    }
+    /* 난이도 별 색조 — 쉬움(sage) / 보통(mustard) / 도전(red) */
+    .course-badge--diff-1 { background: #E8F0DC; }
+    .course-badge--diff-2 { background: #FFE9A6; }
+    .course-badge--diff-3 { background: #FBD2C5; }
+    .course-badge .star-on  { color: var(--red-deep); letter-spacing: -1px; }
+    .course-badge .star-off { color: rgba(58,42,31,0.25); letter-spacing: -1px; }
     .area-intro {
         font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
         font-size: 12.5px;
@@ -1776,6 +1840,67 @@ st.markdown(
     @media (max-width: 720px) {
         .quest-ending { flex-direction: column; text-align: center; }
         .quest-ending .ending-meta { justify-content: center; }
+    }
+
+    /* ── 다음 추천 코스 카드 — 완주 후 engagement loop (P1-3) ── */
+    .next-course-rec {
+        margin: 20px 0 8px 0;
+        padding: 16px 18px;
+        background:
+          linear-gradient(135deg, #FFF8E5 0%, #FFE9A6 100%);
+        border: 2.5px solid var(--ink);
+        border-radius: 18px;
+        box-shadow: 4px 4px 0 var(--ink);
+        animation: next-rec-slide-in 0.6s 0.3s both cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes next-rec-slide-in {
+        from { opacity: 0; transform: translateY(12px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .next-course-rec-hook {
+        font-family: 'Yeon Sung', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
+        font-size: 16px;
+        color: var(--red-deep);
+        margin: 0 0 10px 0;
+        letter-spacing: 0.3px;
+    }
+    .next-course-rec-body {
+        display: flex;
+        gap: 14px;
+        align-items: center;
+    }
+    .next-course-rec-thumb {
+        flex: 0 0 110px;
+        border: 2px solid var(--ink);
+        border-radius: 12px;
+        box-shadow: 2px 2px 0 var(--ink);
+        overflow: hidden;
+        background: #FFFCEF;
+    }
+    .next-course-rec-thumb img {
+        display: block; width: 100%; height: auto;
+    }
+    .next-course-rec-info { flex: 1; min-width: 0; }
+    .next-course-rec-name {
+        font-family: 'Noto Sans KR', 'Apple SD Gothic Neo',
+                     'Malgun Gothic', sans-serif;
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--ink);
+        margin: 0 0 4px 0;
+        line-height: 1.35;
+    }
+    .next-course-rec-area {
+        font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
+        font-size: 12.5px;
+        color: var(--ink-soft);
+        margin: 0 0 6px 0;
+    }
+    @media (max-width: 560px) {
+        .next-course-rec-body { flex-direction: column; align-items: stretch; }
+        .next-course-rec-thumb { flex: 0 0 auto; max-width: 240px;
+                                 margin: 0 auto; }
+        .next-course-rec-info { text-align: center; }
     }
 
     /* ── 왜 사초 AI? 차별 가치 카드 ────────────────────────── */
@@ -2369,33 +2494,80 @@ st.markdown(
     .collection-head-text b { color: var(--red-deep); font-weight: 700; }
 
     .collection-empty {
+        position: relative;
         display: flex; gap: 18px; align-items: center;
-        background: var(--cream);
+        background:
+          radial-gradient(circle at 20% 18%, rgba(217,180,116,0.10) 0%, transparent 38%),
+          radial-gradient(circle at 82% 82%, rgba(201,112,100,0.08) 0%, transparent 42%),
+          var(--cream);
         border: 2.5px dashed var(--ink);
         border-radius: 22px;
         padding: 32px 28px;
         margin: 12px 0 18px 0;
         text-align: left;
+        overflow: hidden;
+    }
+    /* 빈 두루마리 3개 — 보관함이 '비어있음'을 시각화 (decorative ghost) */
+    .collection-empty::before {
+        content: '📜  📜  📜';
+        position: absolute;
+        top: 50%; right: -10px;
+        transform: translateY(-50%) rotate(-8deg);
+        font-size: 56px;
+        letter-spacing: 8px;
+        opacity: 0.10;
+        pointer-events: none;
+        line-height: 1;
     }
     .collection-empty-char {
-        flex: 0 0 120px;
+        flex: 0 0 130px;
         animation: float-y 5s ease-in-out infinite;
+        z-index: 1;
     }
-    .collection-empty-text { flex: 1; }
+    .collection-empty-text { flex: 1; z-index: 1; }
     .collection-empty-text h3 {
         margin: 0; font-family: 'Gowun Batang', 'Apple SD Gothic Neo', 'Malgun Gothic', serif;
-        font-size: 19px; color: var(--ink);
+        font-size: 20px; color: var(--ink);
+        letter-spacing: 0.3px;
     }
     .collection-empty-text p {
-        margin: 6px 0 0 0;
+        margin: 6px 0 12px 0;
         font-family: 'Nanum Pen Script', 'Apple SD Gothic Neo', 'Malgun Gothic', cursive;
         font-size: 18px; color: var(--ink-soft);
+    }
+    /* 빈 보관함 — '어떻게 채우나' 3단계 미니 가이드 */
+    .collection-empty-steps {
+        display: flex; flex-wrap: wrap; gap: 6px;
+        margin-top: 8px;
+    }
+    .collection-empty-step {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 4px 11px;
+        font-family: 'Noto Sans KR', 'Apple SD Gothic Neo',
+                     'Malgun Gothic', sans-serif;
+        font-size: 12px; font-weight: 600;
+        color: var(--ink);
+        background: #FFFCEF;
+        border: 1.5px solid var(--ink);
+        border-radius: 999px;
+        box-shadow: 1.5px 1.5px 0 var(--ink);
+        white-space: nowrap;
+    }
+    .collection-empty-step .step-n {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 17px; height: 17px;
+        background: var(--red-deep); color: #FFFCEF;
+        border-radius: 50%;
+        font-size: 11px; font-weight: 700;
+        margin-right: 2px;
     }
 
     @media (max-width: 720px) {
         .collection-header { flex-wrap: wrap; }
         .collection-char-side { display: none; }
         .collection-empty { flex-direction: column; text-align: center; }
+        .collection-empty-steps { justify-content: center; }
+        .collection-empty::before { display: none; }  /* 모바일은 답답 — 숨김 */
     }
 
     /* ─── 🔐 비밀번호 게이트 (세련·귀엽게) ─── */
@@ -4872,19 +5044,65 @@ def render_collection_page() -> None:
     n = len(cards)
 
     if n == 0:
+        # 언어별 3단계 미니 가이드 — '어떻게 사료를 모으나' 시각화 (P2-4)
+        _empty_steps = {
+            "ko": [("1", "🗺 코스 고르기"),
+                   ("2", "🎯 문제 풀기"),
+                   ("3", "📜 정답 시 자동 보관")],
+            "en": [("1", "🗺 Pick a course"),
+                   ("2", "🎯 Solve a quiz"),
+                   ("3", "📜 Auto-saved on correct")],
+            "ja": [("1", "🗺 コース選択"),
+                   ("2", "🎯 問題に挑戦"),
+                   ("3", "📜 正解で自動保管")],
+            "zh": [("1", "🗺 选择路线"),
+                   ("2", "🎯 答题"),
+                   ("3", "📜 答对自动收藏")],
+        }
+        _steps = _empty_steps.get(
+            st.session_state.language, _empty_steps["ko"]
+        )
+        _steps_html = ''.join(
+            f'<span class="collection-empty-step">'
+            f'<span class="step-n">{n_}</span>{label}'
+            f'</span>'
+            for n_, label in _steps
+        )
         st.markdown(
             f'<div class="collection-empty">'
             f'  <div class="collection-empty-char">{char_img("facedown", width=160)}</div>'
             f'  <div class="collection-empty-text">'
             f'    <h3>{T["collection_empty"]}</h3>'
             f'    <p>{T["collection_empty_hint"]}</p>'
+            f'    <div class="collection-empty-steps">{_steps_html}</div>'
             f'  </div>'
             f'</div>',
             unsafe_allow_html=True,
         )
-        if st.button(T["back_to_chat"], key="back_chat_empty"):
-            st.session_state.view = "chat"
-            st.rerun()
+        # primary CTA — 바로 첫 코스 도전으로 유도
+        _cta_l, _cta_r = st.columns([3, 2])
+        with _cta_l:
+            if st.button(
+                f"🎯 {T.get('start_first_course', '첫 코스 바로 시작')}",
+                key="empty_first_quest",
+                use_container_width=True,
+                type="primary",
+            ):
+                # 가장 가벼운 첫 코스 — 정동 (5분 미만, ★ 쉬움)
+                st.session_state.course_id = "jeongdong"
+                st.session_state.course_idx = 0
+                st.session_state.course_score = 0
+                st.session_state.course_finished = False
+                st.session_state.view = "quest"
+                st.rerun()
+        with _cta_r:
+            if st.button(
+                T["back_to_chat"],
+                key="back_chat_empty",
+                use_container_width=True,
+            ):
+                st.session_state.view = "chat"
+                st.rerun()
         return
 
     st.markdown(
@@ -5240,6 +5458,74 @@ def render_quest_page() -> None:
                 use_container_width=True,
             )
 
+        # ── 다음 추천 코스 (P1-3) — 완주 후 자연스러운 다음 walk 제안 ──
+        _next_cid = next_course_for(cid, tier)
+        if _next_cid and _next_cid != cid:
+            _next_label = _course_options().get(_next_cid, _next_cid)
+            _next_area = COURSES.get(_next_cid, {}).get("area_ko", "")
+            _next_thumb = course_thumb(_next_cid, width=110)
+            _next_meta = course_meta(_next_cid)
+            _next_diff_n = _next_meta["difficulty"]
+            _next_stars = (
+                f'<span class="star-on">{"★" * _next_diff_n}</span>'
+                f'<span class="star-off">{"★" * (3 - _next_diff_n)}</span>'
+            )
+            _next_diff_lbl = difficulty_label(
+                _next_cid, st.session_state.language
+            )
+            _next_km = _next_meta["distance_km"]
+            _next_km_str = (
+                f'{int(_next_km * 1000)}m' if _next_km < 1.0
+                else f'{_next_km:.1f}km'.replace('.0km', 'km')
+            )
+            _hook = next_course_hook(tier, st.session_state.language)
+            _thumb_html = (
+                f'<div class="next-course-rec-thumb">{_next_thumb}</div>'
+                if _next_thumb else ''
+            )
+            _badges_block = (
+                f'<div class="course-badges">'
+                f'  <span class="course-badge course-badge--diff-{_next_diff_n}">'
+                f'    {_next_stars} {_next_diff_lbl}'
+                f'  </span>'
+                f'  <span class="course-badge">⏱ {_next_meta["est_minutes"]}분</span>'
+                f'  <span class="course-badge">📏 {_next_km_str}</span>'
+                f'  <span class="course-badge">🗺 단서 {_next_meta["card_count"]}</span>'
+                f'</div>'
+            )
+            st.markdown(
+                f'<div class="next-course-rec">'
+                f'  <p class="next-course-rec-hook">{_hook}</p>'
+                f'  <div class="next-course-rec-body">'
+                f'    {_thumb_html}'
+                f'    <div class="next-course-rec-info">'
+                f'      <p class="next-course-rec-name">{_next_label}</p>'
+                f'      <p class="next-course-rec-area">📍 {_next_area or "—"}</p>'
+                f'      {_badges_block}'
+                f'    </div>'
+                f'  </div>'
+                f'</div>',
+                unsafe_allow_html=True,
+            )
+            # CTA — 다음 코스 바로 시작 (한 번 클릭으로 진입)
+            if st.button(
+                f"▶ {_next_label} 바로 시작",
+                key=f"ending_next_{_next_cid}",
+                use_container_width=True,
+                type="primary",
+                help="다음 추천 코스로 자동 진입 — 첫 카드까지 생성",
+            ):
+                st.session_state.course_id = _next_cid
+                st.session_state.course_idx = 0
+                st.session_state.course_score = 0
+                st.session_state.course_finished = False
+                _reset_question_state()
+                if api_key_present:
+                    _first = pick_course_card(_next_cid, 0)
+                    if _first is not None:
+                        _generate_with_card(_first)
+                st.rerun()
+
         # 3개 옵션 — 같은 코스 재도전 / 다른 코스 / 지도(랜딩)
         end_l, end_m, end_r = st.columns(3)
         with end_l:
@@ -5530,6 +5816,29 @@ def render_quest_page() -> None:
             # ── 코스 preview 카드 (썸네일 있으면) ─ 없으면 area-tag 폴백 ──
             _course_thumb_html = course_thumb(new_cid, width=140)
             _total_cards = course_card_count(new_cid)
+            # 메타 배지 (난이도·시간·거리) — P1-2
+            _meta = course_meta(new_cid)
+            _diff_n = _meta["difficulty"]
+            _stars_html = (
+                f'<span class="star-on">{"★" * _diff_n}</span>'
+                f'<span class="star-off">{"★" * (3 - _diff_n)}</span>'
+            )
+            _diff_label = difficulty_label(new_cid, st.session_state.language)
+            _km = _meta["distance_km"]
+            _km_str = (
+                f'{int(_km * 1000)}m' if _km < 1.0
+                else f'{_km:.1f}km'.replace('.0km', 'km')
+            )
+            _badges_html = (
+                f'<div class="course-badges">'
+                f'  <span class="course-badge course-badge--diff-{_diff_n}">'
+                f'    {_stars_html} {_diff_label}'
+                f'  </span>'
+                f'  <span class="course-badge">⏱ {_meta["est_minutes"]}분</span>'
+                f'  <span class="course-badge">📏 {_km_str}</span>'
+                f'  <span class="course-badge">🗺 단서 {_total_cards}</span>'
+                f'</div>'
+            )
             if _course_thumb_html:
                 _intro_html = (
                     f'<div class="course-preview-intro">{_course_intro}</div>'
@@ -5541,10 +5850,8 @@ def render_quest_page() -> None:
                     f'  <div class="course-preview-text">'
                     f'    <div class="course-preview-name">{picked_label}</div>'
                     f'    <div class="course-preview-meta">📍 {area or "—"}</div>'
+                    f'    {_badges_html}'
                     f'    {_intro_html}'
-                    f'    <div class="course-preview-cards">'
-                    f'      🗺 단서 <b>{_total_cards}</b>개 · 예상 <b>{_total_cards * 2}분</b>'
-                    f'    </div>'
                     f'  </div>'
                     f'</div>',
                     unsafe_allow_html=True,
@@ -5553,12 +5860,14 @@ def render_quest_page() -> None:
                 if _course_intro:
                     st.markdown(
                         f'<div class="area-tag">📍 권역 — {area}</div>'
+                        f'{_badges_html}'
                         f'<div class="area-intro">{_course_intro}</div>',
                         unsafe_allow_html=True,
                     )
                 else:
                     st.markdown(
-                        f'<div class="area-tag">📍 권역 — {area}</div>',
+                        f'<div class="area-tag">📍 권역 — {area}</div>'
+                        f'{_badges_html}',
                         unsafe_allow_html=True,
                     )
         else:

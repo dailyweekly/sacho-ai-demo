@@ -248,8 +248,9 @@ UI_TEXT = {
         "ending_apprentice":   "📝 사관의 견습 — 다시 한 번 두루마리를 펼쳐 보시구려",
         "ending_novice":       "😴 허허… 다음에 또 들러 주시구려",
         "ending_restart_btn":  "🔁 다른 코스 도전",
+        "start_first_course":  "첫 코스 바로 시작",
 
-        "placeholder": "사관에게 무엇이든 물어 보시오… (소관이 깨어 있을 때에)",
+        "placeholder": "예) 광해군은 왜 폐위되었소? · 케데헌 무대는 어디요? — 무엇이든 물어 보시오",
         "evidence_header": "📜 사료 두루마리",
         "suggested_header": "💭 이런 건 어떠하옵신지…",
         "no_evidence": "허허… 그건 소관 기록엔 없소이다.",
@@ -342,8 +343,9 @@ UI_TEXT = {
         "ending_apprentice":   "📝 Apprentice — try opening the scroll again",
         "ending_novice":       "😴 Hmm… do drop by another time",
         "ending_restart_btn":  "🔁 Try another course",
+        "start_first_course":  "Start your first course",
 
-        "placeholder": "Ask the sleepy Sagwan something… (while he's awake)",
+        "placeholder": "e.g., Why was King Gwanghae deposed? · Where was KPop Demon Hunters filmed? — ask anything",
         "evidence_header": "📜 Source Scrolls",
         "suggested_header": "💭 Perhaps one of these?",
         "no_evidence": "Hmm… that's not in my scrolls, friend.",
@@ -436,8 +438,9 @@ UI_TEXT = {
         "ending_apprentice":   "📝 史官の見習い — もう一度巻物を開いてみませぬか",
         "ending_novice":       "😴 ふむ…またのお越しを",
         "ending_restart_btn":  "🔁 別のコースに挑戦",
+        "start_first_course":  "最初のコースを開始",
 
-        "placeholder": "ねむたい史官に何かお尋ねくだされ… (起きているうちに)",
+        "placeholder": "例) 光海君はなぜ廃位されたのか? · KPOPデーモンハンターズの舞台は? — 何でもどうぞ",
         "evidence_header": "📜 史料の巻物",
         "suggested_header": "💭 こんなのはいかが…",
         "no_evidence": "うーむ…拙者の巻物には載っておりませぬ。",
@@ -530,8 +533,9 @@ UI_TEXT = {
         "ending_apprentice":   "📝 史官之见习 — 再翻开卷子试试",
         "ending_novice":       "😴 唔…下次再来吧",
         "ending_restart_btn":  "🔁 试试别的路线",
+        "start_first_course":  "立即开始首条路线",
 
-        "placeholder": "向犯困的小史官请教点什么吧… (趁他还醒着)",
+        "placeholder": "例) 光海君为何被废? · KPOP恶魔猎人取景地? — 任何问题都可问",
         "evidence_header": "📜 史料卷子",
         "suggested_header": "💭 不如问问这些…",
         "no_evidence": "唔…小臣的卷子里查无此事。",
